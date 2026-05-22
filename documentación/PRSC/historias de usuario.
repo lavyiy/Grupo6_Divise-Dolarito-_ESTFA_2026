@@ -1,0 +1,25 @@
+Historias de usuario.
+
+HU01: Ver cotizaciones de divisas
+
+Como usuario de la plataforma,
+quiero ver las cotizaciones actualizadas de las distintas divisas,
+para conocer rápidamente cómo está el mercado y tomar mejores decisiones.
+
+Criterios de aceptación
+El usuario puede visualizar una lista de divisas activas.
+Cada divisa muestra su valor de compra, venta y variación diaria.
+La información debe actualizarse mostrando los datos más recientes.
+Las divisas inactivas no deben aparecer en la lista.
+
+  
+HU02: Identificar criptomonedas
+
+Como usuario interesado en monedas digitales,
+quiero identificar fácilmente cuáles son criptomonedas,
+para diferenciarlas de las monedas tradicionales.
+
+Criterios de aceptación
+Las criptomonedas deben tener una etiqueta o ícono distintivo.
+El usuario puede reconocer rápidamente cuáles activos son cripto.
+Las monedas tradicionales no deben mostrar el distintivo de criptomoneda.
