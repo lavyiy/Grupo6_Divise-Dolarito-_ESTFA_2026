@@ -1,0 +1,23 @@
+Arquitectura del proyecto
+
+1. Introducción
+El proyecto Dolarito es una aplicación web desarrollada con React. Para garantizar que el código
+sea ordenado, escalable y fácil de mantener, se aplicó una estructura modular que separa las
+responsabilidades del sistema en carpetas específicas.
+2. Estructura de Directorios
+El proyecto se divide en dos secciones principales: /public (para los archivos estáticos que el
+navegador lee directamente, como el index.html) y /src, que contiene el código fuente de la
+aplicación, organizado de la siguiente manera:
+• components/: Contiene las piezas visuales reutilizables de la interfaz, como botones,
+barras de navegación o las tarjetas para mostrar las cotizaciones.
+• pages/: Alberga las pantallas principales de la aplicación (por ejemplo: Inicio, Conversor
+o Historial). Estas páginas se arman combinando los elementos de la carpeta components.
+• hooks/: Espacio dedicado a los Custom Hooks. Aquí se separa la lógica compleja (como
+las peticiones a la API para traer el precio del dólar) de la parte visual.
+• data/: Guarda archivos de datos estáticos, constantes o configuraciones locales que la
+aplicación necesita para funcionar.
+• styles/: Centraliza todos los archivos de diseño (CSS) para mantener la estética de la
+web organizada en un solo lugar.
+Puntos de Entrada
+• App.jsx: Es el componente principal y el contenedor raíz de toda la aplicación.
+• index.js: El archivo encargado de renderizar y conectar React con el navegador.
