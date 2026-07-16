@@ -1,0 +1,77 @@
+/* ── App.css ────────────────────────────────────── */
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: 
+    radial-gradient(ellipse at top left, rgba(170, 59, 255, 0.15), transparent 50%),
+    radial-gradient(ellipse at bottom right, rgba(99, 102, 241, 0.15), transparent 50%),
+    #0a0512;
+  color: #fff;
+}
+
+.app__main {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 2rem 2rem 3rem;
+  animation: fade-in 0.6s ease-out both;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 600px) {
+  .app__main { padding: 1.2rem 1rem 2rem; }
+}
+
+/* Section shared header */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 1.2rem;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.section-title {
+  font-family: var(--font-display, system-ui);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.5px;
+  text-shadow: 0 0 10px rgba(170, 59, 255, 0.3);
+}
+
+.section-sub {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  font-family: var(--font-mono, monospace);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+/* Glassmorphism Cards */
+.glass-card {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.glass-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(170, 59, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.12);
+}
