@@ -1,78 +1,105 @@
-const nodemailer = require('nodemailer');
+// ── server/services/emailService.js ──────────────────────────────────────────
+// Envío de emails via Resend (https://resend.com) — API HTTP, funciona en Render free.
+// Variable de entorno requerida: RESEND_API_KEY
+//
+// Por qué Resend y no nodemailer/Gmail:
+//   - Render bloquea los puertos SMTP (25, 465, 587) en el plan gratuito.
+//   - Resend usa HTTPS (puerto 443) → nunca bloqueado.
+//   - Plan gratis: 3.000 emails/mes, 100/día.
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  },
-  connectionTimeout: 5000, // 5 segundos maximo para conectar
-  greetingTimeout: 5000,
-  socketTimeout: 5000
-});
+const FROM_ADDRESS = 'Divise <onboarding@resend.dev>';
+// ↑ Este "from" funciona en el plan gratuito de Resend sin verificar dominio.
+//   Cuando tengas un dominio propio, cambiarlo por: noreply@tudominio.com
 
-async function sendResetPasswordEmail(toEmail, token) {
-  // Eliminamos la restricción temporal para que puedas probar con cualquier correo.
+/**
+ * Helper genérico: hace POST a la API de Resend.
+ */
+async function sendEmail({ to, subject, html }) {
+  const apiKey = process.env.RESEND_API_KEY;
 
-  const resetUrl = `https://dolarito-santi.netlify.app/reset-password?token=${token}`;
-  
-  // Log the URL so the user can manually click it in Render logs if SMTP is blocked
-  console.log(`[ATENCION] URL de Recuperación para ${toEmail}: \n\n ${resetUrl} \n\n (Si el email falla por Render, copia y pega este link)`);
-  
-  const mailOptions = {
-    from: `"Dolarito" <${process.env.EMAIL_USER}>`,
-    to: toEmail,
-    subject: 'Restablecer contraseña de Dolarito',
-    html: `
-      <div style="font-family: Arial, sans-serif; background: #0a0f1e; color: #f0f4ff; padding: 2rem;">
-        <h2 style="color: #c9a84c;">Recuperación de Contraseña</h2>
-        <p>Hola,</p>
-        <p>Has solicitado restablecer tu contraseña. Haz click en el siguiente botón para crear una nueva:</p>
-        <a href="${resetUrl}" style="background: #c9a84c; color: #0a0f1e; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 20px 0; font-weight: bold;">Restablecer contraseña</a>
-        <p>Si no fuiste vos, ignorá este mensaje.</p>
-        <p style="color: #8899bb; font-size: 0.8rem; margin-top: 2rem;">El equipo de Dolarito</p>
-      </div>
-    `
-  };
+  if (!apiKey) {
+    console.warn('[EMAIL] RESEND_API_KEY no configurada. Email no enviado.');
+    return;
+  }
 
-  try {
-    await transporter.sendMail(mailOptions);
-    console.log(`[EMAIL ENVIADO] Recuperación de contraseña enviada a ${toEmail}`);
-  } catch (err) {
-    console.error(`[ERROR EMAIL] Fallo enviando correo a ${toEmail}:`, err);
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ from: FROM_ADDRESS, to, subject, html }),
+  });
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    console.error('[EMAIL] Error de Resend:', error);
+  } else {
+    console.log(`[EMAIL] Enviado correctamente a ${to}`);
   }
 }
 
-async function sendAlertEmail(toEmail, divisa, condicion, valor, actual) {
-  // Eliminamos la restricción temporal.
-  
-  const mailOptions = {
-    from: `"Alertas Dolarito" <${process.env.EMAIL_USER}>`,
-    to: toEmail,
-    subject: `🔔 Alerta: ${divisa} alcanzó tu límite`,
-    html: `
-      <div style="font-family: Arial, sans-serif; background: #0a0f1e; color: #f0f4ff; padding: 2rem;">
-        <h2 style="color: #2ecc8a;">¡Alerta de Mercado!</h2>
-        <p>Hola,</p>
-        <p>La cotización de <strong>${divisa}</strong> ha cumplido tu condición:</p>
-        <p style="font-size: 1.2rem; background: rgba(201,168,76,0.1); padding: 10px; border-radius: 8px;">
-          Condición: <strong>${condicion} $${valor}</strong><br>
-          Precio actual: <strong>$${actual}</strong>
-        </p>
-        <a href="https://dolarito-santi.netlify.app" style="background: #c9a84c; color: #0a0f1e; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 20px 0; font-weight: bold;">Ver en Dolarito</a>
-      </div>
-    `
-  };
+// ── Recuperación de contraseña ────────────────────────────────────────────────
 
-  try {
-    await transporter.sendMail(mailOptions);
-    console.log(`[ALERTA ENVIADA] Alerta enviada a ${toEmail}`);
-  } catch (err) {
-    console.error(`[ERROR EMAIL] Fallo enviando alerta a ${toEmail}:`, err);
-  }
+async function sendResetPasswordEmail(toEmail, token) {
+  const resetUrl = `https://divise-santi.netlify.app/reset-password?token=${token}`;
+
+  // Backup: si el email falla, el link sigue visible en los logs de Render
+  console.log(`[RESET URL] ${toEmail} → ${resetUrl}`);
+
+  await sendEmail({
+    to: toEmail,
+    subject: 'Restablecer contraseña de Divise',
+    html: `
+      <div style="font-family: Arial, sans-serif; background: #0a0f1e; color: #f0f4ff; padding: 2rem; border-radius: 12px;">
+        <h2 style="color: #c9a84c;">Recuperación de Contraseña 💱</h2>
+        <p>Hola,</p>
+        <p>Recibimos una solicitud para restablecer tu contraseña. Hacé click en el botón para crear una nueva:</p>
+        <a href="${resetUrl}"
+           style="display: inline-block; margin: 20px 0; padding: 12px 24px;
+                  background: #c9a84c; color: #0a0f1e; text-decoration: none;
+                  border-radius: 8px; font-weight: bold; font-size: 1rem;">
+          Restablecer contraseña
+        </a>
+        <p style="color: #8899bb; font-size: 0.85rem;">
+          Este link expira en <strong>30 minutos</strong>. Si no fuiste vos, ignorá este mensaje.
+        </p>
+        <hr style="border-color: rgba(255,255,255,0.1); margin: 1.5rem 0;">
+        <p style="color: #8899bb; font-size: 0.75rem;">El equipo de Divise</p>
+      </div>
+    `,
+  });
+}
+
+// ── Alerta de precio ──────────────────────────────────────────────────────────
+
+async function sendAlertEmail(toEmail, divisa, condicion, valor, actual) {
+  await sendEmail({
+    to: toEmail,
+    subject: `🔔 Alerta Divise: ${divisa} alcanzó tu límite`,
+    html: `
+      <div style="font-family: Arial, sans-serif; background: #0a0f1e; color: #f0f4ff; padding: 2rem; border-radius: 12px;">
+        <h2 style="color: #2ecc8a;">¡Alerta de Mercado! 🔔</h2>
+        <p>Hola,</p>
+        <p>La cotización de <strong>${divisa}</strong> cumplió tu condición:</p>
+        <div style="background: rgba(201,168,76,0.1); border: 1px solid rgba(201,168,76,0.3);
+                    padding: 1rem; border-radius: 8px; margin: 1rem 0;">
+          <p style="margin: 0;">Condición: <strong>${condicion} $${valor}</strong></p>
+          <p style="margin: 0.5rem 0 0;">Precio actual: <strong style="color: #2ecc8a;">$${actual}</strong></p>
+        </div>
+        <a href="https://divise-santi.netlify.app"
+           style="display: inline-block; margin: 20px 0; padding: 12px 24px;
+                  background: #c9a84c; color: #0a0f1e; text-decoration: none;
+                  border-radius: 8px; font-weight: bold;">
+          Ver en Divise
+        </a>
+        <p style="color: #8899bb; font-size: 0.75rem;">El equipo de Divise</p>
+      </div>
+    `,
+  });
 }
 
 module.exports = {
   sendResetPasswordEmail,
-  sendAlertEmail
+  sendAlertEmail,
 };

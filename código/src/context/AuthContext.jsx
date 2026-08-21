@@ -9,8 +9,8 @@ const AuthContext = createContext(null);
 
 // ── Storage helpers ──────────────────────────────────────────────────────────
 
-const STORAGE_TOKEN = 'dolarito_token';
-const STORAGE_USER  = 'dolarito_user';
+const STORAGE_TOKEN = 'divise_token';
+const STORAGE_USER  = 'divise_user';
 
 function readStorage() {
   try {

@@ -1,0 +1,246 @@
+/* ── src/pages/Dashboard/Historial.css ────────────────────────── */
+
+.historial-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Top filter bar */
+.historial-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  padding: 18px 24px;
+  border-radius: var(--radius-md, 12px);
+  flex-wrap: wrap;
+}
+
+.historial-filter-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.historial-filter-group label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.date-range-picker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.date-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm, 8px);
+  padding: 8px 12px;
+  transition: border-color 0.2s;
+  color: var(--text-muted);
+}
+
+.date-input-wrapper:focus-within {
+  border-color: var(--brand-gold);
+}
+
+.date-input-wrapper input {
+  background: transparent;
+  border: none;
+  color: var(--text-main);
+  outline: none;
+  font-size: 13px;
+  width: 110px;
+}
+
+/* Hide default date picker icon for a cleaner look */
+.date-input-wrapper input::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: 0.5;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.date-input-wrapper input::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+.range-separator {
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.historial-search-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm, 8px);
+  padding: 8px 14px;
+  min-width: 220px;
+  transition: border-color 0.2s;
+  color: var(--text-muted);
+}
+
+.historial-search-input:focus-within {
+  border-color: var(--brand-gold);
+}
+
+.historial-search-input input {
+  background: transparent;
+  border: none;
+  color: var(--text-main);
+  outline: none;
+  width: 100%;
+  font-size: 13px;
+}
+
+.historial-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Card Table Container */
+.historial-table-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg, 16px);
+  overflow-x: auto;
+  box-shadow: var(--shadow-card);
+}
+
+.historial-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.historial-card-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.historial-card-sort {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.historial-card-sort label {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.historial-card-sort select {
+  background: var(--bg-input);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  padding: 6px 14px;
+  border-radius: var(--radius-sm, 8px);
+  font-size: 13px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.historial-card-sort select:focus {
+  border-color: var(--brand-gold);
+}
+
+/* Table styling */
+.hist-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.hist-table th {
+  padding: 14px 24px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.hist-table td {
+  padding: 16px 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  font-size: 14px;
+  color: var(--text-main);
+  vertical-align: middle;
+  transition: background-color 0.2s;
+}
+
+.hist-table tr:last-child td {
+  border-bottom: none;
+}
+
+.hist-table tr:hover td {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.date-time-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-secondary);
+  font-size: 13.5px;
+}
+.date-time-cell .icon {
+  color: var(--text-muted);
+}
+
+/* Pagination bar */
+.historial-pagination-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  background: var(--bg-input);
+  border-top: 1px solid var(--border-color);
+}
+
+@media (max-width: 768px) {
+  .historial-top-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .historial-filter-group {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .date-range-picker {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .date-input-wrapper input {
+    width: 100%;
+  }
+  .historial-actions {
+    flex-direction: column;
+  }
+  .historial-actions button {
+    width: 100%;
+  }
+}

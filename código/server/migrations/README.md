@@ -1,4 +1,4 @@
-# Política de Migraciones — Divise / Dolarito
+# Política de Migraciones — Divise / Divise
 
 ## Convención de naming
 

@@ -38,10 +38,62 @@ const updatePassword = async (id_usuario, newPasswordHash) => {
   );
 };
 
+// ── ABM de usuarios ──────────────────────────────────────────────────────────
+
+const getAllUsers = async () => {
+  const result = await db.query(
+    `SELECT u.id_usuario, u.nombre, u.email, u.divisa_base_id,
+            d.codigo AS divisa_base_codigo, u.created_at
+     FROM usuarios u
+     LEFT JOIN divisas d ON d.id_divisa = u.divisa_base_id
+     ORDER BY u.id_usuario ASC`
+  );
+  return result.rows;
+};
+
+const getUserById = async (id_usuario) => {
+  const result = await db.query(
+    `SELECT u.id_usuario, u.nombre, u.email, u.divisa_base_id,
+            d.codigo AS divisa_base_codigo, u.created_at
+     FROM usuarios u
+     LEFT JOIN divisas d ON d.id_divisa = u.divisa_base_id
+     WHERE u.id_usuario = $1`,
+    [id_usuario]
+  );
+  return result.rows[0];
+};
+
+// Nota de diseño: con COALESCE, enviar divisa_base_id: null NO borra la divisa
+// base (limitación aceptada).
+const updateUserProfile = async (id_usuario, { nombre, email, divisa_base_id }) => {
+  const result = await db.query(
+    `UPDATE usuarios
+     SET nombre = COALESCE($1, nombre),
+         email = COALESCE($2, email),
+         divisa_base_id = COALESCE($3, divisa_base_id)
+     WHERE id_usuario = $4
+     RETURNING id_usuario, nombre, email, divisa_base_id`,
+    [nombre, email, divisa_base_id, id_usuario]
+  );
+  return result.rows[0];
+};
+
+const deleteUser = async (id_usuario) => {
+  const result = await db.query(
+    'DELETE FROM usuarios WHERE id_usuario = $1 RETURNING id_usuario',
+    [id_usuario]
+  );
+  return result.rows[0];
+};
+
 module.exports = {
   createUser,
   getUserByEmail,
   getUserByResetToken,
   updateResetToken,
-  updatePassword
+  updatePassword,
+  getAllUsers,
+  getUserById,
+  updateUserProfile,
+  deleteUser
 };

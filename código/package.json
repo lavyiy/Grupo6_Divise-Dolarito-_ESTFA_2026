@@ -1,5 +1,5 @@
 {
-  "name": "dolarito",
+  "name": "divise",
   "version": "1.0.0",
   "description": "Plataforma de cotizaciones multidivisa - FAM Fameghino",
   "scripts": {
@@ -8,14 +8,15 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-router-dom": "^6.24.0",
     "chart.js": "^4.4.0",
-    "react-chartjs-2": "^5.2.0"
+    "react": "^18.2.0",
+    "react-chartjs-2": "^5.2.0",
+    "react-countup": "^6.5.3",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.24.0"
   },
   "devDependencies": {
-    "vite": "^7.0.0",
-    "@vitejs/plugin-react": "^5.0.0"
+    "@vitejs/plugin-react": "^5.0.0",
+    "vite": "^7.0.0"
   }
 }

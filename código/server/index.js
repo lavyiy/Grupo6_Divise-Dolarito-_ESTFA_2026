@@ -13,17 +13,27 @@ const authRoutes = require('./routes/authRoutes');
 const ratesRoutes = require('./routes/ratesRoutes');
 const alertRoutes = require('./routes/alertRoutes');
 const favoritesRoutes = require('./routes/favoritesRoutes');
+const userRoutes = require('./routes/userRoutes');
 app.use('/api/auth', authRoutes);
 app.use('/api/rates', ratesRoutes);
 app.use('/api/alerts', alertRoutes);
 app.use('/api/favorites', favoritesRoutes);
+app.use('/api/users', userRoutes);
+
+// Ruta raíz de la API para evitar "Cannot GET /api"
+app.get('/api', (req, res) => {
+  res.json({
+    message: 'Divise API',
+    endpoints: ['/api/auth', '/api/rates', '/api/alerts', '/api/favorites', '/api/users']
+  });
+});
 
 // Sincronización de cotizaciones
 const { syncRates } = require('./services/syncService');
 
 // Basic route
 app.get('/', (req, res) => {
-  res.send('Dolarito API Running');
+  res.send('Divise API Running');
 });
 
 // Start server
