@@ -10,7 +10,7 @@ services:
     name: dolarito
     runtime: node
     plan: free
-    rootDir: código
+    rootDir: codigo
     buildCommand: npm ci && npm run build && cd server && npm ci --omit=dev
     startCommand: node server/index.js
     envVars:
