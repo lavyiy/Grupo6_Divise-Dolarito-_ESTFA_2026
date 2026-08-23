@@ -7,9 +7,9 @@ const alertService = require('./alertService');
  */
 async function syncRates() {
   console.log('🔄 Iniciando sincronización de cotizaciones...');
-  const client = await pool.connect();
-  
+  let client;
   try {
+    client = await pool.connect();
     await client.query('BEGIN');
     
     // 1. Fetch DolarApi (ARS - Blue, Oficial)
@@ -54,10 +54,12 @@ async function syncRates() {
     // Luego de sincronizar, verificamos las alertas
     await alertService.checkAlerts();
   } catch (err) {
-    await client.query('ROLLBACK');
+    if (client) {
+      try { await client.query('ROLLBACK'); } catch { /* conexión ya perdida */ }
+    }
     console.error('❌ Error sincronizando cotizaciones:', err.message);
   } finally {
-    client.release();
+    if (client) client.release();
   }
 }
 

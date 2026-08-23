@@ -27,10 +27,10 @@ async function request(path, options = {}) {
   } catch (err) {
     // Si el servidor de Render está inactivo o da error de red, respondemos con modo offline simulado para desarrollo
     console.warn(`[API] Servidor backend no disponible (${err.message}). Usando respuesta fallback.`);
-    if (path === '/auth/login') {
+    if (path === '/api/auth/login') {
       return { token: 'mock-jwt-token-12345', user: { id: 1, nombre: 'Usuario Divise', email: 'demo@divise.com' } };
     }
-    if (path === '/auth/register') {
+    if (path === '/api/auth/register') {
       return { message: 'Usuario registrado exitosamente', token: 'mock-jwt-token-12345' };
     }
     throw err;
@@ -40,14 +40,14 @@ async function request(path, options = {}) {
 // ── Auth endpoints ────────────────────────────────────────────────────────────
 
 export function authRegister({ nombre, email, password }) {
-  return request('/auth/register', {
+  return request('/api/auth/register', {
     method: 'POST',
     body: JSON.stringify({ nombre, email, password }),
   });
 }
 
 export function authLogin({ email, password }) {
-  return request('/auth/login', {
+  return request('/api/auth/login', {
     method: 'POST',
     body: JSON.stringify({ email, password }),
   });
