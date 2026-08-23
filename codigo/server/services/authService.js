@@ -10,11 +10,19 @@ const emailService = require('./emailService');
 
 const SALT_ROUNDS = 10;
 const JWT_EXPIRES = '24h';
+const VERIF_EXPIRES_MIN = 15;
 
 /**
- * Registra un nuevo usuario.
- * @returns {{ user: object, token: string }}
- * @throws Error con mensaje descriptivo si falla la validación.
+ * Genera un código numérico de 6 dígitos ("012345" incluido).
+ */
+function generateCode() {
+  return crypto.randomInt(0, 1000000).toString().padStart(6, '0');
+}
+
+/**
+ * Registra un nuevo usuario y envía código de verificación al email.
+ * La cuenta queda inactiva hasta verificar.
+ * @returns {{ message: string, email: string }}
  */
 async function registerUser(nombre, email, password) {
   if (!nombre || !email || !password) {
@@ -22,15 +30,86 @@ async function registerUser(nombre, email, password) {
   }
 
   const existing = await userModel.getUserByEmail(email);
-  if (existing) {
+  if (existing && existing.email_verificado) {
     throw Object.assign(new Error('El email ya está registrado'), { status: 400 });
   }
 
   const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
-  const user = await userModel.createUser(nombre, email, passwordHash);
+  let user;
+  if (existing) {
+    // Re-registro de una cuenta nunca verificada: actualizamos datos y reenviamos código
+    const newHash = await bcrypt.hash(password, SALT_ROUNDS);
+    await userModel.updatePassword(existing.id_usuario, newHash);
+    await userModel.updateUserProfile(existing.id_usuario, { nombre });
+    user = existing;
+  } else {
+    user = await userModel.createUser(nombre, email, passwordHash);
+  }
 
-  const token = signToken(user);
-  return { user, token };
+  await sendVerificationCode(user.email);
+
+  return {
+    message: 'Cuenta creada. Te enviamos un código de 6 dígitos a tu email para activarla.',
+    email: user.email,
+    needsVerification: true,
+  };
+}
+
+/**
+ * Genera y guarda el código, y lo manda por email (fire and forget).
+ */
+async function sendVerificationCode(email) {
+  const codigo = generateCode();
+  const expires = new Date(Date.now() + VERIF_EXPIRES_MIN * 60 * 1000);
+  await userModel.setVerificationCode(email, codigo, expires.toISOString());
+
+  const full = await userModel.getUserByEmail(email);
+  emailService
+    .sendVerificationEmail(email, full?.nombre, codigo)
+    .catch(err => console.error('Error enviando código de verificación:', err.message));
+}
+
+/**
+ * Verifica el código de 6 dígitos. Si es correcto, activa la cuenta
+ * y devuelve sesión iniciada.
+ * @returns {{ user: object, token: string }}
+ */
+async function verifyEmail(email, codigo) {
+  if (!email || !codigo) {
+    throw Object.assign(new Error('Email y código son obligatorios'), { status: 400 });
+  }
+
+  const user = await userModel.getUserByVerificationCode(email, codigo);
+  if (!user) {
+    throw Object.assign(new Error('Código inválido o expirado'), { status: 400 });
+  }
+
+  await userModel.markEmailVerified(user.id_usuario);
+
+  const { password_hash, ...safeUser } = user;
+  safeUser.email_verificado = true;
+  const token = signToken(safeUser);
+  return { user: safeUser, token };
+}
+
+/**
+ * Reenvía un código de verificación.
+ */
+async function resendVerificationCode(email) {
+  if (!email) {
+    throw Object.assign(new Error('Email obligatorio'), { status: 400 });
+  }
+  const user = await userModel.getUserByEmail(email);
+  if (!user) {
+    // No revelamos si el email existe o no
+    return { success: true, message: 'Si el correo existe, reenviamos el código.' };
+  }
+  if (user.email_verificado) {
+    throw Object.assign(new Error('Esta cuenta ya está verificada'), { status: 400 });
+  }
+
+  await sendVerificationCode(email);
+  return { success: true, message: 'Si el correo existe, reenviamos el código.' };
 }
 
 /**
@@ -51,6 +130,14 @@ async function loginUser(email, password) {
   const match = await bcrypt.compare(password, user.password_hash);
   if (!match) {
     throw Object.assign(new Error('Credenciales inválidas'), { status: 401 });
+  }
+
+  // Cuenta sin verificar: bloqueamos login e indicamos al frontend que muestre el código
+  if (!user.email_verificado) {
+    throw Object.assign(
+      new Error('Tu email aún no está verificado. Revisá tu casilla e ingresá el código de 6 dígitos.'),
+      { status: 403, needsVerification: true, email: user.email }
+    );
   }
 
   const { password_hash, ...safeUser } = user;
@@ -108,4 +195,11 @@ function signToken(user) {
   );
 }
 
-module.exports = { registerUser, loginUser, forgotPassword, resetPassword };
+module.exports = {
+  registerUser,
+  loginUser,
+  verifyEmail,
+  resendVerificationCode,
+  forgotPassword,
+  resetPassword
+};

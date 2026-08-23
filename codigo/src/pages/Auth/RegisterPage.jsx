@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { authRegister } from '../../services/api';
+import { authRegister, authVerifyEmail, authResendCode } from '../../services/api';
 import { Icon } from '../../components/ui/Icon';
 import './Auth.css';
 
 export default function RegisterPage() {
   const { login } = useAuth();
-  const navigate = useNavigate();
-  
+
   const [form, setForm] = useState({
     nombre: '',
     email: '',
@@ -17,9 +16,14 @@ export default function RegisterPage() {
     terms: false
   });
   const [error, setError] = useState('');
+  const [info, setInfo] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // Paso 2: verificación por código de 6 dígitos
+  const [pendingEmail, setPendingEmail] = useState('');
+  const [codigo, setCodigo] = useState('');
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -50,23 +54,53 @@ export default function RegisterPage() {
 
     setLoading(true);
     try {
-      const data = await authRegister({ 
-        nombre: form.nombre, 
-        email: form.email, 
-        password: form.password 
+      const data = await authRegister({
+        nombre: form.nombre,
+        email: form.email,
+        password: form.password
       });
-      const token = data?.token ?? data?.accessToken ?? data?.jwt ?? null;
-      if (token) {
-        login({ token, user: data?.user ?? data?.data ?? null });
-        navigate('/dashboard');
-      } else {
-        // Fallback si no devuelve token pero se registró bien
-        navigate('/login', { state: { registered: true } });
-      }
+      // El registro ya no devuelve token: hay que verificar el email
+      setPendingEmail(form.email);
+      setInfo(data?.message || 'Te enviamos un código de 6 dígitos a tu email.');
+      setError('');
     } catch (err) {
       setError(err.message || 'Error al crear la cuenta.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleVerify = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    if (codigo.length !== 6) {
+      setError('Ingresá el código de 6 dígitos.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const data = await authVerifyEmail({ email: pendingEmail, codigo });
+      const token = data?.token ?? data?.accessToken ?? null;
+      if (token) {
+        login({ token, user: data?.user ?? null });
+      }
+    } catch (err) {
+      setError(err.message || 'Código incorrecto.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    setError('');
+    setInfo('');
+    try {
+      const data = await authResendCode({ email: pendingEmail });
+      setInfo(data?.message || 'Código reenviado. Revisá tu casilla.');
+    } catch (err) {
+      setError(err.message || 'No se pudo reenviar el código.');
     }
   };
 
@@ -92,6 +126,54 @@ export default function RegisterPage() {
 
         {/* Right Panel */}
         <div className="auth-right">
+
+          {pendingEmail ? (
+            <>
+              <h2 className="auth-right-title">Verificá tu email</h2>
+              <p className="auth-right-subtitle">
+                Enviamos un código de 6 dígitos a <strong>{pendingEmail}</strong>. Ingresalo para activar tu cuenta.
+              </p>
+
+              {error && <div className="auth-alert error">{error}</div>}
+              {info && !error && <div className="auth-alert error" style={{ background: 'rgba(46,204,138,.12)', borderColor: 'rgba(46,204,138,.4)', color: '#2ecc8a' }}>{info}</div>}
+
+              <form className="auth-form" onSubmit={handleVerify}>
+                <div className="form-group">
+                  <label>Código de verificación</label>
+                  <div className="input-wrapper">
+                    <span className="input-icon"><Icon name="shield" size={16} /></span>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      maxLength={6}
+                      className="auth-input"
+                      placeholder="••••••"
+                      style={{ letterSpacing: '10px', textAlign: 'center', fontSize: '1.25rem' }}
+                      value={codigo}
+                      onChange={(e) => setCodigo(e.target.value.replace(/\D/g, ''))}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <button type="submit" className="btn btn-primary" disabled={loading}>
+                  {loading ? <div className="spinner"></div> : <><span>Verificar y entrar</span><Icon name="arrowRight" size={16} /></>}
+                </button>
+              </form>
+
+              <div className="auth-footer">
+                ¿No te llegó?{' '}
+                <span className="auth-link" style={{ cursor: 'pointer' }} onClick={handleResend}>
+                  Reenviar código
+                </span>
+              </div>
+              <div className="auth-footer">
+                <Link to="/login" className="auth-link">Volver a iniciar sesión</Link>
+              </div>
+            </>
+          ) : (
+          <>
           <h2 className="auth-right-title">Crear cuenta</h2>
           <p className="auth-right-subtitle">Completá tus datos para comenzar</p>
 
@@ -204,6 +286,8 @@ export default function RegisterPage() {
           <div className="auth-footer">
             ¿Ya tenés cuenta? <Link to="/login" className="auth-link">Iniciar sesión</Link>
           </div>
+          </>
+          )}
         </div>
 
       </div>

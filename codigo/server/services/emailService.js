@@ -39,6 +39,32 @@ async function sendEmail({ to, subject, html }) {
   }
 }
 
+// ── Verificación de email (código de 6 dígitos) ──────────────────────────────
+
+async function sendVerificationEmail(toEmail, nombre, codigo) {
+  await sendEmail({
+    to: toEmail,
+    subject: `Tu código de verificación Divise: ${codigo}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; background: #0a0f1e; color: #f0f4ff; padding: 2rem; border-radius: 12px;">
+        <h2 style="color: #c9a84c;">Verificá tu cuenta 💱</h2>
+        <p>Hola ${nombre || ''},</p>
+        <p>Usá este código para activar tu cuenta de Divise:</p>
+        <div style="text-align: center; margin: 1.5rem 0;">
+          <span style="display: inline-block; padding: 14px 28px; background: rgba(201,168,76,0.12);
+                       border: 1px solid rgba(201,168,76,0.4); border-radius: 10px;
+                       font-size: 2rem; letter-spacing: 8px; font-weight: bold; color: #c9a84c;">${codigo}</span>
+        </div>
+        <p style="color: #8899bb; font-size: 0.85rem;">
+          El código expira en <strong>15 minutos</strong>. Si no creaste esta cuenta, ignorá este mensaje.
+        </p>
+        <hr style="border-color: rgba(255,255,255,0.1); margin: 1.5rem 0;">
+        <p style="color: #8899bb; font-size: 0.75rem;">El equipo de Divise</p>
+      </div>
+    `,
+  });
+}
+
 // ── Recuperación de contraseña ────────────────────────────────────────────────
 
 async function sendResetPasswordEmail(toEmail, token) {
@@ -100,6 +126,7 @@ async function sendAlertEmail(toEmail, divisa, condicion, valor, actual) {
 }
 
 module.exports = {
+  sendVerificationEmail,
   sendResetPasswordEmail,
   sendAlertEmail,
 };

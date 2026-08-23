@@ -49,4 +49,27 @@ const deleteAccount = async (req, res) => {
   }
 };
 
-module.exports = { listUsers, getProfile, updateProfile, deleteAccount };
+const updateWhatsApp = async (req, res) => {
+  try {
+    const id_usuario = req.user.id_usuario;
+    const { whatsapp_phone, whatsapp_api_key } = req.body;
+    const updated = await userService.updateWhatsAppConfig(id_usuario, { whatsapp_phone, whatsapp_api_key });
+    res.status(200).json({ message: 'Configuración de WhatsApp guardada', ...updated });
+  } catch (error) {
+    console.error('Error en updateWhatsApp:', error);
+    res.status(error.status || 500).json({ error: error.message || 'Error interno del servidor' });
+  }
+};
+
+const testWhatsApp = async (req, res) => {
+  try {
+    const id_usuario = req.user.id_usuario;
+    const result = await userService.testWhatsApp(id_usuario);
+    res.status(200).json(result);
+  } catch (error) {
+    console.error('Error en testWhatsApp:', error);
+    res.status(error.status || 500).json({ error: error.message || 'Error interno del servidor' });
+  }
+};
+
+module.exports = { listUsers, getProfile, updateProfile, deleteAccount, updateWhatsApp, testWhatsApp };

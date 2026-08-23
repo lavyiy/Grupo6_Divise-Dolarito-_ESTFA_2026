@@ -20,7 +20,11 @@ async function request(path, options = {}) {
     if (!res.ok) {
       const message =
         data?.message || data?.error || `Error ${res.status}: ${res.statusText}`;
-      throw new Error(message);
+      // Adjuntamos el body para que la UI pueda reaccionar (ej: needsVerification)
+      const err = new Error(message);
+      Object.assign(err, data || {});
+      err.data = data;
+      throw err;
     }
 
     return data;
@@ -50,6 +54,45 @@ export function authLogin({ email, password }) {
   return request('/api/auth/login', {
     method: 'POST',
     body: JSON.stringify({ email, password }),
+  });
+}
+
+// ── Verificación de email con código de 6 dígitos ────────────────────────────
+
+export function authVerifyEmail({ email, codigo }) {
+  return request('/api/auth/verify-email', {
+    method: 'POST',
+    body: JSON.stringify({ email, codigo }),
+  });
+}
+
+export function authResendCode({ email }) {
+  return request('/api/auth/resend-verification', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  });
+}
+
+// ── Configuración de WhatsApp (alertas al celular) ───────────────────────────
+
+export function getMyProfile(token) {
+  return request('/api/users/me', {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export function updateWhatsAppConfig({ whatsapp_phone, whatsapp_api_key }, token) {
+  return request('/api/users/me/whatsapp', {
+    method: 'PUT',
+    headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ whatsapp_phone, whatsapp_api_key }),
+  });
+}
+
+export function testWhatsAppConfig(token) {
+  return request('/api/users/me/whatsapp/test', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
   });
 }
 

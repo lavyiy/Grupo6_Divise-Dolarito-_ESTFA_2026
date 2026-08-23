@@ -38,6 +38,54 @@ const updatePassword = async (id_usuario, newPasswordHash) => {
   );
 };
 
+// ── Verificación de email por código ─────────────────────────────────────────
+
+const setVerificationCode = async (email, codigo, expires) => {
+  await db.query(
+    'UPDATE usuarios SET verif_codigo = $1, verif_expira = $2 WHERE email = $3',
+    [codigo, expires, email]
+  );
+};
+
+// Devuelve el usuario solo si el código coincide y no expiró
+const getUserByVerificationCode = async (email, codigo) => {
+  const result = await db.query(
+    `SELECT * FROM usuarios
+     WHERE email = $1 AND verif_codigo = $2 AND verif_expira > CURRENT_TIMESTAMP`,
+    [email, codigo]
+  );
+  return result.rows[0];
+};
+
+const markEmailVerified = async (id_usuario) => {
+  await db.query(
+    'UPDATE usuarios SET email_verificado = TRUE, verif_codigo = NULL, verif_expira = NULL WHERE id_usuario = $1',
+    [id_usuario]
+  );
+};
+
+// ── Configuración de WhatsApp (CallMeBot) ────────────────────────────────────
+
+const updateWhatsAppConfig = async (id_usuario, { whatsapp_phone, whatsapp_api_key }) => {
+  const result = await db.query(
+    `UPDATE usuarios
+     SET whatsapp_phone = COALESCE($1, whatsapp_phone),
+         whatsapp_api_key = COALESCE($2, whatsapp_api_key)
+     WHERE id_usuario = $3
+     RETURNING id_usuario, whatsapp_phone, whatsapp_api_key IS NOT NULL AS tiene_api_key`,
+    [whatsapp_phone, whatsapp_api_key, id_usuario]
+  );
+  return result.rows[0];
+};
+
+const getWhatsAppConfig = async (id_usuario) => {
+  const result = await db.query(
+    'SELECT whatsapp_phone, whatsapp_api_key FROM usuarios WHERE id_usuario = $1',
+    [id_usuario]
+  );
+  return result.rows[0];
+};
+
 // ── ABM de usuarios ──────────────────────────────────────────────────────────
 
 const getAllUsers = async () => {
@@ -54,7 +102,10 @@ const getAllUsers = async () => {
 const getUserById = async (id_usuario) => {
   const result = await db.query(
     `SELECT u.id_usuario, u.nombre, u.email, u.divisa_base_id,
-            d.codigo AS divisa_base_codigo, u.created_at
+            d.codigo AS divisa_base_codigo,
+            u.email_verificado, u.whatsapp_phone,
+            (u.whatsapp_api_key IS NOT NULL) AS whatsapp_configurado,
+            u.created_at
      FROM usuarios u
      LEFT JOIN divisas d ON d.id_divisa = u.divisa_base_id
      WHERE u.id_usuario = $1`,
@@ -92,6 +143,11 @@ module.exports = {
   getUserByResetToken,
   updateResetToken,
   updatePassword,
+  setVerificationCode,
+  getUserByVerificationCode,
+  markEmailVerified,
+  updateWhatsAppConfig,
+  getWhatsAppConfig,
   getAllUsers,
   getUserById,
   updateUserProfile,

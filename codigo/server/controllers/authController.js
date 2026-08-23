@@ -48,4 +48,33 @@ const resetPassword = async (req, res) => {
   }
 };
 
-module.exports = { register, login, forgotPassword, resetPassword };
+const verifyEmail = async (req, res) => {
+  try {
+    const { email, codigo } = req.body;
+    const result = await authService.verifyEmail(email, codigo);
+    res.status(200).json(result);
+  } catch (error) {
+    console.error('Error en verifyEmail:', error);
+    res.status(error.status || 500).json({ error: error.message || 'Error interno del servidor' });
+  }
+};
+
+const resendVerification = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const result = await authService.resendVerificationCode(email);
+    res.status(200).json(result);
+  } catch (error) {
+    console.error('Error en resendVerification:', error);
+    res.status(error.status || 500).json({ error: error.message || 'Error interno del servidor' });
+  }
+};
+
+module.exports = {
+  register,
+  login,
+  verifyEmail,
+  resendVerification,
+  forgotPassword,
+  resetPassword
+};

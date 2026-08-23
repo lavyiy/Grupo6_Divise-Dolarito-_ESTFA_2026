@@ -1,10 +1,63 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { Icon } from '../../components/ui/Icon';
+import { getMyProfile, updateWhatsAppConfig, testWhatsAppConfig } from '../../services/api';
 import './Perfil.css';
 
 export default function Perfil() {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
+
+  // Configuración de WhatsApp para alertas al celular
+  const [waPhone, setWaPhone] = useState('');
+  const [waKey, setWaKey] = useState('');
+  const [waStatus, setWaStatus] = useState(null); // { type: 'ok'|'error', msg }
+  const [waLoading, setWaLoading] = useState(false);
+  const [waConfigured, setWaConfigured] = useState(false);
+
+  useEffect(() => {
+    if (!token) return;
+    getMyProfile(token)
+      .then((profile) => {
+        if (profile?.whatsapp_phone) setWaPhone(profile.whatsapp_phone);
+        setWaConfigured(Boolean(profile?.whatsapp_configurado));
+      })
+      .catch(() => {});
+  }, [token]);
+
+  const handleSaveWhatsApp = async () => {
+    setWaStatus(null);
+    if (!waPhone.trim()) {
+      setWaStatus({ type: 'error', msg: 'Ingresá tu número de WhatsApp con código de país.' });
+      return;
+    }
+    setWaLoading(true);
+    try {
+      await updateWhatsAppConfig(
+        { whatsapp_phone: waPhone.trim(), whatsapp_api_key: waKey.trim() || undefined },
+        token
+      );
+      setWaConfigured(true);
+      setWaKey('');
+      setWaStatus({ type: 'ok', msg: 'Configuración guardada. Las alertas llegarán a tu WhatsApp.' });
+    } catch (err) {
+      setWaStatus({ type: 'error', msg: err.message });
+    } finally {
+      setWaLoading(false);
+    }
+  };
+
+  const handleTestWhatsApp = async () => {
+    setWaStatus(null);
+    setWaLoading(true);
+    try {
+      const res = await testWhatsAppConfig(token);
+      setWaStatus({ type: 'ok', msg: res.message || 'Mensaje de prueba enviado.' });
+    } catch (err) {
+      setWaStatus({ type: 'error', msg: err.message });
+    } finally {
+      setWaLoading(false);
+    }
+  };
 
   return (
     <div className="perfil-container page-enter">
@@ -84,6 +137,65 @@ export default function Perfil() {
                 <p>Agregá una capa extra de seguridad a tu cuenta.</p>
               </div>
               <button className="btn btn-primary">Activar</button>
+            </div>
+          </div>
+
+          <div className="settings-section fade-in delay-400">
+            <h3><Icon name="bell" size={16} /> Alertas por WhatsApp</h3>
+            {waStatus && (
+              <div
+                style={{
+                  padding: '10px 14px',
+                  borderRadius: '8px',
+                  marginBottom: '14px',
+                  fontSize: '13px',
+                  background: waStatus.type === 'ok' ? 'rgba(46,204,138,.12)' : 'rgba(231,76,60,.12)',
+                  color: waStatus.type === 'ok' ? '#2ecc8a' : '#e74c3c',
+                  border: `1px solid ${waStatus.type === 'ok' ? 'rgba(46,204,138,.4)' : 'rgba(231,76,60,.4)'}`,
+                }}
+              >
+                {waStatus.msg}
+              </div>
+            )}
+            <div className="setting-row">
+              <div>
+                <h4>Número de WhatsApp</h4>
+                <p>Con código de país, sin espacios. Ej: +5491122334455</p>
+              </div>
+              <input
+                type="tel"
+                className="setting-select"
+                style={{ maxWidth: '220px', color: 'inherit', fontFamily: 'inherit' }}
+                placeholder="+5491122334455"
+                value={waPhone}
+                onChange={(e) => setWaPhone(e.target.value)}
+              />
+            </div>
+            <div className="setting-row">
+              <div>
+                <h4>API Key de CallMeBot</h4>
+                <p>
+                  Mandá "I allow callmebot to send me messages" por WhatsApp al{' '}
+                  <strong>+34 623 91 22 04</strong> y te la responde el bot.{' '}
+                  {waConfigured ? '(Ya configurada ✓)' : ''}
+                </p>
+              </div>
+              <input
+                type="text"
+                className="setting-select"
+                style={{ maxWidth: '160px', color: 'inherit', fontFamily: 'inherit' }}
+                placeholder={waConfigured ? '••••••••' : 'Ej: 123456'}
+                value={waKey}
+                onChange={(e) => setWaKey(e.target.value)}
+              />
+            </div>
+            <div className="setting-row" style={{ justifyContent: 'flex-end', gap: '10px' }}>
+              <button className="btn btn-outline" onClick={handleTestWhatsApp} disabled={waLoading}>
+                Probar envío
+              </button>
+              <button className="btn btn-primary" onClick={handleSaveWhatsApp} disabled={waLoading}>
+                {waLoading ? <div className="spinner"></div> : 'Guardar'}
+              </button>
             </div>
           </div>
 

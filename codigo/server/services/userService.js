@@ -3,6 +3,7 @@
 // Los controllers llaman a este servicio; ellos solo manejan HTTP.
 
 const userModel = require('../models/userModel');
+const whatsappService = require('./whatsappService');
 
 async function listUsers() {
   const users = await userModel.getAllUsers();
@@ -42,4 +43,55 @@ async function removeUser(id_usuario) {
   return deleted;
 }
 
-module.exports = { listUsers, getUserProfile, updateProfile, removeUser };
+// ── WhatsApp (CallMeBot) ─────────────────────────────────────────────────────
+
+function normalizePhone(phone) {
+  const digits = String(phone).replace(/[^\d]/g, '');
+  if (digits.length < 10 || digits.length > 15) {
+    throw Object.assign(
+      new Error('Número inválido. Incluí el código de país, ej: +5491122334455'),
+      { status: 400 }
+    );
+  }
+  return '+' + digits;
+}
+
+async function updateWhatsAppConfig(id_usuario, { whatsapp_phone, whatsapp_api_key }) {
+  const existing = await userModel.getUserById(id_usuario);
+  if (!existing) {
+    throw Object.assign(new Error('Usuario no encontrado'), { status: 404 });
+  }
+
+  const config = {};
+  if (whatsapp_phone !== undefined && whatsapp_phone !== null && whatsapp_phone !== '') {
+    config.whatsapp_phone = normalizePhone(whatsapp_phone);
+  }
+  if (whatsapp_api_key !== undefined && whatsapp_api_key !== null && whatsapp_api_key !== '') {
+    config.whatsapp_api_key = String(whatsapp_api_key).trim();
+  }
+
+  return userModel.updateWhatsAppConfig(id_usuario, config);
+}
+
+async function testWhatsApp(id_usuario) {
+  const cfg = await userModel.getWhatsAppConfig(id_usuario);
+  if (!cfg?.whatsapp_phone || !cfg?.whatsapp_api_key) {
+    throw Object.assign(
+      new Error('Primero guardá tu número de WhatsApp y la API key de CallMeBot.'),
+      { status: 400 }
+    );
+  }
+
+  const result = await whatsappService.sendWhatsApp(
+    cfg.whatsapp_phone,
+    cfg.whatsapp_api_key,
+    '✅ Hola! Esta es una prueba de notificaciones de Divise.'
+  );
+
+  if (!result.ok) {
+    throw Object.assign(new Error(`No se pudo enviar el mensaje: ${result.error}`), { status: 502 });
+  }
+  return { success: true, message: 'Mensaje de prueba enviado a tu WhatsApp.' };
+}
+
+module.exports = { listUsers, getUserProfile, updateProfile, removeUser, updateWhatsAppConfig, testWhatsApp };

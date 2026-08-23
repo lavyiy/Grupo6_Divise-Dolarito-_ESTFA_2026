@@ -1,17 +1,19 @@
 const pool = require('../config/db');
 const emailService = require('./emailService');
+const whatsappService = require('./whatsappService');
 
 /**
  * Revisa todas las alertas activas contra las cotizaciones actuales
- * y envía emails si se cumplen las condiciones.
+ * y envía emails + WhatsApp si se cumplen las condiciones.
  */
 async function checkAlerts() {
   console.log('🔔 Verificando alertas...');
-  
+
   try {
-    // Obtenemos alertas no notificadas con su email correspondiente
+    // Obtenemos alertas no notificadas con el contacto del usuario
     const alertasRes = await pool.query(`
-      SELECT a.id_alerta, a.codigo_divisa, a.condicion, a.valor_limite, u.email
+      SELECT a.id_alerta, a.codigo_divisa, a.condicion, a.valor_limite,
+             u.email, u.whatsapp_phone, u.whatsapp_api_key
       FROM alertas a
       JOIN usuarios u ON a.id_usuario = u.id_usuario
       WHERE a.notificada = false
@@ -50,7 +52,19 @@ async function checkAlerts() {
       if (disparar) {
         // Enviar correo
         await emailService.sendAlertEmail(alerta.email, alerta.codigo_divisa, alerta.condicion, limite, precioActual);
-        
+
+        // Enviar WhatsApp si el usuario lo tiene configurado
+        if (alerta.whatsapp_phone && alerta.whatsapp_api_key) {
+          const msg =
+            `🔔 *Alerta Divise*\n` +
+            `${alerta.codigo_divisa} ${alerta.condicion} $${limite}\n` +
+            `Precio actual: *$${precioActual}*`;
+          const result = await whatsappService.sendWhatsApp(alerta.whatsapp_phone, alerta.whatsapp_api_key, msg);
+          if (!result.ok) {
+            console.error(`[ALERTA] WhatsApp no enviado a ${alerta.whatsapp_phone}: ${result.error}`);
+          }
+        }
+
         // Marcar como notificada
         await pool.query('UPDATE alertas SET notificada = true WHERE id_alerta = $1', [alerta.id_alerta]);
       }
