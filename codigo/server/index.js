@@ -37,8 +37,10 @@ app.get('/api', (req, res) => {
   });
 });
 
-// Sincronización de cotizaciones
+// Sincronización de cotizaciones y migraciones
 const { syncRates } = require('./services/syncService');
+const { runMigrations } = require('./migrate');
+
 // SPA fallback: cualquier ruta que no empiece con /api devuelve el index.html del frontend
 app.get(/^\/(?!api(\/|$)).*/, (req, res) => {
   if (hasFrontend) {
@@ -60,8 +62,15 @@ const runSync = async () => {
   }
 };
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+app.listen(PORT, async () => {
+  console.log(`🚀 Server is running on port ${PORT}`);
+
+  // Ejecutar migraciones automáticas en Supabase
+  try {
+    await runMigrations({ closePool: false });
+  } catch (err) {
+    console.error('Advertencia al verificar migraciones:', err.message);
+  }
 
   // Ejecutar primera sincronización al iniciar el servidor
   runSync();
@@ -69,3 +78,4 @@ app.listen(PORT, () => {
   // Ejecutar sincronización cada 5 minutos (300,000 ms)
   setInterval(runSync, 5 * 60 * 1000);
 });
+

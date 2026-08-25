@@ -3,7 +3,7 @@
 #
 # Deploy: Render Dashboard → New + → Blueprint → elegir este repositorio.
 # Te pedirá completar DATABASE_URL (tu Postgres, ej. Supabase) y
-# RESEND_API_KEY (opcional, para emails). JWT_SECRET se genera solo.
+# credenciales de email (EMAIL_USER / EMAIL_PASS o RESEND_API_KEY).
 
 services:
   - type: web
@@ -15,10 +15,14 @@ services:
     startCommand: node server/index.js
     envVars:
       - key: NODE_VERSION
-        value: 22.x
+        value: 20.x
       - key: DATABASE_URL
         sync: false
       - key: JWT_SECRET
         generateValue: true
+      - key: EMAIL_USER
+        sync: false
+      - key: EMAIL_PASS
+        sync: false
       - key: RESEND_API_KEY
         sync: false

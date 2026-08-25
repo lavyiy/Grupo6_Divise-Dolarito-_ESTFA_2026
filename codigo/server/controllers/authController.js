@@ -70,11 +70,50 @@ const resendVerification = async (req, res) => {
   }
 };
 
+const testEmail = async (req, res) => {
+  try {
+    const to = req.body?.to || req.query?.to || 'deviseproyect@gmail.com';
+    const emailService = require('../services/emailService');
+    const result = await emailService.sendEmail({
+      to,
+      subject: 'Prueba de integración de Emails - Divise API',
+      html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px; background: #0b0f19; color: #f0f4ff; border-radius: 8px;">
+          <h2 style="color: #c9a84c;">¡Servicio de Emails funcionando en Divise! 🚀</h2>
+          <p>Este es un email de prueba enviado exitosamente hacia <strong>${to}</strong>.</p>
+          <p style="color: #94a3b8; font-size: 13px;">Fecha: ${new Date().toLocaleString()}</p>
+        </div>
+      `,
+    });
+
+    if (!result.success) {
+      return res.status(500).json({
+        success: false,
+        message: 'No se pudo enviar el correo.',
+        details: result.error,
+        help: 'Verifica tus variables EMAIL_USER/EMAIL_PASS (Gmail) o RESEND_API_KEY en tu archivo .env',
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      provider: result.provider,
+      message: `Email de prueba enviado con éxito a ${to} usando ${result.provider || 'email service'}`,
+      data: result.data,
+    });
+  } catch (error) {
+    console.error('Error en testEmail:', error);
+    res.status(500).json({ error: error.message || 'Error interno al probar email' });
+  }
+};
+
 module.exports = {
   register,
   login,
   verifyEmail,
   resendVerification,
   forgotPassword,
-  resetPassword
+  resetPassword,
+  testEmail,
 };
+

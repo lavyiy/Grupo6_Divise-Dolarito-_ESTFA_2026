@@ -73,6 +73,29 @@ export function authResendCode({ email }) {
   });
 }
 
+// ── Recuperación de Contraseña ──────────────────────────────────────────────
+
+export function authForgotPassword({ email }) {
+  return request('/api/auth/forgot-password', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  });
+}
+
+export function authResetPassword({ token, newPassword }) {
+  return request('/api/auth/reset-password', {
+    method: 'POST',
+    body: JSON.stringify({ token, newPassword }),
+  });
+}
+
+export function authTestEmail({ to }) {
+  return request('/api/auth/test-email', {
+    method: 'POST',
+    body: JSON.stringify({ to }),
+  });
+}
+
 // ── Configuración de WhatsApp (alertas al celular) ───────────────────────────
 
 export function getMyProfile(token) {

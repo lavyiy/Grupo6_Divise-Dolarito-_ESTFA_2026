@@ -1,65 +1,173 @@
 // ── server/services/emailService.js ──────────────────────────────────────────
-// Envío de emails via Resend (https://resend.com) — API HTTP, funciona en Render free.
-// Variable de entorno requerida: RESEND_API_KEY
-//
-// Por qué Resend y no nodemailer/Gmail:
-//   - Render bloquea los puertos SMTP (25, 465, 587) en el plan gratuito.
-//   - Resend usa HTTPS (puerto 443) → nunca bloqueado.
-//   - Plan gratis: 3.000 emails/mes, 100/día.
+// Soporte híbrido de envío de emails:
+// 1. Gmail SMTP (vía Nodemailer) -> Recomendado para enviar a cualquier email sin comprar dominio.
+//    Variables requeridas: EMAIL_USER, EMAIL_PASS (Contraseña de aplicación de Google).
+// 2. Resend (https://resend.com) -> API HTTP / SDK Resend.
+//    Variable requerida: RESEND_API_KEY (y opcionalmente RESEND_FROM).
 
-const FROM_ADDRESS = 'Divise <onboarding@resend.dev>';
-// ↑ Este "from" funciona en el plan gratuito de Resend sin verificar dominio.
-//   Cuando tengas un dominio propio, cambiarlo por: noreply@tudominio.com
+let ResendClient = null;
+try {
+  const { Resend } = require('resend');
+  ResendClient = Resend;
+} catch (e) {
+  // Resend SDK opcional
+}
+
+let nodemailer = null;
+try {
+  nodemailer = require('nodemailer');
+} catch (e) {
+  // Nodemailer opcional
+}
+
+const FRONTEND_URL = process.env.FRONTEND_URL || process.env.APP_URL || 'https://dolarito.onrender.com';
 
 /**
- * Helper genérico: hace POST a la API de Resend.
+ * Obtiene el transportador de Nodemailer configurado con Gmail.
  */
-async function sendEmail({ to, subject, html }) {
-  const apiKey = process.env.RESEND_API_KEY;
+function getGmailTransporter() {
+  const user = process.env.EMAIL_USER;
+  const pass = process.env.EMAIL_PASS ? process.env.EMAIL_PASS.replace(/\s+/g, '') : null;
 
-  if (!apiKey) {
-    console.warn('[EMAIL] RESEND_API_KEY no configurada. Email no enviado.');
-    return;
+  if (nodemailer && user && pass) {
+    return nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user,
+        pass,
+      },
+    });
+  }
+  return null;
+}
+
+/**
+ * Envía un correo electrónico utilizando Gmail (Nodemailer) o Resend según la configuración disponible.
+ */
+async function sendEmail({ to, subject, html, from }) {
+  const gmailTransporter = getGmailTransporter();
+  const resendApiKey = process.env.RESEND_API_KEY;
+
+  // 1. Prioridad: Gmail SMTP (permite enviar a cualquier correo sin restricciones de dominio)
+  if (gmailTransporter) {
+    try {
+      const defaultFrom = process.env.EMAIL_FROM || `"Divise" <${process.env.EMAIL_USER}>`;
+      const info = await gmailTransporter.sendMail({
+        from: from || defaultFrom,
+        to: Array.isArray(to) ? to.join(', ') : to,
+        subject,
+        html,
+      });
+
+      console.log(`\n✅ [GMAIL SMTP SUCCESS] Correo enviado a ${to} (MessageId: ${info.messageId})`);
+      return { success: true, provider: 'gmail', data: { id: info.messageId } };
+    } catch (err) {
+      console.error('\n❌ [GMAIL SMTP ERROR]:', err.message);
+      // Si falla Gmail y hay Resend, intentamos Resend como respaldo
+      if (!resendApiKey) {
+        return { success: false, provider: 'gmail', error: err.message };
+      }
+      console.log('⚠️ Intentando envío de respaldo con Resend...');
+    }
   }
 
-  const res = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ from: FROM_ADDRESS, to, subject, html }),
-  });
+  // 2. Resend API
+  if (resendApiKey) {
+    const defaultResendFrom = process.env.RESEND_FROM || 'Divise <onboarding@resend.dev>';
+    try {
+      if (ResendClient) {
+        const resend = new ResendClient(resendApiKey);
+        const { data, error } = await resend.emails.send({
+          from: from || defaultResendFrom,
+          to: Array.isArray(to) ? to : [to],
+          subject,
+          html,
+        });
 
-  if (!res.ok) {
-    const error = await res.json().catch(() => ({}));
-    console.error('[EMAIL] Error de Resend:', error);
-  } else {
-    console.log(`[EMAIL] Enviado correctamente a ${to}`);
+        if (error) {
+          console.error('\n❌ [RESEND ERROR]:', error.message || error);
+          return { success: false, provider: 'resend', error: error.message || error };
+        }
+
+        console.log(`\n✅ [RESEND SUCCESS] Correo enviado a ${to} (ID: ${data?.id})`);
+        return { success: true, provider: 'resend', data };
+      } else {
+        // Fallback con fetch HTTP nativo
+        const res = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${resendApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            from: from || defaultResendFrom,
+            to: Array.isArray(to) ? to : [to],
+            subject,
+            html,
+          }),
+        });
+
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok) {
+          console.error('\n❌ [RESEND API ERROR]:', data?.message || data?.error || res.statusText);
+          return { success: false, provider: 'resend', error: data?.message || data?.error || 'Error al enviar email' };
+        }
+
+        console.log(`\n✅ [RESEND SUCCESS] Correo enviado a ${to} (ID: ${data?.id})`);
+        return { success: true, provider: 'resend', data };
+      }
+    } catch (err) {
+      console.error('\n❌ [EMAIL EXCEPTION]:', err.message);
+      return { success: false, provider: 'resend', error: err.message };
+    }
   }
+
+  // 3. Ningún proveedor configurado (Modo simulación en consola para desarrollo)
+  console.warn('\n⚠️ [EMAIL NO CONFIGURADO] No se definieron EMAIL_USER/EMAIL_PASS ni RESEND_API_KEY.');
+  console.warn(`[SIMULACIÓN] Destino: ${to} | Asunto: ${subject}`);
+  return {
+    success: false,
+    error: 'No se configuraron credenciales de email (EMAIL_USER/EMAIL_PASS ni RESEND_API_KEY)',
+    simulated: true,
+  };
 }
 
 // ── Verificación de email (código de 6 dígitos) ──────────────────────────────
 
 async function sendVerificationEmail(toEmail, nombre, codigo) {
-  await sendEmail({
+  console.log(`\n🔑 [CÓDIGO DE VERIFICACIÓN] Para: ${toEmail} -> Código: ${codigo}`);
+
+  return await sendEmail({
     to: toEmail,
     subject: `Tu código de verificación Divise: ${codigo}`,
     html: `
-      <div style="font-family: Arial, sans-serif; background: #0a0f1e; color: #f0f4ff; padding: 2rem; border-radius: 12px;">
-        <h2 style="color: #c9a84c;">Verificá tu cuenta 💱</h2>
-        <p>Hola ${nombre || ''},</p>
-        <p>Usá este código para activar tu cuenta de Divise:</p>
-        <div style="text-align: center; margin: 1.5rem 0;">
-          <span style="display: inline-block; padding: 14px 28px; background: rgba(201,168,76,0.12);
-                       border: 1px solid rgba(201,168,76,0.4); border-radius: 10px;
-                       font-size: 2rem; letter-spacing: 8px; font-weight: bold; color: #c9a84c;">${codigo}</span>
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #0b0f19; color: #f0f4ff; padding: 32px 20px; border-radius: 12px; max-width: 540px; margin: 0 auto;">
+        <div style="text-align: center; margin-bottom: 24px;">
+          <h1 style="color: #c9a84c; font-size: 26px; font-weight: 800; margin: 0; letter-spacing: 1px;">DIVISE</h1>
+          <p style="color: #94a3b8; font-size: 13px; margin-top: 4px;">Cotizaciones & Mercado en Tiempo Real</p>
         </div>
-        <p style="color: #8899bb; font-size: 0.85rem;">
-          El código expira en <strong>15 minutos</strong>. Si no creaste esta cuenta, ignorá este mensaje.
-        </p>
-        <hr style="border-color: rgba(255,255,255,0.1); margin: 1.5rem 0;">
-        <p style="color: #8899bb; font-size: 0.75rem;">El equipo de Divise</p>
+
+        <div style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 24px; text-align: center;">
+          <h2 style="color: #ffffff; font-size: 18px; margin-top: 0;">Activá tu cuenta</h2>
+          <p style="color: #cbd5e1; font-size: 14px; line-height: 1.5;">
+            Hola <strong>${nombre || 'Usuario'}</strong>, ingresá el siguiente código en la aplicación para activar tu cuenta de Divise:
+          </p>
+
+          <div style="margin: 24px 0;">
+            <span style="display: inline-block; padding: 12px 28px; background: rgba(201, 168, 76, 0.15); border: 1px solid #c9a84c; border-radius: 8px; font-size: 28px; letter-spacing: 6px; font-weight: 700; color: #f2cf66; font-family: monospace;">
+              ${codigo}
+            </span>
+          </div>
+
+          <p style="color: #94a3b8; font-size: 12px; margin-bottom: 0;">
+            Este código expira en <strong>15 minutos</strong>. Si no solicitaste este registro, podés ignorar este correo de forma segura.
+          </p>
+        </div>
+
+        <div style="text-align: center; margin-top: 24px; color: #64748b; font-size: 11px;">
+          <p style="margin: 0;">© ${new Date().getFullYear()} Divise. Todos los derechos reservados.</p>
+        </div>
       </div>
     `,
   });
@@ -68,64 +176,80 @@ async function sendVerificationEmail(toEmail, nombre, codigo) {
 // ── Recuperación de contraseña ────────────────────────────────────────────────
 
 async function sendResetPasswordEmail(toEmail, token) {
-  const resetUrl = `https://divise-santi.netlify.app/reset-password?token=${token}`;
+  const resetUrl = `${FRONTEND_URL}/reset-password?token=${token}`;
+  console.log(`\n🔗 [RESET PASSWORD LINK] Para: ${toEmail} -> ${resetUrl}`);
 
-  // Backup: si el email falla, el link sigue visible en los logs de Render
-  console.log(`[RESET URL] ${toEmail} → ${resetUrl}`);
-
-  await sendEmail({
+  return await sendEmail({
     to: toEmail,
-    subject: 'Restablecer contraseña de Divise',
+    subject: 'Restablecer tu contraseña de Divise',
     html: `
-      <div style="font-family: Arial, sans-serif; background: #0a0f1e; color: #f0f4ff; padding: 2rem; border-radius: 12px;">
-        <h2 style="color: #c9a84c;">Recuperación de Contraseña 💱</h2>
-        <p>Hola,</p>
-        <p>Recibimos una solicitud para restablecer tu contraseña. Hacé click en el botón para crear una nueva:</p>
-        <a href="${resetUrl}"
-           style="display: inline-block; margin: 20px 0; padding: 12px 24px;
-                  background: #c9a84c; color: #0a0f1e; text-decoration: none;
-                  border-radius: 8px; font-weight: bold; font-size: 1rem;">
-          Restablecer contraseña
-        </a>
-        <p style="color: #8899bb; font-size: 0.85rem;">
-          Este link expira en <strong>30 minutos</strong>. Si no fuiste vos, ignorá este mensaje.
-        </p>
-        <hr style="border-color: rgba(255,255,255,0.1); margin: 1.5rem 0;">
-        <p style="color: #8899bb; font-size: 0.75rem;">El equipo de Divise</p>
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #0b0f19; color: #f0f4ff; padding: 32px 20px; border-radius: 12px; max-width: 540px; margin: 0 auto;">
+        <div style="text-align: center; margin-bottom: 24px;">
+          <h1 style="color: #c9a84c; font-size: 26px; font-weight: 800; margin: 0; letter-spacing: 1px;">DIVISE</h1>
+        </div>
+
+        <div style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 24px; text-align: center;">
+          <h2 style="color: #ffffff; font-size: 18px; margin-top: 0;">Recuperación de Contraseña</h2>
+          <p style="color: #cbd5e1; font-size: 14px; line-height: 1.5;">
+            Recibimos una solicitud para restablecer la contraseña de tu cuenta. Hacé clic en el siguiente botón para continuar:
+          </p>
+
+          <div style="margin: 24px 0;">
+            <a href="${resetUrl}" target="_blank" style="display: inline-block; padding: 12px 28px; background: #c9a84c; color: #0b0f19; font-weight: 700; text-decoration: none; border-radius: 8px; font-size: 15px;">
+              Restablecer Contraseña
+            </a>
+          </div>
+
+          <p style="color: #94a3b8; font-size: 12px;">
+            O copiá este enlace en tu navegador:<br/>
+            <span style="color: #c9a84c; word-break: break-all;">${resetUrl}</span>
+          </p>
+
+          <p style="color: #94a3b8; font-size: 12px; margin-top: 16px; margin-bottom: 0;">
+            El enlace es válido por <strong>30 minutos</strong>. Si no solicitaste este cambio, ignorá este mensaje.
+          </p>
+        </div>
+
+        <div style="text-align: center; margin-top: 24px; color: #64748b; font-size: 11px;">
+          <p style="margin: 0;">© ${new Date().getFullYear()} Divise.</p>
+        </div>
       </div>
     `,
   });
 }
 
-// ── Alerta de precio ──────────────────────────────────────────────────────────
+// ── Alerta de cotización ──────────────────────────────────────────────────────
 
 async function sendAlertEmail(toEmail, divisa, condicion, valor, actual) {
-  await sendEmail({
+  return await sendEmail({
     to: toEmail,
     subject: `🔔 Alerta Divise: ${divisa} alcanzó tu límite`,
     html: `
-      <div style="font-family: Arial, sans-serif; background: #0a0f1e; color: #f0f4ff; padding: 2rem; border-radius: 12px;">
-        <h2 style="color: #2ecc8a;">¡Alerta de Mercado! 🔔</h2>
-        <p>Hola,</p>
-        <p>La cotización de <strong>${divisa}</strong> cumplió tu condición:</p>
-        <div style="background: rgba(201,168,76,0.1); border: 1px solid rgba(201,168,76,0.3);
-                    padding: 1rem; border-radius: 8px; margin: 1rem 0;">
-          <p style="margin: 0;">Condición: <strong>${condicion} $${valor}</strong></p>
-          <p style="margin: 0.5rem 0 0;">Precio actual: <strong style="color: #2ecc8a;">$${actual}</strong></p>
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #0b0f19; color: #f0f4ff; padding: 32px 20px; border-radius: 12px; max-width: 540px; margin: 0 auto;">
+        <div style="text-align: center; margin-bottom: 24px;">
+          <h1 style="color: #c9a84c; font-size: 26px; font-weight: 800; margin: 0;">DIVISE</h1>
         </div>
-        <a href="https://divise-santi.netlify.app"
-           style="display: inline-block; margin: 20px 0; padding: 12px 24px;
-                  background: #c9a84c; color: #0a0f1e; text-decoration: none;
-                  border-radius: 8px; font-weight: bold;">
-          Ver en Divise
-        </a>
-        <p style="color: #8899bb; font-size: 0.75rem;">El equipo de Divise</p>
+
+        <div style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 24px; text-align: center;">
+          <h2 style="color: #2ecc8a; font-size: 18px; margin-top: 0;">¡Alerta de Cotización Activada! 🔔</h2>
+          <p style="color: #cbd5e1; font-size: 14px;">La cotización de <strong>${divisa}</strong> alcanzó el objetivo configurado:</p>
+
+          <div style="background: rgba(201, 168, 76, 0.08); border: 1px solid rgba(201, 168, 76, 0.25); border-radius: 8px; padding: 16px; margin: 20px 0; text-align: left;">
+            <p style="margin: 0 0 6px 0; color: #cbd5e1; font-size: 13px;">Condición configurada: <strong style="color: #ffffff;">${condicion} $${valor}</strong></p>
+            <p style="margin: 0; color: #cbd5e1; font-size: 13px;">Precio detectado: <strong style="color: #2ecc8a; font-size: 15px;">$${actual}</strong></p>
+          </div>
+
+          <a href="${FRONTEND_URL}" target="_blank" style="display: inline-block; padding: 10px 24px; background: #c9a84c; color: #0b0f19; font-weight: 700; text-decoration: none; border-radius: 8px; font-size: 14px;">
+            Ver en Divise
+          </a>
+        </div>
       </div>
     `,
   });
 }
 
 module.exports = {
+  sendEmail,
   sendVerificationEmail,
   sendResetPasswordEmail,
   sendAlertEmail,

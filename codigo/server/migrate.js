@@ -32,9 +32,15 @@ async function getApplied(client) {
   return new Set(rows.map(r => r.filename));
 }
 
-async function runMigrations() {
-  const client = await pool.connect();
+async function runMigrations({ closePool = true } = {}) {
+  if (!process.env.DATABASE_URL) {
+    console.warn('⚠️  [MIGRATIONS] DATABASE_URL no está configurada. Omitiendo migraciones.');
+    return;
+  }
+
+  let client;
   try {
+    client = await pool.connect();
     await client.query('BEGIN');
     await ensureMigrationsTable(client);
 
@@ -49,12 +55,11 @@ async function runMigrations() {
     let ran = 0;
     for (const file of files) {
       if (applied.has(file)) {
-        console.log(`  ⏭  Ya aplicada: ${file}`);
         continue;
       }
 
       const sql = fs.readFileSync(path.join(MIGRATIONS_DIR, file), 'utf8');
-      console.log(`  ▶  Aplicando:   ${file}`);
+      console.log(`  ▶  [MIGRATION] Aplicando: ${file}`);
       await client.query(sql);
       await client.query(
         'INSERT INTO _migrations (filename) VALUES ($1)',
@@ -64,16 +69,23 @@ async function runMigrations() {
     }
 
     await client.query('COMMIT');
-    console.log(`\n✅ Listo. ${ran} migración(es) aplicada(s).`);
+    if (ran > 0) {
+      console.log(`✅ [MIGRATIONS] ${ran} migración(es) aplicada(s) exitosamente en Supabase.`);
+    } else {
+      console.log('✅ [MIGRATIONS] Base de datos de Supabase al día.');
+    }
   } catch (err) {
-    await client.query('ROLLBACK');
-    console.error('\n❌ Error en migración. Se hizo ROLLBACK.');
-    console.error(err.message);
-    process.exit(1);
+    if (client) await client.query('ROLLBACK');
+    console.error('❌ [MIGRATIONS] Error en migración:', err.message);
   } finally {
-    client.release();
-    await pool.end();
+    if (client) client.release();
+    if (closePool) await pool.end();
   }
 }
 
-runMigrations();
+if (require.main === module) {
+  runMigrations({ closePool: true });
+}
+
+module.exports = { runMigrations };
+

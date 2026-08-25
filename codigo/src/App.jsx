@@ -10,6 +10,8 @@ import DashboardLayout from './components/Layout/DashboardLayout';
 // ── Páginas de autenticación ──────────────────────────────────────────────────
 import LoginPage from './pages/Auth/LoginPage';
 import RegisterPage from './pages/Auth/RegisterPage';
+import ForgotPasswordPage from './pages/Auth/ForgotPasswordPage';
+import ResetPasswordPage from './pages/Auth/ResetPasswordPage';
 
 // ── Páginas del Dashboard ─────────────────────────────────────────────────────
 import Inicio from './pages/Dashboard/Inicio';
@@ -29,6 +31,9 @@ export default function App() {
       {/* Rutas públicas */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+      <Route path="/forgot" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
+
 
       {/* Ruta protegida */}
       <Route
