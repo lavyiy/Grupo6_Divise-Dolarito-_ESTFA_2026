@@ -1,136 +1,50 @@
 // ── server/services/emailService.js ──────────────────────────────────────────
-// Soporte híbrido de envío de emails:
-// 1. Gmail SMTP (vía Nodemailer) -> Recomendado para enviar a cualquier email sin comprar dominio.
-//    Variables requeridas: EMAIL_USER, EMAIL_PASS (Contraseña de aplicación de Google).
-// 2. Resend (https://resend.com) -> API HTTP / SDK Resend.
-//    Variable requerida: RESEND_API_KEY (y opcionalmente RESEND_FROM).
-
-let ResendClient = null;
-try {
-  const { Resend } = require('resend');
-  ResendClient = Resend;
-} catch (e) {
-  // Resend SDK opcional
-}
-
-let nodemailer = null;
-try {
-  nodemailer = require('nodemailer');
-} catch (e) {
-  // Nodemailer opcional
-}
+// Envío de emails via Brevo (https://www.brevo.com) — API HTTP, funciona en Render free.
+// Variable de entorno requerida: BREVO_API_KEY
+//
+// Brevo gratis: 300 emails/día, 9,000/mes, sin verificar dominio propio.
+// Render free bloquea SMTP (25, 465, 587) → Brevo usa HTTPS (443), siempre funciona.
+//
+// Antes se usaba nodemailer (Gmail SMTP) y Resend; ambos fallan o tienen
+// restricciones en Render free. Brevo es la solución elegida.
 
 const FRONTEND_URL = process.env.FRONTEND_URL || process.env.APP_URL || 'https://dolarito.onrender.com';
 
 /**
- * Obtiene el transportador de Nodemailer configurado con Gmail.
+ * Helper: POST a la API de Brevo (SMTP API v3).
  */
-function getGmailTransporter() {
-  const user = process.env.EMAIL_USER;
-  const pass = process.env.EMAIL_PASS ? process.env.EMAIL_PASS.replace(/\s+/g, '') : null;
+async function sendEmail({ to, subject, html }) {
+  const apiKey = process.env.BREVO_API_KEY;
 
-  if (nodemailer && user && pass) {
-    return nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user,
-        pass,
-      },
-    });
-  }
-  return null;
-}
-
-/**
- * Envía un correo electrónico utilizando Gmail (Nodemailer) o Resend según la configuración disponible.
- */
-async function sendEmail({ to, subject, html, from }) {
-  const gmailTransporter = getGmailTransporter();
-  const resendApiKey = process.env.RESEND_API_KEY;
-
-  // 1. Prioridad: Gmail SMTP (permite enviar a cualquier correo sin restricciones de dominio)
-  if (gmailTransporter) {
-    try {
-      const defaultFrom = process.env.EMAIL_FROM || `"Divise" <${process.env.EMAIL_USER}>`;
-      const info = await gmailTransporter.sendMail({
-        from: from || defaultFrom,
-        to: Array.isArray(to) ? to.join(', ') : to,
-        subject,
-        html,
-      });
-
-      console.log(`\n✅ [GMAIL SMTP SUCCESS] Correo enviado a ${to} (MessageId: ${info.messageId})`);
-      return { success: true, provider: 'gmail', data: { id: info.messageId } };
-    } catch (err) {
-      console.error('\n❌ [GMAIL SMTP ERROR]:', err.message);
-      // Si falla Gmail y hay Resend, intentamos Resend como respaldo
-      if (!resendApiKey) {
-        return { success: false, provider: 'gmail', error: err.message };
-      }
-      console.log('⚠️ Intentando envío de respaldo con Resend...');
-    }
+  if (!apiKey) {
+    console.warn('[EMAIL] BREVO_API_KEY no configurada. Email no enviado.');
+    console.warn(`[EMAIL SIMULADO] Para: ${to} | Asunto: ${subject}`);
+    return { success: false, error: 'BREVO_API_KEY no configurada', simulated: true };
   }
 
-  // 2. Resend API
-  if (resendApiKey) {
-    const defaultResendFrom = process.env.RESEND_FROM || 'Divise <onboarding@resend.dev>';
-    try {
-      if (ResendClient) {
-        const resend = new ResendClient(resendApiKey);
-        const { data, error } = await resend.emails.send({
-          from: from || defaultResendFrom,
-          to: Array.isArray(to) ? to : [to],
-          subject,
-          html,
-        });
+  const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: {
+      'api-key': apiKey,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      sender:  { email: 'no-reply@brevo.com', name: 'Divise' },
+      to:      [{ email: to }],
+      subject,
+      htmlContent: html,
+    }),
+  });
 
-        if (error) {
-          console.error('\n❌ [RESEND ERROR]:', error.message || error);
-          return { success: false, provider: 'resend', error: error.message || error };
-        }
+  const data = await res.json().catch(() => ({}));
 
-        console.log(`\n✅ [RESEND SUCCESS] Correo enviado a ${to} (ID: ${data?.id})`);
-        return { success: true, provider: 'resend', data };
-      } else {
-        // Fallback con fetch HTTP nativo
-        const res = await fetch('https://api.resend.com/emails', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${resendApiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            from: from || defaultResendFrom,
-            to: Array.isArray(to) ? to : [to],
-            subject,
-            html,
-          }),
-        });
-
-        const data = await res.json().catch(() => ({}));
-
-        if (!res.ok) {
-          console.error('\n❌ [RESEND API ERROR]:', data?.message || data?.error || res.statusText);
-          return { success: false, provider: 'resend', error: data?.message || data?.error || 'Error al enviar email' };
-        }
-
-        console.log(`\n✅ [RESEND SUCCESS] Correo enviado a ${to} (ID: ${data?.id})`);
-        return { success: true, provider: 'resend', data };
-      }
-    } catch (err) {
-      console.error('\n❌ [EMAIL EXCEPTION]:', err.message);
-      return { success: false, provider: 'resend', error: err.message };
-    }
+  if (!res.ok) {
+    console.error('[EMAIL] Error de Brevo:', res.status, data);
+    return { success: false, error: data?.message || `Error ${res.status}` };
   }
 
-  // 3. Ningún proveedor configurado (Modo simulación en consola para desarrollo)
-  console.warn('\n⚠️ [EMAIL NO CONFIGURADO] No se definieron EMAIL_USER/EMAIL_PASS ni RESEND_API_KEY.');
-  console.warn(`[SIMULACIÓN] Destino: ${to} | Asunto: ${subject}`);
-  return {
-    success: false,
-    error: 'No se configuraron credenciales de email (EMAIL_USER/EMAIL_PASS ni RESEND_API_KEY)',
-    simulated: true,
-  };
+  console.log(`[EMAIL] Enviado correctamente a ${to}`);
+  return { success: true, provider: 'brevo', data };
 }
 
 // ── Verificación de email (código de 6 dígitos) ──────────────────────────────

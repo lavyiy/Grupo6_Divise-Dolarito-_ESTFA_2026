@@ -2,8 +2,7 @@
 # Un único Web Service que sirve el frontend React compilado y la API Express.
 #
 # Deploy: Render Dashboard → New + → Blueprint → elegir este repositorio.
-# Te pedirá completar DATABASE_URL (tu Postgres, ej. Supabase) y
-# credenciales de email (EMAIL_USER / EMAIL_PASS o RESEND_API_KEY).
+# Te pedirá completar DATABASE_URL (tu Postgres en Supabase) y BREVO_API_KEY.
 
 services:
   - type: web
@@ -15,14 +14,10 @@ services:
     startCommand: node server/index.js
     envVars:
       - key: NODE_VERSION
-        value: 20.x
+        value: 22.x
       - key: DATABASE_URL
         sync: false
       - key: JWT_SECRET
         generateValue: true
-      - key: EMAIL_USER
-        sync: false
-      - key: EMAIL_PASS
-        sync: false
-      - key: RESEND_API_KEY
+      - key: BREVO_API_KEY
         sync: false
