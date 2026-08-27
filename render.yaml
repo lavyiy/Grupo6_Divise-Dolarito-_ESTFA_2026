@@ -21,3 +21,5 @@ services:
         generateValue: true
       - key: BREVO_API_KEY
         sync: false
+      - key: BREVO_SENDER
+        sync: false

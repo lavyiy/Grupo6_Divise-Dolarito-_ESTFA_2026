@@ -1,6 +1,8 @@
 // ── server/services/emailService.js ──────────────────────────────────────────
 // Envío de emails via Brevo (https://www.brevo.com) — API HTTP, funciona en Render free.
-// Variable de entorno requerida: BREVO_API_KEY
+// Variables de entorno requeridas:
+//   BREVO_API_KEY  -> API key de Brevo
+//   BREVO_SENDER   -> email remitente verificado en Brevo (NO puede ser @brevo.com)
 //
 // Brevo gratis: 300 emails/día, 9,000/mes, sin verificar dominio propio.
 // Render free bloquea SMTP (25, 465, 587) → Brevo usa HTTPS (443), siempre funciona.
@@ -15,11 +17,17 @@ const FRONTEND_URL = process.env.FRONTEND_URL || process.env.APP_URL || 'https:/
  */
 async function sendEmail({ to, subject, html }) {
   const apiKey = process.env.BREVO_API_KEY;
+  const sender = process.env.BREVO_SENDER;
 
   if (!apiKey) {
     console.warn('[EMAIL] BREVO_API_KEY no configurada. Email no enviado.');
     console.warn(`[EMAIL SIMULADO] Para: ${to} | Asunto: ${subject}`);
     return { success: false, error: 'BREVO_API_KEY no configurada', simulated: true };
+  }
+
+  if (!sender) {
+    console.warn('[EMAIL] BREVO_SENDER no configurada. El remitente @brevo.com está prohibido.');
+    return { success: false, error: 'BREVO_SENDER no configurada' };
   }
 
   const res = await fetch('https://api.brevo.com/v3/smtp/email', {
@@ -29,7 +37,7 @@ async function sendEmail({ to, subject, html }) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      sender:  { email: 'no-reply@brevo.com', name: 'Divise' },
+      sender:  { email: sender, name: 'Divise' },
       to:      [{ email: to }],
       subject,
       htmlContent: html,
