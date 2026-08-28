@@ -12,6 +12,7 @@ import LoginPage from './pages/Auth/LoginPage';
 import RegisterPage from './pages/Auth/RegisterPage';
 import ForgotPasswordPage from './pages/Auth/ForgotPasswordPage';
 import ResetPasswordPage from './pages/Auth/ResetPasswordPage';
+import VerifyEmailPage from './pages/Auth/VerifyEmailPage';
 
 // ── Páginas del Dashboard ─────────────────────────────────────────────────────
 import Inicio from './pages/Dashboard/Inicio';
@@ -33,6 +34,7 @@ export default function App() {
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/forgot" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
+      <Route path="/verify" element={<VerifyEmailPage />} />
 
 
       {/* Ruta protegida */}

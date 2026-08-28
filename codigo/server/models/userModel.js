@@ -47,6 +47,14 @@ const setVerificationCode = async (email, codigo, expires) => {
   );
 };
 
+// Guarda el token de verificación (para el enlace clickeable)
+const setVerificationToken = async (email, token) => {
+  await db.query(
+    'UPDATE usuarios SET verif_token = $1 WHERE email = $2',
+    [token, email]
+  );
+};
+
 // Devuelve el usuario solo si el código coincide y no expiró
 const getUserByVerificationCode = async (email, codigo) => {
   const result = await db.query(
@@ -57,9 +65,19 @@ const getUserByVerificationCode = async (email, codigo) => {
   return result.rows[0];
 };
 
+// Devuelve el usuario solo si el token coincide y no expiró
+const getUserByVerificationToken = async (token) => {
+  const result = await db.query(
+    `SELECT * FROM usuarios
+     WHERE verif_token = $1 AND verif_expira > CURRENT_TIMESTAMP`,
+    [token]
+  );
+  return result.rows[0];
+};
+
 const markEmailVerified = async (id_usuario) => {
   await db.query(
-    'UPDATE usuarios SET email_verificado = TRUE, verif_codigo = NULL, verif_expira = NULL WHERE id_usuario = $1',
+    'UPDATE usuarios SET email_verificado = TRUE, verif_codigo = NULL, verif_expira = NULL, verif_token = NULL WHERE id_usuario = $1',
     [id_usuario]
   );
 };
@@ -144,7 +162,9 @@ module.exports = {
   updateResetToken,
   updatePassword,
   setVerificationCode,
+  setVerificationToken,
   getUserByVerificationCode,
+  getUserByVerificationToken,
   markEmailVerified,
   updateWhatsAppConfig,
   getWhatsAppConfig,

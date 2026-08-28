@@ -73,6 +73,12 @@ export function authResendCode({ email }) {
   });
 }
 
+export function authVerifyEmailToken(token) {
+  return request(`/api/auth/verify-email?token=${encodeURIComponent(token)}`, {
+    method: 'GET',
+  });
+}
+
 // ── Recuperación de Contraseña ──────────────────────────────────────────────
 
 export function authForgotPassword({ email }) {

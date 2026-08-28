@@ -55,10 +55,11 @@ async function sendEmail({ to, subject, html }) {
   return { success: true, provider: 'brevo', data };
 }
 
-// ── Verificación de email (código de 6 dígitos) ──────────────────────────────
+// ── Verificación de email (código de 6 dígitos + enlace) ─────────────────────
 
-async function sendVerificationEmail(toEmail, nombre, codigo) {
+async function sendVerificationEmail(toEmail, nombre, codigo, verifyUrl) {
   console.log(`\n🔑 [CÓDIGO DE VERIFICACIÓN] Para: ${toEmail} -> Código: ${codigo}`);
+  console.log(`🔗 [LINK DE VERIFICACIÓN] ${verifyUrl}`);
 
   return await sendEmail({
     to: toEmail,
@@ -73,17 +74,22 @@ async function sendVerificationEmail(toEmail, nombre, codigo) {
         <div style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 24px; text-align: center;">
           <h2 style="color: #ffffff; font-size: 18px; margin-top: 0;">Activá tu cuenta</h2>
           <p style="color: #cbd5e1; font-size: 14px; line-height: 1.5;">
-            Hola <strong>${nombre || 'Usuario'}</strong>, ingresá el siguiente código en la aplicación para activar tu cuenta de Divise:
+            Hola <strong>${nombre || 'Usuario'}</strong>, ya casi está. Podés activar tu cuenta de Divise con un clic o ingresando el código:
           </p>
 
-          <div style="margin: 24px 0;">
+          <a href="${verifyUrl}" target="_blank" style="display: inline-block; padding: 12px 28px; background: #c9a84c; color: #0b0f19; font-weight: 700; text-decoration: none; border-radius: 8px; font-size: 15px; margin-bottom: 20px;">
+            ✔ Activar mi cuenta
+          </a>
+
+          <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 20px;">
+            <p style="color: #94a3b8; font-size: 13px; margin-top: 0;">O ingresá este código en la aplicación:</p>
             <span style="display: inline-block; padding: 12px 28px; background: rgba(201, 168, 76, 0.15); border: 1px solid #c9a84c; border-radius: 8px; font-size: 28px; letter-spacing: 6px; font-weight: 700; color: #f2cf66; font-family: monospace;">
               ${codigo}
             </span>
           </div>
 
           <p style="color: #94a3b8; font-size: 12px; margin-bottom: 0;">
-            Este código expira en <strong>15 minutos</strong>. Si no solicitaste este registro, podés ignorar este correo de forma segura.
+            Este enlace y código expiran en <strong>15 minutos</strong>. Si no solicitaste este registro, podés ignorar este correo de forma segura.
           </p>
         </div>
 

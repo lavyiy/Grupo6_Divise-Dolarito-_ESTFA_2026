@@ -12,6 +12,8 @@ const SALT_ROUNDS = 10;
 const JWT_EXPIRES = '24h';
 const VERIF_EXPIRES_MIN = 15;
 
+const FRONTEND_URL = process.env.FRONTEND_URL || process.env.APP_URL || 'https://dolarito.onrender.com';
+
 /**
  * Genera un código numérico de 6 dígitos ("012345" incluido).
  */
@@ -56,16 +58,20 @@ async function registerUser(nombre, email, password) {
 }
 
 /**
- * Genera y guarda el código, y lo manda por email (fire and forget).
+ * Genera y guarda código + token de verificación, y los manda por email.
  */
 async function sendVerificationCode(email) {
   const codigo = generateCode();
+  const token = crypto.randomBytes(32).toString('hex');
   const expires = new Date(Date.now() + VERIF_EXPIRES_MIN * 60 * 1000);
   await userModel.setVerificationCode(email, codigo, expires.toISOString());
+  await userModel.setVerificationToken(email, token);
+
+  const verifyUrl = `${FRONTEND_URL}/verify?token=${token}`;
 
   const full = await userModel.getUserByEmail(email);
   emailService
-    .sendVerificationEmail(email, full?.nombre, codigo)
+    .sendVerificationEmail(email, full?.nombre, codigo, verifyUrl)
     .catch(err => console.error('Error enviando código de verificación:', err.message));
 }
 
@@ -90,6 +96,23 @@ async function verifyEmail(email, codigo) {
   safeUser.email_verificado = true;
   const token = signToken(safeUser);
   return { user: safeUser, token };
+}
+
+/**
+ * Verifica la cuenta mediante el enlace clickeable (token).
+ */
+async function verifyEmailByToken(token) {
+  if (!token) {
+    throw Object.assign(new Error('Token de verificación inválido'), { status: 400 });
+  }
+
+  const user = await userModel.getUserByVerificationToken(token);
+  if (!user) {
+    throw Object.assign(new Error('Enlace de verificación inválido o expirado'), { status: 400 });
+  }
+
+  await userModel.markEmailVerified(user.id_usuario);
+  return { success: true, message: 'Cuenta verificada correctamente.' };
 }
 
 /**
@@ -199,6 +222,7 @@ module.exports = {
   registerUser,
   loginUser,
   verifyEmail,
+  verifyEmailByToken,
   resendVerificationCode,
   forgotPassword,
   resetPassword

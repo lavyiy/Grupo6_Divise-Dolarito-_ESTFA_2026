@@ -70,6 +70,17 @@ const resendVerification = async (req, res) => {
   }
 };
 
+const verifyEmailByToken = async (req, res) => {
+  try {
+    const { token } = req.query;
+    const result = await authService.verifyEmailByToken(token);
+    res.status(200).json(result);
+  } catch (error) {
+    console.error('Error en verifyEmailByToken:', error);
+    res.status(error.status || 500).json({ error: error.message || 'Error interno del servidor' });
+  }
+};
+
 const testEmail = async (req, res) => {
   try {
     const to = req.body?.to || req.query?.to || 'deviseproyect@gmail.com';
@@ -91,7 +102,7 @@ const testEmail = async (req, res) => {
         success: false,
         message: 'No se pudo enviar el correo.',
         details: result.error,
-        help: 'Verifica tus variables EMAIL_USER/EMAIL_PASS (Gmail) o RESEND_API_KEY en tu archivo .env',
+        help: 'Verifica tu variable BREVO_API_KEY (y opcionalmente BREVO_SENDER) en Render',
       });
     }
 
@@ -111,6 +122,7 @@ module.exports = {
   register,
   login,
   verifyEmail,
+  verifyEmailByToken,
   resendVerification,
   forgotPassword,
   resetPassword,
