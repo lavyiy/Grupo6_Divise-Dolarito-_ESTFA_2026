@@ -49,7 +49,17 @@ export default function Calculadora() {
     if (currencyCode === 'ARS') return 1;
     let rate = rates.find(r => r.codigo === currencyCode && r.tipo_mercado === 'Informal');
     if (!rate) rate = rates.find(r => r.codigo === currencyCode);
-    return rate ? rate.venta : 0;
+    if (!rate) return 0;
+
+    // Si la divisa cotiza en USD (como BTC o ETH), convertimos su valor base a ARS mediante Dólar Blue
+    if (['BTC', 'ETH'].includes(currencyCode)) {
+      const usdRate = rates.find(r => r.codigo === 'USD' && r.tipo_mercado === 'Informal')?.venta
+        || rates.find(r => r.codigo === 'USD')?.venta
+        || 1545;
+      return rate.venta * usdRate;
+    }
+
+    return rate.venta;
   };
 
   const calculateResult = () => {
@@ -105,6 +115,7 @@ export default function Calculadora() {
                   <option value="CHF">CHF</option>
                   <option value="AUD">AUD</option>
                   <option value="BTC">BTC</option>
+                  <option value="ETH">ETH</option>
                 </select>
                 <span>⌄</span>
               </div>
@@ -142,6 +153,7 @@ export default function Calculadora() {
                   <option value="CHF">CHF</option>
                   <option value="AUD">AUD</option>
                   <option value="BTC">BTC</option>
+                  <option value="ETH">ETH</option>
                 </select>
                 <span>⌄</span>
               </div>
@@ -149,7 +161,7 @@ export default function Calculadora() {
               <input 
                 type="text" 
                 className="calc-amount calc-result-display" 
-                value={result ? result.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 4}) : 'Cargando...'} 
+                value={result ? result.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: ['BTC', 'ETH'].includes(toCurrency) ? 6 : 4}) : 'Cargando...'} 
                 disabled 
               />
             </div>
@@ -191,7 +203,7 @@ export default function Calculadora() {
             </div>
             
             <div className="calc-big-result">
-              <CountUp end={result} decimals={2} duration={1} separator="." decimal="," /> <span>{toCurrency}</span>
+              <CountUp end={result} decimals={['BTC', 'ETH'].includes(toCurrency) ? 6 : 2} duration={1} separator="." decimal="," /> <span>{toCurrency}</span>
             </div>
 
             <div className="calc-used-rate" style={{marginTop: '32px'}}>

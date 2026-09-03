@@ -20,7 +20,7 @@ export default function Alertas() {
       divisa: 'Bitcoin',
       icon: 'bitcoin',
       condicion: 'Cae por debajo de',
-      valor: '60.000 USD',
+      valor: '80.000 USD',
       email: 'santi@email.com',
       activa: true
     }
@@ -36,7 +36,7 @@ export default function Alertas() {
       {
         id: Date.now(),
         divisa: newAlert.divisa,
-        icon: newAlert.divisa === 'Bitcoin' ? 'bitcoin' : 'dollar',
+        icon: newAlert.divisa === 'Bitcoin' ? 'bitcoin' : newAlert.divisa === 'Ethereum' ? 'ethereum' : 'dollar',
         condicion: newAlert.condicion,
         valor: newAlert.valor,
         email: newAlert.email,

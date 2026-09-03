@@ -67,7 +67,7 @@ export default function Inicio() {
   const dolarBlue = getRate('USD', 'Informal') || 1540.0;
   const dolarOficial = getRate('USD', 'Oficial') || 1515.0;
   const euroOficial = getRate('EUR', 'Oficial') || 1722.0;
-  const btc = getRate('BTC') || 64200.0;
+  const btc = getRate('BTC') || 81200.0;
 
   const kpiValues = {
     blue: dolarBlue,
@@ -161,7 +161,7 @@ export default function Inicio() {
                   </div>
                   <div className="fr-right">
                     <div className="fr-meta">
-                      <span className="fr-price">$ {formatARS(item.venta)}</span>
+                      <span className="fr-price">{['BTC', 'ETH'].includes(item.codigo) ? 'US$ ' : '$ '}{formatARS(item.venta)}</span>
                       <span className={`fr-change ${isUp ? 'up' : 'down'}`}>
                         {isUp ? '+' : ''}
                         {variation.toFixed(2)}%

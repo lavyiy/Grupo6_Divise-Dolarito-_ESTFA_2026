@@ -58,6 +58,7 @@ export function flagIcon(code) {
     case 'CHF': return '🇨🇭';
     case 'AUD': return '🇦🇺';
     case 'BTC': return '₿';
+    case 'ETH': return 'Ξ';
     default: return '💰';
   }
 }

@@ -251,6 +251,7 @@ export default function Perfil() {
                 <option value="USD - Dólar Oficial">USD - Dólar Oficial</option>
                 <option value="EUR - Euro">EUR - Euro</option>
                 <option value="BTC - Bitcoin">BTC - Bitcoin</option>
+                <option value="ETH - Ethereum">ETH - Ethereum</option>
               </select>
             </div>
           </div>

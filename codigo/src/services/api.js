@@ -163,16 +163,68 @@ export function toggleTwoFactor(enabled, token) {
   });
 }
 
-// ── Cotizaciones en Tiempo Real (DolarHoy / DolarApi) ───────────────────────
+// ── Cotizaciones en Tiempo Real (DolarApi & Cripto en vivo) ────────────────
 
 /**
- * Obtiene las cotizaciones actuales en tiempo real desde DolarApi (API pública de cotizaciones de Argentina en vivo).
+ * Consulta precios en tiempo real de Bitcoin y Ethereum en USD.
+ * Intenta primero Binance (rápido y sin rate-limits agresivos), luego CoinGecko y Coinbase como fallback.
+ */
+async function fetchCryptoPrices() {
+  // 1. Binance
+  try {
+    const [btcRes, ethRes] = await Promise.all([
+      fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT').then(r => r.json()),
+      fetch('https://api.binance.com/api/v3/ticker/price?symbol=ETHUSDT').then(r => r.json())
+    ]);
+    const btc = parseFloat(btcRes?.price);
+    const eth = parseFloat(ethRes?.price);
+    if (!isNaN(btc) && !isNaN(eth) && btc > 0 && eth > 0) {
+      return { btc, eth };
+    }
+  } catch (err) {
+    console.warn('[Cripto API] Binance falló, intentando CoinGecko...', err.message);
+  }
+
+  // 2. CoinGecko
+  try {
+    const cgRes = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd').then(r => r.json());
+    const btc = parseFloat(cgRes?.bitcoin?.usd);
+    const eth = parseFloat(cgRes?.ethereum?.usd);
+    if (!isNaN(btc) && !isNaN(eth) && btc > 0 && eth > 0) {
+      return { btc, eth };
+    }
+  } catch (err) {
+    console.warn('[Cripto API] CoinGecko falló, intentando Coinbase...', err.message);
+  }
+
+  // 3. Coinbase
+  try {
+    const [btcRes, ethRes] = await Promise.all([
+      fetch('https://api.coinbase.com/v2/prices/BTC-USD/spot').then(r => r.json()),
+      fetch('https://api.coinbase.com/v2/prices/ETH-USD/spot').then(r => r.json())
+    ]);
+    const btc = parseFloat(btcRes?.data?.amount);
+    const eth = parseFloat(ethRes?.data?.amount);
+    if (!isNaN(btc) && !isNaN(eth) && btc > 0 && eth > 0) {
+      return { btc, eth };
+    }
+  } catch (err) {
+    console.warn('[Cripto API] Coinbase falló...', err.message);
+  }
+
+  // Respaldo de emergencia si falla toda la red
+  return { btc: 81200.00, eth: 2500.00 };
+}
+
+/**
+ * Obtiene las cotizaciones actuales en tiempo real desde DolarApi y APIs de Criptomonedas en vivo.
  */
 export async function fetchRates() {
   try {
-    const [dolaresRes, cotizRes] = await Promise.allSettled([
+    const [dolaresRes, cotizRes, cryptoRes] = await Promise.allSettled([
       fetch('https://dolarapi.com/v1/dolares').then(res => res.json()),
-      fetch('https://dolarapi.com/v1/cotizaciones').then(res => res.json())
+      fetch('https://dolarapi.com/v1/cotizaciones').then(res => res.json()),
+      fetchCryptoPrices()
     ]);
 
     let formattedRates = [];
@@ -207,10 +259,30 @@ export async function fetchRates() {
       formattedRates.push(...mappedCotiz);
     }
 
-    // Monedas adicionales / Cripto
+    // Monedas Cripto en tiempo real (en USD)
+    const cryptoData = cryptoRes.status === 'fulfilled' && cryptoRes.value
+      ? cryptoRes.value
+      : { btc: 81200.00, eth: 2500.00 };
+
     formattedRates.push(
-      { codigo: 'BTC', nombre: 'Bitcoin', tipo_mercado: 'Cripto', tipo: 'Cripto', compra: 64100.00, venta: 64200.00, updated_at: new Date().toISOString() },
-      { codigo: 'ETH', nombre: 'Ethereum', tipo_mercado: 'Cripto', tipo: 'Cripto', compra: 3480.00, venta: 3500.00, updated_at: new Date().toISOString() }
+      {
+        codigo: 'BTC',
+        nombre: 'Bitcoin',
+        tipo_mercado: 'Cripto',
+        tipo: 'Cripto',
+        compra: Number((cryptoData.btc * 0.999).toFixed(2)),
+        venta: Number(cryptoData.btc.toFixed(2)),
+        updated_at: new Date().toISOString()
+      },
+      {
+        codigo: 'ETH',
+        nombre: 'Ethereum',
+        tipo_mercado: 'Cripto',
+        tipo: 'Cripto',
+        compra: Number((cryptoData.eth * 0.999).toFixed(2)),
+        venta: Number(cryptoData.eth.toFixed(2)),
+        updated_at: new Date().toISOString()
+      }
     );
 
     if (formattedRates.length > 0) {
@@ -218,8 +290,8 @@ export async function fetchRates() {
     }
     throw new Error("No rates returned");
   } catch (err) {
-    console.error("Error fetching live rates from DolarApi", err);
-    // Backup seguro con precios actualizados de Argentina si no hay conectividad
+    console.error("Error fetching live rates from DolarApi / Crypto", err);
+    // Backup seguro con precios actualizados si no hay conectividad
     return [
       { codigo: 'USD', nombre: 'Dólar Blue', tipo_mercado: 'Informal', tipo: 'Informal', compra: 1520, venta: 1540 },
       { codigo: 'USD', nombre: 'Dólar Oficial', tipo_mercado: 'Oficial', tipo: 'Oficial', compra: 1465, venta: 1515 },
@@ -228,7 +300,8 @@ export async function fetchRates() {
       { codigo: 'USD', nombre: 'Dólar Tarjeta', tipo_mercado: 'Tarjeta', tipo: 'Oficial', compra: 1904, venta: 1969 },
       { codigo: 'EUR', nombre: 'Euro', tipo_mercado: 'Oficial', tipo: 'Oficial', compra: 1707, venta: 1722 },
       { codigo: 'BRL', nombre: 'Real Brasileño', tipo_mercado: 'Oficial', tipo: 'Oficial', compra: 286, venta: 287 },
-      { codigo: 'BTC', nombre: 'Bitcoin', tipo_mercado: 'Cripto', tipo: 'Cripto', compra: 64100, venta: 64200 }
+      { codigo: 'BTC', nombre: 'Bitcoin', tipo_mercado: 'Cripto', tipo: 'Cripto', compra: 81100, venta: 81200 },
+      { codigo: 'ETH', nombre: 'Ethereum', tipo_mercado: 'Cripto', tipo: 'Cripto', compra: 2490, venta: 2500 }
     ];
   }
 }

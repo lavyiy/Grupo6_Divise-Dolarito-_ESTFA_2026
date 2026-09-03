@@ -140,7 +140,9 @@ export default function Divisas() {
                   )}
                 </div>
 
-                <div className="dc-price">$ {formatARS(d.venta)}</div>
+                <div className="dc-price">
+                  {['BTC', 'ETH'].includes(d.codigo) ? `US$ ${formatARS(d.venta)}` : `$ ${formatARS(d.venta)}`}
+                </div>
 
                 <div className="dc-bottom">
                   <span className={`dc-change ${isUp ? 'up' : 'down'}`}>

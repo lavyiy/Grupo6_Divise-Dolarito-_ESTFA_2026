@@ -46,6 +46,7 @@ export default function AlertModal({ onClose, onSave }) {
                   <option>Dólar Oficial</option>
                   <option>Euro Oficial</option>
                   <option>Bitcoin</option>
+                  <option>Ethereum</option>
                 </select>
               </div>
             </div>
