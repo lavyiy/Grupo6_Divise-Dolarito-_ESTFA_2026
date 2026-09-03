@@ -1,71 +1,140 @@
 // ── server/services/emailService.js ──────────────────────────────────────────
-// Envío de emails via Brevo (https://www.brevo.com) — API HTTP, funciona en Render free.
-// Variables de entorno requeridas:
-//   BREVO_API_KEY  -> API key de Brevo
-//   BREVO_SENDER   -> email remitente verificado en Brevo (NO puede ser @brevo.com)
-//
-// Brevo gratis: 300 emails/día, 9,000/mes, sin verificar dominio propio.
-// Render free bloquea SMTP (25, 465, 587) → Brevo usa HTTPS (443), siempre funciona.
-//
-// Antes se usaba nodemailer (Gmail SMTP) y Resend; ambos fallan o tienen
-// restricciones en Render free. Brevo es la solución elegida.
+// Soporte de emails vía Gmail (Nodemailer SMTP) con fallback a Brevo y consola en desarrollo.
+// Variables soportadas:
+//   EMAIL_USER / GMAIL_USER       -> Tu dirección de Gmail (ej: deviseproyect@gmail.com)
+//   EMAIL_PASS / GMAIL_PASS       -> Contraseña de aplicación de 16 caracteres de Google
+//   FRONTEND_URL                  -> URL de la app (http://localhost:5173 o en Render)
 
-const FRONTEND_URL = process.env.FRONTEND_URL || process.env.APP_URL || 'https://dolarito.onrender.com';
+const nodemailer = require('nodemailer');
+
+const FRONTEND_URL = process.env.FRONTEND_URL || process.env.APP_URL || 'http://localhost:5173';
 
 /**
- * Helper: POST a la API de Brevo (SMTP API v3).
+ * Obtiene el transportador de Nodemailer configurado con Gmail.
  */
-async function sendEmail({ to, subject, html }) {
-  const apiKey = process.env.BREVO_API_KEY;
-  const sender = process.env.BREVO_SENDER;
+function getGmailTransporter() {
+  const user = process.env.EMAIL_USER || process.env.GMAIL_USER;
+  const rawPass = process.env.EMAIL_PASS || process.env.GMAIL_PASS || process.env.GMAIL_APP_PASSWORD;
+  const pass = rawPass ? rawPass.replace(/\s+/g, '') : null;
 
-  if (!apiKey) {
-    console.warn('[EMAIL] BREVO_API_KEY no configurada. Email no enviado.');
-    console.warn(`[EMAIL SIMULADO] Para: ${to} | Asunto: ${subject}`);
-    return { success: false, error: 'BREVO_API_KEY no configurada', simulated: true };
+  if (user && pass) {
+    return nodemailer.createTransport({
+      service: 'gmail',
+      auth: { user, pass },
+    });
+  }
+  return null;
+}
+
+/**
+ * Envía un correo electrónico utilizando Gmail SMTP (Nodemailer), Brevo o simulación en consola.
+ */
+async function sendEmail({ to, subject, html, from }) {
+  const gmail = getGmailTransporter();
+
+  // 1. Gmail SMTP (Nodemailer)
+  if (gmail) {
+    const user = process.env.EMAIL_USER || process.env.GMAIL_USER;
+    const defaultFrom = process.env.EMAIL_FROM || `"Divise" <${user}>`;
+    try {
+      const info = await gmail.sendMail({
+        from: from || defaultFrom,
+        to: Array.isArray(to) ? to.join(', ') : to,
+        subject,
+        html,
+      });
+      console.log(`\n📧 [GMAIL SMTP SUCCESS] Correo enviado a ${to} (MessageId: ${info.messageId})`);
+      return { success: true, provider: 'gmail', data: { id: info.messageId } };
+    } catch (err) {
+      console.error('\n❌ [GMAIL SMTP ERROR]:', err.message);
+      return { success: false, provider: 'gmail', error: err.message };
+    }
   }
 
-  if (!sender) {
-    console.warn('[EMAIL] BREVO_SENDER no configurada. El remitente @brevo.com está prohibido.');
-    return { success: false, error: 'BREVO_SENDER no configurada' };
+  // 2. Resend API (si está configurada RESEND_API_KEY)
+  const resendApiKey = process.env.RESEND_API_KEY;
+  if (resendApiKey) {
+    try {
+      const res = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${resendApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: from || process.env.RESEND_FROM || 'Divise <onboarding@resend.dev>',
+          to: Array.isArray(to) ? to : [to],
+          subject,
+          html,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        console.log(`\n📧 [RESEND SUCCESS] Correo enviado a ${to} (ID: ${data?.id})`);
+        return { success: true, provider: 'resend', data };
+      }
+      console.error('\n❌ [RESEND ERROR]:', data?.message || data?.error || res.statusText);
+    } catch (err) {
+      console.error('\n❌ [RESEND EXCEPTION]:', err.message);
+    }
   }
 
-  const res = await fetch('https://api.brevo.com/v3/smtp/email', {
-    method: 'POST',
-    headers: {
-      'api-key': apiKey,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      sender:  { email: sender, name: 'Divise' },
-      to:      [{ email: to }],
-      subject,
-      htmlContent: html,
-    }),
-  });
-
-  const data = await res.json().catch(() => ({}));
-
-  if (!res.ok) {
-    console.error('[EMAIL] Error de Brevo:', res.status, data);
-    return { success: false, error: data?.message || `Error ${res.status}` };
+  // 3. Brevo API (opcional)
+  const brevoKey = process.env.BREVO_API_KEY;
+  const brevoSender = process.env.BREVO_SENDER;
+  if (brevoKey && brevoSender) {
+    try {
+      const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+          'api-key': brevoKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          sender: { email: brevoSender, name: 'Divise' },
+          to: [{ email: to }],
+          subject,
+          htmlContent: html,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        console.log(`\n📧 [BREVO SUCCESS] Correo enviado a ${to}`);
+        return { success: true, provider: 'brevo', data };
+      }
+      console.error('\n❌ [BREVO ERROR]:', data?.message || res.statusText);
+    } catch (err) {
+      console.error('\n❌ [BREVO EXCEPTION]:', err.message);
+    }
   }
 
-  console.log(`[EMAIL] Enviado correctamente a ${to}`);
-  return { success: true, provider: 'brevo', data };
+  // 3. Modo desarrollo / consola
+  console.warn(`\n⚠️ [EMAIL NO CONFIGURADO] Para enviar correos reales, definí EMAIL_USER y EMAIL_PASS en server/.env`);
+  console.warn(`📩 [SIMULACIÓN CONSOLA] Destino: ${to} | Asunto: ${subject}`);
+  return {
+    success: true,
+    provider: 'simulated',
+    simulated: true,
+    message: 'Email simulado en consola (configura EMAIL_USER y EMAIL_PASS para Gmail)',
+  };
 }
 
 // ── Verificación de email (código de 6 dígitos + enlace) ─────────────────────
 
 async function sendVerificationEmail(toEmail, nombre, codigo, verifyUrl) {
-  console.log(`\n🔑 [CÓDIGO DE VERIFICACIÓN] Para: ${toEmail} -> Código: ${codigo}`);
-  console.log(`🔗 [LINK DE VERIFICACIÓN] ${verifyUrl}`);
+  const url = verifyUrl || `${FRONTEND_URL}/verify?token=${codigo}`;
+  console.log(`\n======================================================`);
+  console.log(`🔑 [CÓDIGO DE VERIFICACIÓN GMAIL]`);
+  console.log(`👤 Para: ${toEmail} (${nombre || 'Usuario'})`);
+  console.log(`🔢 Código de 6 dígitos: ${codigo}`);
+  console.log(`🔗 Enlace directo: ${url}`);
+  console.log(`======================================================\n`);
 
   return await sendEmail({
     to: toEmail,
     subject: `Tu código de verificación Divise: ${codigo}`,
     html: `
-      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #0b0f19; color: #f0f4ff; padding: 32px 20px; border-radius: 12px; max-width: 540px; margin: 0 auto;">
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #0b0f19; color: #f0f4ff; padding: 32px 20px; border-radius: 12px; max-width: 540px; margin: 0 auto; border: 1px solid rgba(255, 255, 255, 0.08);">
         <div style="text-align: center; margin-bottom: 24px;">
           <h1 style="color: #c9a84c; font-size: 26px; font-weight: 800; margin: 0; letter-spacing: 1px;">DIVISE</h1>
           <p style="color: #94a3b8; font-size: 13px; margin-top: 4px;">Cotizaciones & Mercado en Tiempo Real</p>
@@ -74,22 +143,24 @@ async function sendVerificationEmail(toEmail, nombre, codigo, verifyUrl) {
         <div style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 24px; text-align: center;">
           <h2 style="color: #ffffff; font-size: 18px; margin-top: 0;">Activá tu cuenta</h2>
           <p style="color: #cbd5e1; font-size: 14px; line-height: 1.5;">
-            Hola <strong>${nombre || 'Usuario'}</strong>, ya casi está. Podés activar tu cuenta de Divise con un clic o ingresando el código:
+            Hola <strong>${nombre || 'Usuario'}</strong>, ingresá este código en Divise para activar tu cuenta o completar tu inicio de sesión:
           </p>
 
-          <a href="${verifyUrl}" target="_blank" style="display: inline-block; padding: 12px 28px; background: #c9a84c; color: #0b0f19; font-weight: 700; text-decoration: none; border-radius: 8px; font-size: 15px; margin-bottom: 20px;">
-            ✔ Activar mi cuenta
-          </a>
-
-          <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 20px;">
-            <p style="color: #94a3b8; font-size: 13px; margin-top: 0;">O ingresá este código en la aplicación:</p>
-            <span style="display: inline-block; padding: 12px 28px; background: rgba(201, 168, 76, 0.15); border: 1px solid #c9a84c; border-radius: 8px; font-size: 28px; letter-spacing: 6px; font-weight: 700; color: #f2cf66; font-family: monospace;">
+          <div style="margin: 24px 0;">
+            <span style="display: inline-block; padding: 14px 32px; background: rgba(201, 168, 76, 0.15); border: 2px solid #c9a84c; border-radius: 10px; font-size: 32px; letter-spacing: 8px; font-weight: 800; color: #f2cf66; font-family: monospace;">
               ${codigo}
             </span>
           </div>
 
-          <p style="color: #94a3b8; font-size: 12px; margin-bottom: 0;">
-            Este enlace y código expiran en <strong>15 minutos</strong>. Si no solicitaste este registro, podés ignorar este correo de forma segura.
+          <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 20px; margin-top: 20px;">
+            <p style="color: #94a3b8; font-size: 13px; margin-top: 0;">O activá directamente haciendo clic aquí:</p>
+            <a href="${url}" target="_blank" style="display: inline-block; padding: 12px 28px; background: #c9a84c; color: #0b0f19; font-weight: 700; text-decoration: none; border-radius: 8px; font-size: 14px;">
+              ✔ Activar mi cuenta
+            </a>
+          </div>
+
+          <p style="color: #94a3b8; font-size: 12px; margin-top: 20px; margin-bottom: 0;">
+            Este enlace y código expiran en <strong>15 minutos</strong>. Si no solicitaste este acceso, podés ignorar este correo de forma segura.
           </p>
         </div>
 
@@ -105,13 +176,17 @@ async function sendVerificationEmail(toEmail, nombre, codigo, verifyUrl) {
 
 async function sendResetPasswordEmail(toEmail, token) {
   const resetUrl = `${FRONTEND_URL}/reset-password?token=${token}`;
-  console.log(`\n🔗 [RESET PASSWORD LINK] Para: ${toEmail} -> ${resetUrl}`);
+  console.log(`\n======================================================`);
+  console.log(`🔗 [ENLACE DE RECUPERACIÓN GMAIL]`);
+  console.log(`👤 Para: ${toEmail}`);
+  console.log(`🔗 Link: ${resetUrl}`);
+  console.log(`======================================================\n`);
 
   return await sendEmail({
     to: toEmail,
     subject: 'Restablecer tu contraseña de Divise',
     html: `
-      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #0b0f19; color: #f0f4ff; padding: 32px 20px; border-radius: 12px; max-width: 540px; margin: 0 auto;">
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #0b0f19; color: #f0f4ff; padding: 32px 20px; border-radius: 12px; max-width: 540px; margin: 0 auto; border: 1px solid rgba(255, 255, 255, 0.08);">
         <div style="text-align: center; margin-bottom: 24px;">
           <h1 style="color: #c9a84c; font-size: 26px; font-weight: 800; margin: 0; letter-spacing: 1px;">DIVISE</h1>
         </div>
@@ -153,7 +228,7 @@ async function sendAlertEmail(toEmail, divisa, condicion, valor, actual) {
     to: toEmail,
     subject: `🔔 Alerta Divise: ${divisa} alcanzó tu límite`,
     html: `
-      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #0b0f19; color: #f0f4ff; padding: 32px 20px; border-radius: 12px; max-width: 540px; margin: 0 auto;">
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #0b0f19; color: #f0f4ff; padding: 32px 20px; border-radius: 12px; max-width: 540px; margin: 0 auto; border: 1px solid rgba(255, 255, 255, 0.08);">
         <div style="text-align: center; margin-bottom: 24px;">
           <h1 style="color: #c9a84c; font-size: 26px; font-weight: 800; margin: 0;">DIVISE</h1>
         </div>

@@ -155,11 +155,15 @@ async function loginUser(email, password) {
     throw Object.assign(new Error('Credenciales inválidas'), { status: 401 });
   }
 
-  // Cuenta sin verificar: bloqueamos login e indicamos al frontend que muestre el código
-  if (!user.email_verificado) {
+  // Cuenta sin verificar o con 2FA activado: enviamos código de 6 dígitos y solicitamos paso 2
+  if (!user.email_verificado || user.two_factor_enabled) {
+    await sendVerificationCode(user.email);
+    const msg = user.two_factor_enabled
+      ? 'Verificación en dos pasos (2FA): Enviamos un código de 6 dígitos a tu correo.'
+      : 'Tu email aún no está verificado. Enviamos un código de 6 dígitos a tu casilla para activarla.';
     throw Object.assign(
-      new Error('Tu email aún no está verificado. Revisá tu casilla e ingresá el código de 6 dígitos.'),
-      { status: 403, needsVerification: true, email: user.email }
+      new Error(msg),
+      { status: 403, needsVerification: true, email: user.email, twoFactor: Boolean(user.two_factor_enabled) }
     );
   }
 

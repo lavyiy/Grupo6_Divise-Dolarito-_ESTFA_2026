@@ -32,10 +32,39 @@ async function request(path, options = {}) {
     // Si el servidor de Render está inactivo o da error de red, respondemos con modo offline simulado para desarrollo
     console.warn(`[API] Servidor backend no disponible (${err.message}). Usando respuesta fallback.`);
     if (path === '/api/auth/login') {
-      return { token: 'mock-jwt-token-12345', user: { id: 1, nombre: 'Usuario Divise', email: 'demo@divise.com' } };
+      const reqBody = options.body ? JSON.parse(options.body) : {};
+      const pendingEmail = reqBody.email || 'demo@divise.com';
+      // Simula el flujo 2-step verification tras el ingreso de credenciales
+      const verifErr = new Error('Verificación de seguridad en 2 pasos: Te enviamos un código de 6 dígitos a tu casilla (Código demo: 123456).');
+      verifErr.needsVerification = true;
+      verifErr.email = pendingEmail;
+      throw verifErr;
+    }
+    if (path === '/api/auth/verify-email') {
+      const reqBody = options.body ? JSON.parse(options.body) : {};
+      const email = reqBody.email || 'demo@divise.com';
+      return {
+        success: true,
+        token: 'mock-jwt-token-12345',
+        user: { id: 1, nombre: 'Usuario Divise', email, email_verificado: true, two_factor_enabled: true }
+      };
+    }
+    if (path === '/api/auth/resend-verification') {
+      return { success: true, message: 'Código reenviado con éxito (Código demo: 123456).' };
     }
     if (path === '/api/auth/register') {
-      return { message: 'Usuario registrado exitosamente', token: 'mock-jwt-token-12345' };
+      return { message: 'Usuario registrado exitosamente. Te enviamos el código.', needsVerification: true };
+    }
+    if (path === '/api/users/me' && options.method === 'PUT') {
+      const reqBody = options.body ? JSON.parse(options.body) : {};
+      return { success: true, message: 'Perfil actualizado correctamente.', ...reqBody };
+    }
+    if (path === '/api/users/me/password') {
+      return { success: true, message: 'Contraseña actualizada correctamente.' };
+    }
+    if (path === '/api/users/me/2fa') {
+      const reqBody = options.body ? JSON.parse(options.body) : {};
+      return { success: true, two_factor_enabled: reqBody.enabled, message: reqBody.enabled ? '2FA activado' : '2FA desactivado' };
     }
     throw err;
   }
@@ -110,18 +139,27 @@ export function getMyProfile(token) {
   });
 }
 
-export function updateWhatsAppConfig({ whatsapp_phone, whatsapp_api_key }, token) {
-  return request('/api/users/me/whatsapp', {
+export function updateProfile(profileData, token) {
+  return request('/api/users/me', {
     method: 'PUT',
     headers: { Authorization: `Bearer ${token}` },
-    body: JSON.stringify({ whatsapp_phone, whatsapp_api_key }),
+    body: JSON.stringify(profileData),
   });
 }
 
-export function testWhatsAppConfig(token) {
-  return request('/api/users/me/whatsapp/test', {
-    method: 'POST',
+export function changePassword({ currentPassword, newPassword }, token) {
+  return request('/api/users/me/password', {
+    method: 'PUT',
     headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ currentPassword, newPassword }),
+  });
+}
+
+export function toggleTwoFactor(enabled, token) {
+  return request('/api/users/me/2fa', {
+    method: 'PUT',
+    headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ enabled }),
   });
 }
 

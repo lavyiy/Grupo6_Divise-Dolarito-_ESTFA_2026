@@ -121,7 +121,7 @@ const getUserById = async (id_usuario) => {
   const result = await db.query(
     `SELECT u.id_usuario, u.nombre, u.email, u.divisa_base_id,
             d.codigo AS divisa_base_codigo,
-            u.email_verificado, u.whatsapp_phone,
+            u.email_verificado, u.two_factor_enabled, u.whatsapp_phone,
             (u.whatsapp_api_key IS NOT NULL) AS whatsapp_configurado,
             u.created_at
      FROM usuarios u
@@ -141,8 +141,16 @@ const updateUserProfile = async (id_usuario, { nombre, email, divisa_base_id }) 
          email = COALESCE($2, email),
          divisa_base_id = COALESCE($3, divisa_base_id)
      WHERE id_usuario = $4
-     RETURNING id_usuario, nombre, email, divisa_base_id`,
+     RETURNING id_usuario, nombre, email, divisa_base_id, two_factor_enabled`,
     [nombre, email, divisa_base_id, id_usuario]
+  );
+  return result.rows[0];
+};
+
+const setTwoFactorEnabled = async (id_usuario, enabled) => {
+  const result = await db.query(
+    'UPDATE usuarios SET two_factor_enabled = $1 WHERE id_usuario = $2 RETURNING id_usuario, two_factor_enabled',
+    [enabled, id_usuario]
   );
   return result.rows[0];
 };
@@ -171,5 +179,6 @@ module.exports = {
   getAllUsers,
   getUserById,
   updateUserProfile,
+  setTwoFactorEnabled,
   deleteUser
 };

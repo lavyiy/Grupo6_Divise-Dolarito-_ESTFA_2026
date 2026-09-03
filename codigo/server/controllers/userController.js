@@ -72,4 +72,37 @@ const testWhatsApp = async (req, res) => {
   }
 };
 
-module.exports = { listUsers, getProfile, updateProfile, deleteAccount, updateWhatsApp, testWhatsApp };
+const changePassword = async (req, res) => {
+  try {
+    const id_usuario = req.user.id_usuario;
+    const { currentPassword, newPassword } = req.body;
+    const result = await userService.changePassword(id_usuario, currentPassword, newPassword);
+    res.status(200).json(result);
+  } catch (error) {
+    console.error('Error en changePassword:', error);
+    res.status(error.status || 500).json({ error: error.message || 'Error al cambiar contraseña' });
+  }
+};
+
+const toggleTwoFactor = async (req, res) => {
+  try {
+    const id_usuario = req.user.id_usuario;
+    const { enabled } = req.body;
+    const result = await userService.toggleTwoFactor(id_usuario, enabled);
+    res.status(200).json(result);
+  } catch (error) {
+    console.error('Error en toggleTwoFactor:', error);
+    res.status(error.status || 500).json({ error: error.message || 'Error al actualizar 2FA' });
+  }
+};
+
+module.exports = {
+  listUsers,
+  getProfile,
+  updateProfile,
+  deleteAccount,
+  updateWhatsApp,
+  testWhatsApp,
+  changePassword,
+  toggleTwoFactor
+};

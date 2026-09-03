@@ -111,10 +111,13 @@ export default function LoginPage() {
           {info && !error && <div className="auth-alert error" style={{ background: 'rgba(46,204,138,.12)', borderColor: 'rgba(46,204,138,.4)', color: '#2ecc8a' }}>{info}</div>}
 
           {pendingEmail ? (
-            <>
+            <div className="fade-in">
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 12px', background: 'rgba(240, 185, 11, 0.12)', border: '1px solid rgba(240, 185, 11, 0.3)', borderRadius: '20px', color: '#f0b90b', fontSize: '12px', fontWeight: 600, marginBottom: '16px' }}>
+                <Icon name="shield" size={14} /> Paso 2 de 2: Verificación de Seguridad
+              </div>
               <form className="auth-form" onSubmit={handleVerify}>
                 <div className="form-group">
-                  <label>Código de verificación</label>
+                  <label>Código de verificación (6 dígitos)</label>
                   <div className="input-wrapper">
                     <span className="input-icon"><Icon name="shield" size={16} /></span>
                     <input
@@ -122,9 +125,10 @@ export default function LoginPage() {
                       inputMode="numeric"
                       pattern="[0-9]*"
                       maxLength={6}
+                      autoFocus
                       className="auth-input"
                       placeholder="••••••"
-                      style={{ letterSpacing: '10px', textAlign: 'center', fontSize: '1.25rem' }}
+                      style={{ letterSpacing: '12px', textAlign: 'center', fontSize: '1.35rem', fontWeight: '700', color: '#f0b90b' }}
                       value={codigo}
                       onChange={(e) => setCodigo(e.target.value.replace(/\D/g, ''))}
                       required
@@ -132,28 +136,28 @@ export default function LoginPage() {
                   </div>
                 </div>
 
-                <button type="submit" className="btn btn-primary" disabled={loading}>
+                <button type="submit" className="btn btn-primary" disabled={loading} style={{ width: '100%', marginTop: '8px' }}>
                   {loading ? <div className="spinner"></div> : <><span>Verificar y entrar</span><Icon name="arrowRight" size={16} /></>}
                 </button>
               </form>
-              <div className="auth-footer">
-                ¿No te llegó?{' '}
-                <span className="auth-link" style={{ cursor: 'pointer' }} onClick={handleResend}>
+              <div className="auth-footer" style={{ marginTop: '16px' }}>
+                ¿No te llegó el código?{' '}
+                <span className="auth-link" style={{ cursor: 'pointer', fontWeight: 600 }} onClick={handleResend}>
                   Reenviar código
                 </span>
               </div>
-              <div className="auth-footer">
+              <div className="auth-footer" style={{ marginTop: '12px' }}>
                 <span
                   className="auth-link"
-                  style={{ cursor: 'pointer' }}
+                  style={{ cursor: 'pointer', color: 'var(--text-muted)' }}
                   onClick={() => { setPendingEmail(''); setCodigo(''); setError(''); setInfo(''); }}
                 >
-                  Volver al inicio de sesión
+                  ← Volver al inicio de sesión
                 </span>
               </div>
-            </>
+            </div>
           ) : (
-          <>
+          <div className="fade-in">
           <form className="auth-form" onSubmit={handleSubmit}>
             <div className="form-group">
               <label>Email</label>
@@ -207,16 +211,10 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="auth-divider">o continuá con</div>
-
-          <button type="button" className="btn btn-secondary auth-google-btn" onClick={() => alert("SSO Google Próximamente")}>
-            <span className="google-g">G</span> Google
-          </button>
-
-          <div className="auth-footer">
+          <div className="auth-footer" style={{ marginTop: '24px' }}>
             ¿No tenés cuenta? <Link to="/register" className="auth-link">Registrate</Link>
           </div>
-          </>
+          </div>
           )}
         </div>
 

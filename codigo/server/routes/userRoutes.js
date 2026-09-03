@@ -9,6 +9,8 @@ router.use(verifyToken);
 // /me debe declararse antes de /:id para no capturar "me" como parámetro.
 router.get('/me', userController.getProfile);
 router.put('/me', userController.updateProfile);
+router.put('/me/password', userController.changePassword);
+router.put('/me/2fa', userController.toggleTwoFactor);
 router.put('/me/whatsapp', userController.updateWhatsApp);
 router.post('/me/whatsapp/test', userController.testWhatsApp);
 router.delete('/me', userController.deleteAccount);

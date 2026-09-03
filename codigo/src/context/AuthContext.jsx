@@ -48,6 +48,18 @@ export function AuthProvider({ children }) {
   }, [navigate]);
 
   /**
+   * Actualiza los datos del usuario en memoria y en localStorage.
+   * @param {object} updatedData
+   */
+  const updateUser = useCallback((updatedData) => {
+    setUser((prev) => {
+      const merged = { ...(prev || {}), ...updatedData };
+      localStorage.setItem(STORAGE_USER, JSON.stringify(merged));
+      return merged;
+    });
+  }, []);
+
+  /**
    * Cierra la sesión: limpia el storage y redirige a /login.
    */
   const logout = useCallback(() => {
@@ -58,7 +70,7 @@ export function AuthProvider({ children }) {
     navigate('/login', { replace: true });
   }, [navigate]);
 
-  const value = { token, user, login, logout, isAuthenticated: Boolean(token) };
+  const value = { token, user, login, logout, updateUser, isAuthenticated: Boolean(token) };
 
   return (
     <AuthContext.Provider value={value}>

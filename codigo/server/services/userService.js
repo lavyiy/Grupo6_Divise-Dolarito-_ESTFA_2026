@@ -2,6 +2,7 @@
 // Lógica de negocio del ABM de usuarios.
 // Los controllers llaman a este servicio; ellos solo manejan HTTP.
 
+const bcrypt = require('bcrypt');
 const userModel = require('../models/userModel');
 const whatsappService = require('./whatsappService');
 
@@ -94,4 +95,57 @@ async function testWhatsApp(id_usuario) {
   return { success: true, message: 'Mensaje de prueba enviado a tu WhatsApp.' };
 }
 
-module.exports = { listUsers, getUserProfile, updateProfile, removeUser, updateWhatsAppConfig, testWhatsApp };
+// ── Seguridad de cuenta ──────────────────────────────────────────────────────
+
+async function changePassword(id_usuario, currentPassword, newPassword) {
+  if (!currentPassword || !newPassword) {
+    throw Object.assign(new Error('Debes ingresar la contraseña actual y la nueva contraseña.'), { status: 400 });
+  }
+  if (newPassword.length < 8) {
+    throw Object.assign(new Error('La nueva contraseña debe tener mínimo 8 caracteres.'), { status: 400 });
+  }
+
+  const user = await userModel.getUserById(id_usuario);
+  if (!user) {
+    throw Object.assign(new Error('Usuario no encontrado'), { status: 404 });
+  }
+
+  const fullUser = await userModel.getUserByEmail(user.email);
+  if (!fullUser) {
+    throw Object.assign(new Error('Usuario no encontrado'), { status: 404 });
+  }
+
+  const match = await bcrypt.compare(currentPassword, fullUser.password_hash);
+  if (!match) {
+    throw Object.assign(new Error('La contraseña actual es incorrecta.'), { status: 400 });
+  }
+
+  const newHash = await bcrypt.hash(newPassword, 10);
+  await userModel.updatePassword(id_usuario, newHash);
+  return { success: true, message: 'Contraseña actualizada con éxito.' };
+}
+
+async function toggleTwoFactor(id_usuario, enabled) {
+  const existing = await userModel.getUserById(id_usuario);
+  if (!existing) {
+    throw Object.assign(new Error('Usuario no encontrado'), { status: 404 });
+  }
+
+  const result = await userModel.setTwoFactorEnabled(id_usuario, Boolean(enabled));
+  return {
+    success: true,
+    two_factor_enabled: result.two_factor_enabled,
+    message: result.two_factor_enabled ? 'Autenticación en dos pasos activada' : 'Autenticación en dos pasos desactivada'
+  };
+}
+
+module.exports = {
+  listUsers,
+  getUserProfile,
+  updateProfile,
+  removeUser,
+  updateWhatsAppConfig,
+  testWhatsApp,
+  changePassword,
+  toggleTwoFactor
+};

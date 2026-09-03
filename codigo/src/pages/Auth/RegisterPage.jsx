@@ -277,13 +277,7 @@ export default function RegisterPage() {
             </button>
           </form>
 
-          <div className="auth-divider">o continuá con</div>
-
-          <button type="button" className="btn btn-secondary auth-google-btn" onClick={() => alert("SSO Google Próximamente")}>
-            <span className="google-g">G</span> Google
-          </button>
-
-          <div className="auth-footer">
+          <div className="auth-footer" style={{ marginTop: '24px' }}>
             ¿Ya tenés cuenta? <Link to="/login" className="auth-link">Iniciar sesión</Link>
           </div>
           </>
