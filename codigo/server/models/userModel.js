@@ -9,8 +9,9 @@ const createUser = async (nombre, email, passwordHash) => {
 };
 
 const getUserByEmail = async (email) => {
+  if (!email) return null;
   const result = await db.query(
-    'SELECT * FROM usuarios WHERE email = $1',
+    'SELECT * FROM usuarios WHERE LOWER(TRIM(email)) = LOWER(TRIM($1))',
     [email]
   );
   return result.rows[0];
@@ -26,7 +27,7 @@ const getUserByResetToken = async (token) => {
 
 const updateResetToken = async (email, token, expires) => {
   await db.query(
-    'UPDATE usuarios SET reset_token = $1, reset_token_expires = $2 WHERE email = $3',
+    'UPDATE usuarios SET reset_token = $1, reset_token_expires = $2 WHERE LOWER(TRIM(email)) = LOWER(TRIM($3))',
     [token, expires, email]
   );
 };
@@ -42,7 +43,7 @@ const updatePassword = async (id_usuario, newPasswordHash) => {
 
 const setVerificationCode = async (email, codigo, expires) => {
   await db.query(
-    'UPDATE usuarios SET verif_codigo = $1, verif_expira = $2 WHERE email = $3',
+    'UPDATE usuarios SET verif_codigo = $1, verif_expira = $2 WHERE LOWER(TRIM(email)) = LOWER(TRIM($3))',
     [codigo, expires, email]
   );
 };
@@ -50,7 +51,7 @@ const setVerificationCode = async (email, codigo, expires) => {
 // Guarda el token de verificación (para el enlace clickeable)
 const setVerificationToken = async (email, token) => {
   await db.query(
-    'UPDATE usuarios SET verif_token = $1 WHERE email = $2',
+    'UPDATE usuarios SET verif_token = $1 WHERE LOWER(TRIM(email)) = LOWER(TRIM($2))',
     [token, email]
   );
 };
@@ -59,7 +60,7 @@ const setVerificationToken = async (email, token) => {
 const getUserByVerificationCode = async (email, codigo) => {
   const result = await db.query(
     `SELECT * FROM usuarios
-     WHERE email = $1 AND verif_codigo = $2 AND verif_expira > CURRENT_TIMESTAMP`,
+     WHERE LOWER(TRIM(email)) = LOWER(TRIM($1)) AND verif_codigo = $2 AND verif_expira > CURRENT_TIMESTAMP`,
     [email, codigo]
   );
   return result.rows[0];

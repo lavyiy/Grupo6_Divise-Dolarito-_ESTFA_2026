@@ -31,7 +31,8 @@ async function registerUser(nombre, email, password) {
     throw Object.assign(new Error('Todos los campos son obligatorios'), { status: 400 });
   }
 
-  const existing = await userModel.getUserByEmail(email);
+  const cleanEmail = email.trim().toLowerCase();
+  const existing = await userModel.getUserByEmail(cleanEmail);
   if (existing && existing.email_verificado) {
     throw Object.assign(new Error('El email ya está registrado'), { status: 400 });
   }
@@ -45,7 +46,7 @@ async function registerUser(nombre, email, password) {
     await userModel.updateUserProfile(existing.id_usuario, { nombre });
     user = existing;
   } else {
-    user = await userModel.createUser(nombre, email, passwordHash);
+    user = await userModel.createUser(nombre, cleanEmail, passwordHash);
   }
 
   await sendVerificationCode(user.email);
@@ -61,17 +62,18 @@ async function registerUser(nombre, email, password) {
  * Genera y guarda código + token de verificación, y los manda por email.
  */
 async function sendVerificationCode(email) {
+  const cleanEmail = email.trim().toLowerCase();
   const codigo = generateCode();
   const token = crypto.randomBytes(32).toString('hex');
   const expires = new Date(Date.now() + VERIF_EXPIRES_MIN * 60 * 1000);
-  await userModel.setVerificationCode(email, codigo, expires.toISOString());
-  await userModel.setVerificationToken(email, token);
+  await userModel.setVerificationCode(cleanEmail, codigo, expires.toISOString());
+  await userModel.setVerificationToken(cleanEmail, token);
 
   const verifyUrl = `${FRONTEND_URL}/verify?token=${token}`;
 
-  const full = await userModel.getUserByEmail(email);
+  const full = await userModel.getUserByEmail(cleanEmail);
   emailService
-    .sendVerificationEmail(email, full?.nombre, codigo, verifyUrl)
+    .sendVerificationEmail(cleanEmail, full?.nombre, codigo, verifyUrl)
     .catch(err => console.error('Error enviando código de verificación:', err.message));
 }
 
@@ -85,7 +87,8 @@ async function verifyEmail(email, codigo) {
     throw Object.assign(new Error('Email y código son obligatorios'), { status: 400 });
   }
 
-  const user = await userModel.getUserByVerificationCode(email, codigo);
+  const cleanEmail = email.trim().toLowerCase();
+  const user = await userModel.getUserByVerificationCode(cleanEmail, codigo);
   if (!user) {
     throw Object.assign(new Error('Código inválido o expirado'), { status: 400 });
   }
@@ -122,7 +125,8 @@ async function resendVerificationCode(email) {
   if (!email) {
     throw Object.assign(new Error('Email obligatorio'), { status: 400 });
   }
-  const user = await userModel.getUserByEmail(email);
+  const cleanEmail = email.trim().toLowerCase();
+  const user = await userModel.getUserByEmail(cleanEmail);
   if (!user) {
     // No revelamos si el email existe o no
     return { success: true, message: 'Si el correo existe, reenviamos el código.' };
@@ -131,7 +135,7 @@ async function resendVerificationCode(email) {
     throw Object.assign(new Error('Esta cuenta ya está verificada'), { status: 400 });
   }
 
-  await sendVerificationCode(email);
+  await sendVerificationCode(cleanEmail);
   return { success: true, message: 'Si el correo existe, reenviamos el código.' };
 }
 
@@ -145,7 +149,8 @@ async function loginUser(email, password) {
     throw Object.assign(new Error('Email y contraseña obligatorios'), { status: 400 });
   }
 
-  const user = await userModel.getUserByEmail(email);
+  const cleanEmail = email.trim().toLowerCase();
+  const user = await userModel.getUserByEmail(cleanEmail);
   if (!user) {
     throw Object.assign(new Error('Credenciales inválidas'), { status: 401 });
   }
@@ -176,8 +181,10 @@ async function loginUser(email, password) {
 async function forgotPassword(email) {
   if (!email) throw Object.assign(new Error('Email obligatorio'), { status: 400 });
 
-  const user = await userModel.getUserByEmail(email);
+  const cleanEmail = email.trim().toLowerCase();
+  const user = await userModel.getUserByEmail(cleanEmail);
   if (!user) {
+    console.warn(`⚠️ [FORGOT PASSWORD] Email no registrado en la base de datos: "${cleanEmail}"`);
     // Para no revelar qué emails están registrados, no devolvemos error
     return { success: true, message: 'Si el correo existe, enviaremos un enlace.' };
   }
@@ -186,12 +193,15 @@ async function forgotPassword(email) {
   const resetToken = crypto.randomBytes(32).toString('hex');
   const expires = new Date(Date.now() + 1000 * 60 * 30); // 30 min
 
-  await userModel.updateResetToken(email, resetToken, expires.toISOString());
+  await userModel.updateResetToken(user.email, resetToken, expires.toISOString());
   
-  // Enviar email sin bloquear la respuesta (fire and forget)
-  emailService.sendResetPasswordEmail(email, resetToken).catch(err => {
-    console.error('Error al enviar correo (posible bloqueo SMTP en Render):', err);
-  });
+  console.log(`📤 [FORGOT PASSWORD] Enviando correo de recuperación a: ${user.email}`);
+  const sendResult = await emailService.sendResetPasswordEmail(user.email, resetToken);
+  if (!sendResult?.success) {
+    console.error('❌ [FORGOT PASSWORD] Error al enviar correo:', sendResult?.error);
+  } else {
+    console.log(`✅ [FORGOT PASSWORD] Correo enviado exitosamente a: ${user.email}`);
+  }
 
   return { success: true, message: 'Si el correo existe, enviaremos un enlace.' };
 }

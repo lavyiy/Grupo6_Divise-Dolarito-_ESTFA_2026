@@ -89,7 +89,8 @@ const verifyEmailByToken = async (req, res) => {
 
 const testEmail = async (req, res) => {
   try {
-    const to = req.body?.to || req.query?.to || 'deviseproyect@gmail.com';
+    const defaultTo = process.env.EMAIL_USER || 'santiiyt2@gmail.com';
+    const to = req.body?.to || req.query?.to || defaultTo;
     const emailService = require('../services/emailService');
     const result = await emailService.sendEmail({
       to,
