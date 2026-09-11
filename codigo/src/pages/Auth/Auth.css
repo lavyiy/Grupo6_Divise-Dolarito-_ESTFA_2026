@@ -318,43 +318,6 @@
   color: #ffffff;
   box-shadow: 0 6px 24px rgba(0, 102, 255, 0.35);
 }
-.auth-google-btn {
-  width: 100%;
-  height: 56px;
-  font-size: 16px;
-  justify-content: center;
-}
-.auth-google-btn .google-g {
-  color: #ea4335;
-  font-weight: 700;
-  font-size: 18px;
-}
-.auth-google-btn .google-g {
-  color: #ea4335;
-  font-weight: 700;
-  font-size: 18px;
-}
-
-.auth-divider {
-  display: flex;
-  align-items: center;
-  text-align: center;
-  color: var(--text-muted);
-  font-size: 14px;
-  margin: 8px 0;
-}
-.auth-divider::before,
-.auth-divider::after {
-  content: '';
-  flex: 1;
-  border-bottom: 1px solid var(--border-color);
-}
-.auth-divider::before {
-  margin-right: 16px;
-}
-.auth-divider::after {
-  margin-left: 16px;
-}
 
 .auth-footer {
   text-align: center;
@@ -395,4 +358,52 @@
 }
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+/* ── Mobile Responsive Auth ──────────────────────────────────────────────── */
+
+/* Tablet: ocultar panel izquierdo, mostrar solo el formulario */
+@media (max-width: 768px) {
+  .auth-left {
+    display: none;
+  }
+  .auth-wrapper {
+    max-width: 480px;
+    padding: 24px 20px;
+  }
+  .auth-right {
+    padding: 0;
+    width: 100%;
+  }
+}
+
+/* Mobile pequeño */
+@media (max-width: 480px) {
+  .auth-wrapper {
+    padding: 16px;
+    max-width: 100%;
+  }
+  .auth-right {
+    padding: 0;
+  }
+  .auth-input {
+    height: 50px;
+    font-size: 15px;
+  }
+  .auth-form .btn {
+    height: 50px;
+    font-size: 15px;
+  }
+  .auth-right-title {
+    font-size: 20px;
+  }
+  .auth-right-subtitle {
+    font-size: 13px;
+    margin-bottom: 24px;
+  }
+  /* Código de verificación más compacto */
+  .auth-form input[style*="letterSpacing"] {
+    font-size: 1.1rem !important;
+    letter-spacing: 8px !important;
+  }
 }

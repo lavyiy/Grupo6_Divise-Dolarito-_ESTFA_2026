@@ -10,7 +10,10 @@ export default function LoginPage() {
 
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
-  const [info, setInfo] = useState('');
+  const [info, setInfo] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('expired') === '1' ? 'Tu sesión expiró. Iniciá sesión nuevamente.' : '';
+  });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 

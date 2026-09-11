@@ -2,15 +2,38 @@ import React, { useState } from 'react';
 import { Icon } from '../ui/Icon';
 import './AlertModal.css';
 
+// Mapeo nombre legible → código de divisa para el backend
+const DIVISAS = [
+  { label: 'Dólar Blue',    codigo: 'USD' },
+  { label: 'Dólar Oficial', codigo: 'USD' },
+  { label: 'Euro',          codigo: 'EUR' },
+  { label: 'Bitcoin',       codigo: 'BTC' },
+  { label: 'Ethereum',      codigo: 'ETH' },
+  { label: 'Tether (USDT)', codigo: 'USDT' },
+  { label: 'BNB',           codigo: 'BNB' },
+  { label: 'Dogecoin',      codigo: 'DOGE' },
+];
+
 export default function AlertModal({ onClose, onSave }) {
-  const [divisa, setDivisa] = useState('Dólar Blue');
+  const [divisaIdx, setDivisaIdx] = useState(0);
   const [condicion, setCondicion] = useState('Supera el valor');
   const [valor, setValor] = useState('');
-  const [email, setEmail] = useState('');
+  const [error, setError] = useState('');
 
   const handleSave = () => {
+    if (!valor || isNaN(parseFloat(valor.replace(',', '.')))) {
+      setError('Ingresá un valor numérico válido.');
+      return;
+    }
+    setError('');
     if (onSave) {
-      onSave({ divisa, condicion, valor, email });
+      onSave({
+        codigo_divisa: DIVISAS[divisaIdx].codigo,
+        divisa: DIVISAS[divisaIdx].label,
+        condicion,
+        valor_limite: parseFloat(valor.replace(',', '.')),
+        valor: valor
+      });
     }
   };
 
@@ -27,10 +50,10 @@ export default function AlertModal({ onClose, onSave }) {
           </p>
 
           <div className="ml-card">
-            <div className="mlc-label">COTIZACIÓN ACTUAL</div>
-            <div className="mlc-title">Dólar Blue</div>
-            <div className="mlc-price">$ 1.423,00</div>
-            <div className="mlc-change"><Icon name="trendUp" size={14} /> +1,35% hoy</div>
+            <div className="mlc-label">COTIZACIÓN SELECCIONADA</div>
+            <div className="mlc-title">{DIVISAS[divisaIdx].label}</div>
+            <div className="mlc-price">Código: {DIVISAS[divisaIdx].codigo}</div>
+            <div className="mlc-change"><Icon name="bell" size={14} /> Notificación por email</div>
           </div>
         </div>
 
@@ -41,12 +64,14 @@ export default function AlertModal({ onClose, onSave }) {
             <div className="mr-input-wrapper">
               <span className="mr-icon"><Icon name="dollar" size={16} /></span>
               <div className="mr-select-wrapper">
-                <select className="mr-select" value={divisa} onChange={e => setDivisa(e.target.value)}>
-                  <option>Dólar Blue</option>
-                  <option>Dólar Oficial</option>
-                  <option>Euro Oficial</option>
-                  <option>Bitcoin</option>
-                  <option>Ethereum</option>
+                <select
+                  className="mr-select"
+                  value={divisaIdx}
+                  onChange={e => setDivisaIdx(Number(e.target.value))}
+                >
+                  {DIVISAS.map((d, i) => (
+                    <option key={i} value={i}>{d.label}</option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -66,32 +91,19 @@ export default function AlertModal({ onClose, onSave }) {
           </div>
 
           <div className="mr-group">
-            <label className="mr-label">VALOR OBJETIVO (ARS)</label>
+            <label className="mr-label">VALOR OBJETIVO</label>
             <div className="mr-input-wrapper">
               <span className="mr-icon"><Icon name="target" size={16} /></span>
               <span style={{color: 'var(--text-main)'}}>$ </span>
               <input 
                 type="text" 
                 className="mr-input" 
-                placeholder="1.450" 
+                placeholder="1450" 
                 value={valor}
                 onChange={e => setValor(e.target.value)}
               />
             </div>
-          </div>
-
-          <div className="mr-group">
-            <label className="mr-label">EMAIL DE NOTIFICACIÓN</label>
-            <div className="mr-input-wrapper">
-              <span className="mr-icon"><Icon name="mail" size={16} /></span>
-              <input 
-                type="email" 
-                className="mr-input" 
-                placeholder="usuario@email.com" 
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-              />
-            </div>
+            {error && <span style={{ color: '#e74c3c', fontSize: '12px', marginTop: '4px' }}>{error}</span>}
           </div>
 
           <div className="mr-info">

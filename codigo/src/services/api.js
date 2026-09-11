@@ -17,6 +17,20 @@ async function request(path, options = {}) {
 
     const data = await res.json().catch(() => ({}));
 
+    // ── Manejo de JWT expirado ────────────────────────────────────────────
+    if (res.status === 401) {
+      const isTokenExpired = data?.tokenExpired || data?.error?.includes('expirado') || data?.error?.includes('expired');
+      if (isTokenExpired) {
+        console.warn('[API] Token JWT expirado. Cerrando sesión automáticamente.');
+        localStorage.removeItem('divise_token');
+        localStorage.removeItem('divise_user');
+        window.location.href = '/login?expired=1';
+        const err = new Error('Tu sesión expiró. Iniciá sesión nuevamente.');
+        err.tokenExpired = true;
+        throw err;
+      }
+    }
+
     if (!res.ok) {
       const message =
         data?.message || data?.error || `Error ${res.status}: ${res.statusText}`;
@@ -29,43 +43,19 @@ async function request(path, options = {}) {
 
     return data;
   } catch (err) {
-    // Si el servidor de Render está inactivo o da error de red, respondemos con modo offline simulado para desarrollo
-    console.warn(`[API] Servidor backend no disponible (${err.message}). Usando respuesta fallback.`);
-    if (path === '/api/auth/login') {
-      const reqBody = options.body ? JSON.parse(options.body) : {};
-      const pendingEmail = reqBody.email || 'demo@divise.com';
-      // Simula el flujo 2-step verification tras el ingreso de credenciales
-      const verifErr = new Error('Verificación de seguridad en 2 pasos: Te enviamos un código de 6 dígitos a tu casilla (Código demo: 123456).');
-      verifErr.needsVerification = true;
-      verifErr.email = pendingEmail;
-      throw verifErr;
+    // Si el error es por token expirado, lo re-lanzamos directamente
+    if (err.tokenExpired) throw err;
+
+    // Error de red: el servidor no está disponible
+    const isNetworkError = err instanceof TypeError && err.message.includes('fetch');
+    if (isNetworkError) {
+      const netErr = new Error(
+        'No se pudo conectar al servidor. Asegurate de que el backend esté corriendo en el puerto 5000 (npm run dev en /server).'
+      );
+      netErr.isNetworkError = true;
+      throw netErr;
     }
-    if (path === '/api/auth/verify-email') {
-      const reqBody = options.body ? JSON.parse(options.body) : {};
-      const email = reqBody.email || 'demo@divise.com';
-      return {
-        success: true,
-        token: 'mock-jwt-token-12345',
-        user: { id: 1, nombre: 'Usuario Divise', email, email_verificado: true, two_factor_enabled: true }
-      };
-    }
-    if (path === '/api/auth/resend-verification') {
-      return { success: true, message: 'Código reenviado con éxito (Código demo: 123456).' };
-    }
-    if (path === '/api/auth/register') {
-      return { message: 'Usuario registrado exitosamente. Te enviamos el código.', needsVerification: true };
-    }
-    if (path === '/api/users/me' && options.method === 'PUT') {
-      const reqBody = options.body ? JSON.parse(options.body) : {};
-      return { success: true, message: 'Perfil actualizado correctamente.', ...reqBody };
-    }
-    if (path === '/api/users/me/password') {
-      return { success: true, message: 'Contraseña actualizada correctamente.' };
-    }
-    if (path === '/api/users/me/2fa') {
-      const reqBody = options.body ? JSON.parse(options.body) : {};
-      return { success: true, two_factor_enabled: reqBody.enabled, message: reqBody.enabled ? '2FA activado' : '2FA desactivado' };
-    }
+
     throw err;
   }
 }
@@ -163,57 +153,132 @@ export function toggleTwoFactor(enabled, token) {
   });
 }
 
+// ── Eliminar cuenta ──────────────────────────────────────────────────────────
+
+export function deleteMyAccount(token) {
+  return request('/api/users/me', {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+// ── Alertas ───────────────────────────────────────────────────────────────────
+
+export function getAlerts(token) {
+  return request('/api/alerts', {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export function createAlert({ codigo_divisa, condicion, valor_limite }, token) {
+  return request('/api/alerts', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ codigo_divisa, condicion, valor_limite }),
+  });
+}
+
+export function deleteAlert(id, token) {
+  return request(`/api/alerts/${id}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+// ── Favoritos ─────────────────────────────────────────────────────────────────
+
+export function getFavorites(token) {
+  return request('/api/favorites', {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export function toggleFavorite(codigo_divisa, token) {
+  return request('/api/favorites/toggle', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ codigo_divisa }),
+  });
+}
+
 // ── Cotizaciones en Tiempo Real (DolarApi & Cripto en vivo) ────────────────
 
 /**
- * Consulta precios en tiempo real de Bitcoin y Ethereum en USD.
+ * Consulta precios en tiempo real de BTC, ETH, USDT, BNB y DOGE en USD.
  * Intenta primero Binance (rápido y sin rate-limits agresivos), luego CoinGecko y Coinbase como fallback.
  */
 async function fetchCryptoPrices() {
+  const symbols = [
+    { key: 'btc', binance: 'BTCUSDT', coingecko: 'bitcoin', coinbase: 'BTC-USD', fallback: 81200.00 },
+    { key: 'eth', binance: 'ETHUSDT', coingecko: 'ethereum', coinbase: 'ETH-USD', fallback: 2500.00 },
+    { key: 'usdt', binance: null, coingecko: 'tether', coinbase: 'USDT-USD', fallback: 1.00 },
+    { key: 'bnb', binance: 'BNBUSDT', coingecko: 'binancecoin', coinbase: 'BNB-USD', fallback: 600.00 },
+    { key: 'doge', binance: 'DOGEUSDT', coingecko: 'dogecoin', coinbase: 'DOGE-USD', fallback: 0.32 },
+  ];
+
+  const prices = {};
+
   // 1. Binance
   try {
-    const [btcRes, ethRes] = await Promise.all([
-      fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT').then(r => r.json()),
-      fetch('https://api.binance.com/api/v3/ticker/price?symbol=ETHUSDT').then(r => r.json())
-    ]);
-    const btc = parseFloat(btcRes?.price);
-    const eth = parseFloat(ethRes?.price);
-    if (!isNaN(btc) && !isNaN(eth) && btc > 0 && eth > 0) {
-      return { btc, eth };
-    }
+    const binanceSymbols = symbols.filter(s => s.binance);
+    const binanceResults = await Promise.all(
+      binanceSymbols.map(s =>
+        fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${s.binance}`)
+          .then(r => r.json())
+          .then(data => ({ key: s.key, price: parseFloat(data?.price) }))
+          .catch(() => ({ key: s.key, price: NaN }))
+      )
+    );
+    binanceResults.forEach(r => {
+      if (!isNaN(r.price) && r.price > 0) prices[r.key] = r.price;
+    });
+    // USDT siempre ~1 USD
+    if (!prices.usdt) prices.usdt = 1.00;
   } catch (err) {
     console.warn('[Cripto API] Binance falló, intentando CoinGecko...', err.message);
   }
 
-  // 2. CoinGecko
-  try {
-    const cgRes = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd').then(r => r.json());
-    const btc = parseFloat(cgRes?.bitcoin?.usd);
-    const eth = parseFloat(cgRes?.ethereum?.usd);
-    if (!isNaN(btc) && !isNaN(eth) && btc > 0 && eth > 0) {
-      return { btc, eth };
+  // 2. CoinGecko (para los que faltan)
+  const missing = symbols.filter(s => !prices[s.key]);
+  if (missing.length > 0) {
+    try {
+      const ids = missing.map(s => s.coingecko).join(',');
+      const cgRes = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd`).then(r => r.json());
+      missing.forEach(s => {
+        const val = parseFloat(cgRes?.[s.coingecko]?.usd);
+        if (!isNaN(val) && val > 0) prices[s.key] = val;
+      });
+    } catch (err) {
+      console.warn('[Cripto API] CoinGecko falló, intentando Coinbase...', err.message);
     }
-  } catch (err) {
-    console.warn('[Cripto API] CoinGecko falló, intentando Coinbase...', err.message);
   }
 
-  // 3. Coinbase
-  try {
-    const [btcRes, ethRes] = await Promise.all([
-      fetch('https://api.coinbase.com/v2/prices/BTC-USD/spot').then(r => r.json()),
-      fetch('https://api.coinbase.com/v2/prices/ETH-USD/spot').then(r => r.json())
-    ]);
-    const btc = parseFloat(btcRes?.data?.amount);
-    const eth = parseFloat(ethRes?.data?.amount);
-    if (!isNaN(btc) && !isNaN(eth) && btc > 0 && eth > 0) {
-      return { btc, eth };
+  // 3. Coinbase (para los que aún faltan)
+  const stillMissing = symbols.filter(s => !prices[s.key]);
+  if (stillMissing.length > 0) {
+    try {
+      const coinbaseResults = await Promise.all(
+        stillMissing.map(s =>
+          fetch(`https://api.coinbase.com/v2/prices/${s.coinbase}/spot`)
+            .then(r => r.json())
+            .then(data => ({ key: s.key, price: parseFloat(data?.data?.amount) }))
+            .catch(() => ({ key: s.key, price: NaN }))
+        )
+      );
+      coinbaseResults.forEach(r => {
+        if (!isNaN(r.price) && r.price > 0) prices[r.key] = r.price;
+      });
+    } catch (err) {
+      console.warn('[Cripto API] Coinbase falló...', err.message);
     }
-  } catch (err) {
-    console.warn('[Cripto API] Coinbase falló...', err.message);
   }
 
-  // Respaldo de emergencia si falla toda la red
-  return { btc: 81200.00, eth: 2500.00 };
+  // Respaldo de emergencia para los que sigan sin precio
+  symbols.forEach(s => {
+    if (!prices[s.key]) prices[s.key] = s.fallback;
+  });
+
+  return prices;
 }
 
 /**
@@ -262,28 +327,30 @@ export async function fetchRates() {
     // Monedas Cripto en tiempo real (en USD)
     const cryptoData = cryptoRes.status === 'fulfilled' && cryptoRes.value
       ? cryptoRes.value
-      : { btc: 81200.00, eth: 2500.00 };
+      : { btc: 81200.00, eth: 2500.00, usdt: 1.00, bnb: 600.00, doge: 0.32 };
 
-    formattedRates.push(
-      {
-        codigo: 'BTC',
-        nombre: 'Bitcoin',
-        tipo_mercado: 'Cripto',
-        tipo: 'Cripto',
-        compra: Number((cryptoData.btc * 0.999).toFixed(2)),
-        venta: Number(cryptoData.btc.toFixed(2)),
-        updated_at: new Date().toISOString()
-      },
-      {
-        codigo: 'ETH',
-        nombre: 'Ethereum',
-        tipo_mercado: 'Cripto',
-        tipo: 'Cripto',
-        compra: Number((cryptoData.eth * 0.999).toFixed(2)),
-        venta: Number(cryptoData.eth.toFixed(2)),
-        updated_at: new Date().toISOString()
+    const cryptoList = [
+      { codigo: 'BTC', nombre: 'Bitcoin', key: 'btc' },
+      { codigo: 'ETH', nombre: 'Ethereum', key: 'eth' },
+      { codigo: 'USDT', nombre: 'Tether', key: 'usdt' },
+      { codigo: 'BNB', nombre: 'Binance Coin', key: 'bnb' },
+      { codigo: 'DOGE', nombre: 'Dogecoin', key: 'doge' },
+    ];
+
+    cryptoList.forEach(c => {
+      const price = cryptoData[c.key] || 0;
+      if (price > 0) {
+        formattedRates.push({
+          codigo: c.codigo,
+          nombre: c.nombre,
+          tipo_mercado: 'Cripto',
+          tipo: 'Cripto',
+          compra: Number((price * 0.999).toFixed(c.codigo === 'DOGE' ? 4 : 2)),
+          venta: Number(price.toFixed(c.codigo === 'DOGE' ? 4 : 2)),
+          updated_at: new Date().toISOString()
+        });
       }
-    );
+    });
 
     if (formattedRates.length > 0) {
       return formattedRates;
@@ -301,7 +368,10 @@ export async function fetchRates() {
       { codigo: 'EUR', nombre: 'Euro', tipo_mercado: 'Oficial', tipo: 'Oficial', compra: 1707, venta: 1722 },
       { codigo: 'BRL', nombre: 'Real Brasileño', tipo_mercado: 'Oficial', tipo: 'Oficial', compra: 286, venta: 287 },
       { codigo: 'BTC', nombre: 'Bitcoin', tipo_mercado: 'Cripto', tipo: 'Cripto', compra: 81100, venta: 81200 },
-      { codigo: 'ETH', nombre: 'Ethereum', tipo_mercado: 'Cripto', tipo: 'Cripto', compra: 2490, venta: 2500 }
+      { codigo: 'ETH', nombre: 'Ethereum', tipo_mercado: 'Cripto', tipo: 'Cripto', compra: 2490, venta: 2500 },
+      { codigo: 'USDT', nombre: 'Tether', tipo_mercado: 'Cripto', tipo: 'Cripto', compra: 1.00, venta: 1.00 },
+      { codigo: 'BNB', nombre: 'Binance Coin', tipo_mercado: 'Cripto', tipo: 'Cripto', compra: 598, venta: 600 },
+      { codigo: 'DOGE', nombre: 'Dogecoin', tipo_mercado: 'Cripto', tipo: 'Cripto', compra: 0.319, venta: 0.32 }
     ];
   }
 }

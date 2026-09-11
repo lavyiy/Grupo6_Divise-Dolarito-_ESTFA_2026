@@ -13,7 +13,13 @@ const verifyToken = (req, res, next) => {
     req.user = decoded; // Adjuntar info del usuario a la request
     next();
   } catch (error) {
-    res.status(401).json({ error: 'Token inválido o expirado' });
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({
+        error: 'Tu sesión expiró. Iniciá sesión nuevamente.',
+        tokenExpired: true
+      });
+    }
+    res.status(401).json({ error: 'Token inválido. Iniciá sesión nuevamente.' });
   }
 };
 

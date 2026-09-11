@@ -349,3 +349,73 @@
   color: var(--text-muted);
   border: 1px solid rgba(148, 163, 184, 0.25);
 }
+
+/* ── Zona de Peligro ──────────────────────────────────────────────────────── */
+.danger-zone {
+  border-color: rgba(246, 70, 93, 0.25) !important;
+  background: rgba(246, 70, 93, 0.03) !important;
+}
+.danger-zone h3 {
+  color: var(--danger) !important;
+}
+.danger-zone .setting-row {
+  border-bottom-color: rgba(246, 70, 93, 0.15);
+}
+
+.modal-danger {
+  border-color: rgba(246, 70, 93, 0.35) !important;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 24px rgba(246, 70, 93, 0.15) !important;
+}
+
+/* ── Mobile improvements ─────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .setting-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .setting-row .btn {
+    width: 100%;
+    justify-content: center;
+  }
+  .setting-select {
+    width: 100%;
+    min-width: unset;
+  }
+}
+
+@media (max-width: 480px) {
+  .perfil-card {
+    padding: 24px 16px;
+  }
+  .pc-avatar {
+    width: 80px;
+    height: 80px;
+    font-size: 32px;
+  }
+  .settings-section {
+    padding: 20px 16px;
+  }
+  .settings-section h3 {
+    font-size: 16px;
+    margin-bottom: 16px;
+  }
+  .setting-row h4 {
+    font-size: 14px;
+  }
+  .modal-content {
+    padding: 24px 20px;
+    max-width: 100%;
+    margin: 12px;
+  }
+  .modal-actions {
+    flex-direction: column;
+  }
+  .modal-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+  .modal-title {
+    font-size: 17px;
+  }
+}

@@ -5,12 +5,13 @@ import {
   getMyProfile,
   updateProfile,
   changePassword,
-  toggleTwoFactor
+  toggleTwoFactor,
+  deleteMyAccount
 } from '../../services/api';
 import './Perfil.css';
 
 export default function Perfil() {
-  const { user, token, updateUser } = useAuth();
+  const { user, token, updateUser, logout } = useAuth();
 
   // ── Alerta global en página (Toast/Banner) ───────────────────────────────
   const [globalToast, setGlobalToast] = useState(null); // { type: 'ok'|'error', msg }
@@ -162,6 +163,28 @@ export default function Perfil() {
     }
   };
 
+  // ── Eliminar Cuenta ──────────────────────────────────────────────────
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText !== 'ELIMINAR') {
+      setDeleteError('Escribí ELIMINAR para confirmar.');
+      return;
+    }
+    setDeleteLoading(true);
+    setDeleteError('');
+    try {
+      await deleteMyAccount(token);
+      logout();
+    } catch (err) {
+      setDeleteError(err.message || 'No se pudo eliminar la cuenta.');
+      setDeleteLoading(false);
+    }
+  };
+
   return (
     <div className="perfil-container page-enter">
       
@@ -252,6 +275,9 @@ export default function Perfil() {
                 <option value="EUR - Euro">EUR - Euro</option>
                 <option value="BTC - Bitcoin">BTC - Bitcoin</option>
                 <option value="ETH - Ethereum">ETH - Ethereum</option>
+                <option value="USDT - Tether">USDT - Tether</option>
+                <option value="BNB - Binance Coin">BNB - Binance Coin</option>
+                <option value="DOGE - Dogecoin">DOGE - Dogecoin</option>
               </select>
             </div>
           </div>
@@ -301,6 +327,24 @@ export default function Perfil() {
                 ) : (
                   'Activar 2FA'
                 )}
+              </button>
+            </div>
+          </div>
+
+          {/* Zona de Peligro */}
+          <div className="settings-section danger-zone fade-in delay-400">
+            <h3><Icon name="alertTriangle" size={16} /> Zona de Peligro</h3>
+            <div className="setting-row">
+              <div>
+                <h4>Eliminar mi cuenta</h4>
+                <p>Esta acción es permanente. Se eliminarán tu perfil, favoritos, alertas e historial de consultas. No se puede deshacer.</p>
+              </div>
+              <button
+                type="button"
+                className="btn btn-danger"
+                onClick={() => { setIsDeleteModalOpen(true); setDeleteConfirmText(''); setDeleteError(''); }}
+              >
+                <Icon name="alertTriangle" size={14} /> Eliminar cuenta
               </button>
             </div>
           </div>
@@ -485,6 +529,71 @@ export default function Perfil() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal Eliminar Cuenta (Confirmación) ───────────────────────────── */}
+      {isDeleteModalOpen && (
+        <div className="modal-overlay" onClick={() => setIsDeleteModalOpen(false)}>
+          <div className="modal-content modal-danger" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <div>
+                <h3 className="modal-title" style={{ color: 'var(--danger)' }}>
+                  <span className="modal-title-icon" style={{ color: 'var(--danger)' }}><Icon name="alertTriangle" size={20} /></span>
+                  Eliminar mi cuenta
+                </h3>
+                <p className="modal-sub">Esta acción es irreversible. Tu perfil, favoritos, alertas e historial se borrarán permanentemente.</p>
+              </div>
+              <button
+                type="button"
+                className="modal-close-btn"
+                onClick={() => setIsDeleteModalOpen(false)}
+                aria-label="Cerrar modal"
+              >
+                <Icon name="close" size={18} />
+              </button>
+            </div>
+
+            {deleteError && (
+              <div className="toast-message error">
+                <Icon name="alertTriangle" size={16} />
+                <span>{deleteError}</span>
+              </div>
+            )}
+
+            <div className="modal-form">
+              <div className="modal-field">
+                <label>Escribí <strong>ELIMINAR</strong> para confirmar</label>
+                <input
+                  type="text"
+                  className="modal-input"
+                  value={deleteConfirmText}
+                  onChange={(e) => setDeleteConfirmText(e.target.value.toUpperCase())}
+                  placeholder="ELIMINAR"
+                  autoFocus
+                />
+              </div>
+
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setIsDeleteModalOpen(false)}
+                  disabled={deleteLoading}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-danger"
+                  onClick={handleDeleteAccount}
+                  disabled={deleteLoading || deleteConfirmText !== 'ELIMINAR'}
+                >
+                  {deleteLoading ? <div className="spinner"></div> : 'Eliminar definitivamente'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

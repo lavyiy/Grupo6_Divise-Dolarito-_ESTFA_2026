@@ -36,41 +36,57 @@ async function syncRates() {
     }
     
     // 3. Fetch Cripto en USD (Binance primero, CoinGecko como fallback)
-    let btcPrice = null;
-    let ethPrice = null;
+    const cryptoSymbols = [
+      { key: 'btc', binance: 'BTCUSDT', coingecko: 'bitcoin', code: 'BTC' },
+      { key: 'eth', binance: 'ETHUSDT', coingecko: 'ethereum', code: 'ETH' },
+      { key: 'bnb', binance: 'BNBUSDT', coingecko: 'binancecoin', code: 'BNB' },
+      { key: 'doge', binance: 'DOGEUSDT', coingecko: 'dogecoin', code: 'DOGE' },
+    ];
+    const cryptoPrices = {};
 
+    // Binance
     try {
-      const [bBtc, bEth] = await Promise.all([
-        fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT').then(r => r.json()),
-        fetch('https://api.binance.com/api/v3/ticker/price?symbol=ETHUSDT').then(r => r.json())
-      ]);
-      const pBtc = parseFloat(bBtc?.price);
-      const pEth = parseFloat(bEth?.price);
-      if (!isNaN(pBtc) && pBtc > 0) btcPrice = pBtc;
-      if (!isNaN(pEth) && pEth > 0) ethPrice = pEth;
+      const binanceResults = await Promise.all(
+        cryptoSymbols.map(s =>
+          fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${s.binance}`)
+            .then(r => r.json())
+            .then(data => ({ key: s.key, price: parseFloat(data?.price) }))
+            .catch(() => ({ key: s.key, price: NaN }))
+        )
+      );
+      binanceResults.forEach(r => {
+        if (!isNaN(r.price) && r.price > 0) cryptoPrices[r.key] = r.price;
+      });
     } catch (e) {
       console.warn('Sync Binance cripto error:', e.message);
     }
 
-    if (!btcPrice || !ethPrice) {
+    // CoinGecko para los que faltan
+    const missingCrypto = cryptoSymbols.filter(s => !cryptoPrices[s.key]);
+    if (missingCrypto.length > 0) {
       try {
-        const cryptoRes = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd');
+        const ids = missingCrypto.map(s => s.coingecko).join(',');
+        const cryptoRes = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd`);
         if (cryptoRes.ok) {
           const cryptos = await cryptoRes.json();
-          if (cryptos.bitcoin?.usd) btcPrice = cryptos.bitcoin.usd;
-          if (cryptos.ethereum?.usd) ethPrice = cryptos.ethereum.usd;
+          missingCrypto.forEach(s => {
+            if (cryptos[s.coingecko]?.usd) cryptoPrices[s.key] = cryptos[s.coingecko].usd;
+          });
         }
       } catch (e) {
         console.warn('Sync CoinGecko cripto error:', e.message);
       }
     }
 
-    if (btcPrice) {
-      await updateRate(client, 'BTC', 'Cripto', btcPrice * 0.999, btcPrice);
+    // Actualizar en DB
+    for (const s of cryptoSymbols) {
+      if (cryptoPrices[s.key]) {
+        await updateRate(client, s.code, 'Cripto', cryptoPrices[s.key] * 0.999, cryptoPrices[s.key]);
+      }
     }
-    if (ethPrice) {
-      await updateRate(client, 'ETH', 'Cripto', ethPrice * 0.999, ethPrice);
-    }
+
+    // USDT siempre ~1 USD
+    await updateRate(client, 'USDT', 'Cripto', 0.999, 1.00);
     
     await client.query('COMMIT');
     console.log('✅ Cotizaciones sincronizadas con éxito.');

@@ -306,3 +306,28 @@
   }
   .featured-row { padding: 12px 14px; }
 }
+
+@media (max-width: 480px) {
+  .quick-stats {
+    gap: 12px;
+  }
+  .stat-card {
+    padding: 18px 16px;
+  }
+  .sc-price {
+    font-size: 24px;
+  }
+  .page-title {
+    font-size: 22px;
+  }
+  .page-sub {
+    font-size: 13px;
+  }
+  .live-status {
+    font-size: 11px;
+    padding: 4px 10px;
+  }
+  .quick-action-card {
+    padding: 14px 16px;
+  }
+}

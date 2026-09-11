@@ -41,6 +41,9 @@ export function currencyIcon(codigo) {
     case 'AUD': return '🇦🇺';
     case 'BTC': return '₿';
     case 'ETH': return 'Ξ';
+    case 'USDT': return '₮';
+    case 'BNB': return '◆';
+    case 'DOGE': return 'Đ';
     default: return '💰';
   }
 }
@@ -59,6 +62,9 @@ export function flagIcon(code) {
     case 'AUD': return '🇦🇺';
     case 'BTC': return '₿';
     case 'ETH': return 'Ξ';
+    case 'USDT': return '💵';
+    case 'BNB': return '◆';
+    case 'DOGE': return '🐶';
     default: return '💰';
   }
 }
@@ -77,6 +83,9 @@ export function currencyName(code) {
     case 'AUD': return 'Dólar Australiano';
     case 'BTC': return 'Bitcoin';
     case 'ETH': return 'Ethereum';
+    case 'USDT': return 'Tether (USDT)';
+    case 'BNB': return 'Binance Coin';
+    case 'DOGE': return 'Dogecoin';
     default: return code;
   }
 }

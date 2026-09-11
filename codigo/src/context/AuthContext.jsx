@@ -17,6 +17,25 @@ function readStorage() {
     const token = localStorage.getItem(STORAGE_TOKEN);
     const raw   = localStorage.getItem(STORAGE_USER);
     const user  = raw ? JSON.parse(raw) : null;
+
+    // Verificar si el token JWT está expirado
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        if (payload.exp && payload.exp * 1000 < Date.now()) {
+          console.warn('[Auth] Token JWT expirado. Limpiando sesión.');
+          localStorage.removeItem(STORAGE_TOKEN);
+          localStorage.removeItem(STORAGE_USER);
+          return { token: null, user: null };
+        }
+      } catch {
+        // Token malformado, limpiamos
+        localStorage.removeItem(STORAGE_TOKEN);
+        localStorage.removeItem(STORAGE_USER);
+        return { token: null, user: null };
+      }
+    }
+
     return { token, user };
   } catch {
     return { token: null, user: null };

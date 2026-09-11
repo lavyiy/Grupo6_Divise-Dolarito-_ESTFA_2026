@@ -403,3 +403,18 @@
     justify-content: center;
   }
 }
+
+/* ── Spinner de carga ─────────────────────────────────────────────────── */
+.spinner-lg {
+  width: 28px;
+  height: 28px;
+  border: 3px solid rgba(240, 185, 11, 0.2);
+  border-left-color: var(--brand-gold);
+  border-radius: 50%;
+  animation: spin-fav 0.9s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin-fav {
+  to { transform: rotate(360deg); }
+}
