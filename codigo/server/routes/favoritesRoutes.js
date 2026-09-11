@@ -12,7 +12,8 @@ router.get('/', async (req, res) => {
       `SELECT d.codigo 
        FROM favoritos f
        JOIN divisas d ON f.id_divisa = d.id_divisa
-       WHERE f.id_usuario = $1`,
+       WHERE f.id_usuario = $1
+       ORDER BY f.created_at ASC`,
       [req.user.id_usuario]
     );
     const favorites = result.rows.map(r => r.codigo);
@@ -32,12 +33,15 @@ router.post('/toggle', async (req, res) => {
       return res.status(400).json({ error: 'Falta codigo_divisa' });
     }
     
-    // Buscar id_divisa
-    const divisaRes = await pool.query('SELECT id_divisa FROM divisas WHERE codigo = $1', [codigo_divisa]);
+    const cleanCode = String(codigo_divisa).trim().toUpperCase();
+    
+    // Buscar id_divisa insensible a mayúsculas
+    const divisaRes = await pool.query('SELECT id_divisa, codigo FROM divisas WHERE UPPER(codigo) = $1', [cleanCode]);
     if (divisaRes.rows.length === 0) {
-      return res.status(404).json({ error: 'Divisa no encontrada' });
+      return res.status(404).json({ error: `Divisa ${cleanCode} no encontrada` });
     }
     const id_divisa = divisaRes.rows[0].id_divisa;
+    const resolvedCode = divisaRes.rows[0].codigo;
     
     // Comprobar si ya es favorito
     const checkRes = await pool.query(
@@ -53,13 +57,13 @@ router.post('/toggle', async (req, res) => {
     } else {
       // Agregar
       await pool.query(
-        'INSERT INTO favoritos (id_usuario, id_divisa) VALUES ($1, $2)',
+        'INSERT INTO favoritos (id_usuario, id_divisa) VALUES ($1, $2) ON CONFLICT (id_usuario, id_divisa) DO NOTHING',
         [req.user.id_usuario, id_divisa]
       );
       isFavorite = true;
     }
     
-    res.json({ success: true, isFavorite });
+    res.json({ success: true, isFavorite, codigo: resolvedCode });
   } catch (error) {
     console.error('Error toggling favorite:', error);
     res.status(500).json({ error: 'Error interno' });

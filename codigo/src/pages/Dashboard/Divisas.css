@@ -164,6 +164,14 @@
   transform: scale(1.1);
 }
 .dc-fav-btn:active { transform: scale(0.9); }
+.dc-fav-btn.active {
+  color: var(--brand-gold);
+  background: var(--gold-soft);
+  border-color: rgba(240, 185, 11, 0.4);
+}
+.dc-fav-btn.active svg {
+  fill: var(--brand-gold) !important;
+}
 
 .dc-meta {
   display: flex;

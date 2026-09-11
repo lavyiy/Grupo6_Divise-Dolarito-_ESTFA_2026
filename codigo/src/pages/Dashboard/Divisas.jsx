@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { fetchRates } from '../../services/api';
+import { fetchRates, getFavorites, toggleFavorite } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 import { Icon } from '../../components/ui/Icon';
 import Sparkline from '../../components/ui/Sparkline';
 import { stableVariation, formatARS, currencyIcon, hashSeed } from '../../utils';
@@ -14,34 +15,83 @@ const CATEGORIES = [
 const isCrypto = (r) =>
   r.tipo_mercado === 'Cripto' ||
   r.tipo === 'Cripto' ||
-  ['BTC', 'ETH', 'USDT', 'USDC'].includes(r.codigo);
+  ['BTC', 'ETH', 'USDT', 'USDC', 'BNB', 'DOGE'].includes(r.codigo);
 
 export default function Divisas() {
+  const { token } = useAuth();
   const [rates, setRates] = useState([]);
+  const [favoritesCodes, setFavoritesCodes] = useState(new Set());
+  const [togglingCode, setTogglingCode] = useState(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('todos');
   const [now, setNow] = useState(new Date());
+  const [toast, setToast] = useState('');
+
+  const showToast = (msg) => {
+    setToast(msg);
+    setTimeout(() => setToast(''), 3500);
+  };
 
   useEffect(() => {
     async function load() {
       try {
-        const data = await fetchRates();
-        if (Array.isArray(data)) setRates(data);
+        const [data, favs] = await Promise.allSettled([
+          fetchRates(),
+          token ? getFavorites(token) : Promise.resolve([])
+        ]);
+        if (data.status === 'fulfilled' && Array.isArray(data.value)) {
+          setRates(data.value);
+        }
+        if (favs.status === 'fulfilled' && Array.isArray(favs.value)) {
+          setFavoritesCodes(new Set(favs.value));
+        }
       } catch (err) {
-        console.error("Error fetching live rates", err);
+        console.error("Error fetching live rates or favorites", err);
       } finally {
         setLoading(false);
       }
     }
     load();
-  }, []);
+  }, [token]);
 
   // Reloj de "última actualización" en vivo
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  const handleToggleFavorite = async (codigo) => {
+    if (!token) {
+      showToast('Iniciá sesión para gestionar tus favoritos.');
+      return;
+    }
+    if (togglingCode) return;
+    setTogglingCode(codigo);
+
+    const isFav = favoritesCodes.has(codigo);
+    // Optimistic update
+    setFavoritesCodes(prev => {
+      const next = new Set(prev);
+      isFav ? next.delete(codigo) : next.add(codigo);
+      return next;
+    });
+    showToast(isFav ? `${codigo} quitado de favoritos` : `★ ${codigo} agregado a favoritos`);
+
+    try {
+      await toggleFavorite(codigo, token);
+    } catch (err) {
+      // Revertir ante error
+      setFavoritesCodes(prev => {
+        const next = new Set(prev);
+        isFav ? next.add(codigo) : next.delete(codigo);
+        return next;
+      });
+      showToast('Error al actualizar favorito.');
+    } finally {
+      setTogglingCode(null);
+    }
+  };
 
   const filteredRates = rates.filter((r) => {
     const matchesSearch =
@@ -55,6 +105,8 @@ export default function Divisas() {
 
   return (
     <div className="divisas-container page-enter">
+
+      {toast && <div className="toast" style={{ position: 'fixed', top: '24px', right: '24px', zIndex: 9999 }}>{toast}</div>}
 
       {/* Encabezado */}
       <header className="page-header">
@@ -118,6 +170,8 @@ export default function Divisas() {
             );
             const isUp = variation >= 0;
             const seed = hashSeed(d.codigo, d.tipo_mercado || d.tipo || 'x');
+            const isFav = favoritesCodes.has(d.codigo);
+            const isToggling = togglingCode === d.codigo;
 
             return (
               <div className="divisa-card stagger" key={`${d.codigo}-${d.tipo_mercado}-${i}`} style={{ '--i': i }}>
@@ -129,8 +183,24 @@ export default function Divisas() {
                       <span className="dc-name">{d.nombre}</span>
                     </div>
                   </div>
-                  <button className="dc-fav-btn" title="Agregar a favoritos">
-                    <Icon name="star" size={17} />
+                  <button
+                    type="button"
+                    className={`dc-fav-btn ${isFav ? 'active' : ''}`}
+                    title={isFav ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+                    disabled={isToggling}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleToggleFavorite(d.codigo);
+                    }}
+                  >
+                    <Icon
+                      name="star"
+                      size={17}
+                      style={{
+                        fill: isFav ? 'var(--brand-gold)' : 'none',
+                        color: isFav ? 'var(--brand-gold)' : 'inherit'
+                      }}
+                    />
                   </button>
                 </div>
 

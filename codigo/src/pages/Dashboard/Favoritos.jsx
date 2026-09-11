@@ -24,17 +24,18 @@ export default function Favoritos() {
   const { token } = useAuth();
 
   const [loading, setLoading] = useState(true);
-  const [favoritesCodes, setFavoritesCodes] = useState(new Set()); // codigos en Supabase
+  const [favoritesCodes, setFavoritesCodes] = useState(new Set()); // códigos en Supabase
   const [rates, setRates] = useState({});                           // precios en vivo
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortOrder, setSortOrder] = useState('mis-favoritas');
+  const [viewTab, setViewTab] = useState('todas');                  // 'todas' | 'mis-favoritas'
+  const [sortOrder, setSortOrder] = useState('favoritas-primero');
   const [currentPage, setCurrentPage] = useState(1);
   const [notification, setNotification] = useState('');
   const [togglingCode, setTogglingCode] = useState(null);
 
   const showToast = (msg) => {
     setNotification(msg);
-    setTimeout(() => setNotification(''), 3000);
+    setTimeout(() => setNotification(''), 3500);
   };
 
   // Carga favoritos desde Supabase y cotizaciones en vivo
@@ -48,11 +49,14 @@ export default function Favoritos() {
       ]);
 
       if (favData.status === 'fulfilled') {
-        setFavoritesCodes(new Set(Array.isArray(favData.value) ? favData.value : []));
+        const favList = Array.isArray(favData.value) ? favData.value : [];
+        setFavoritesCodes(new Set(favList));
+        if (favList.length > 0) {
+          setViewTab('mis-favoritas');
+        }
       }
 
       if (liveRates.status === 'fulfilled' && Array.isArray(liveRates.value)) {
-        // Agrupar precio de venta por código
         const rateMap = {};
         liveRates.value.forEach(r => {
           if (!rateMap[r.codigo] || r.tipo_mercado === 'Oficial') {
@@ -81,7 +85,7 @@ export default function Favoritos() {
       wasFav ? next.delete(codigo) : next.add(codigo);
       return next;
     });
-    showToast(wasFav ? `${codigo} quitado de favoritos` : `${codigo} agregado a favoritos`);
+    showToast(wasFav ? `${codigo} quitado de favoritos` : `★ ${codigo} guardado en favoritos`);
     try {
       await toggleFavorite(codigo, token);
     } catch {
@@ -101,6 +105,26 @@ export default function Favoritos() {
     navigate('/dashboard/calculadora', { state: { currency: codigo } });
   };
 
+  const handleRefreshRates = async (item) => {
+    try {
+      showToast(`Consultando cotización de ${item.codigo}...`);
+      const live = await fetchRates();
+      if (Array.isArray(live)) {
+        const rateMap = {};
+        live.forEach(r => {
+          if (!rateMap[r.codigo] || r.tipo_mercado === 'Oficial') {
+            rateMap[r.codigo] = r.venta || r.compra || 0;
+          }
+        });
+        setRates(prev => ({ ...prev, ...rateMap }));
+        const current = rateMap[item.codigo] || item.precio;
+        showToast(`${item.codigo}: $${current.toLocaleString('es-AR', { minimumFractionDigits: 2 })} al instante`);
+      }
+    } catch {
+      showToast(`Cotización actual de ${item.codigo}: $${item.precio.toLocaleString('es-AR')}`);
+    }
+  };
+
   // Construir lista con precio en vivo e isFav real
   const allItems = DIVISAS_CATALOG.map((d, i) => ({
     id: i + 1,
@@ -111,17 +135,23 @@ export default function Favoritos() {
     isFav: favoritesCodes.has(d.codigo),
   }));
 
-  // Solo mostrar favoritos o todos según filtro
-  const baseList = sortOrder === 'mis-favoritas'
+  // Filtrado por Tab
+  const baseList = viewTab === 'mis-favoritas'
     ? allItems.filter(i => i.isFav)
     : allItems;
 
+  // Filtrado por término de búsqueda
   const filteredList = baseList.filter(item =>
     item.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.codigo.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Ordenamiento
   const sortedList = [...filteredList].sort((a, b) => {
+    if (sortOrder === 'favoritas-primero') {
+      if (a.isFav !== b.isFav) return a.isFav ? -1 : 1;
+      return a.codigo.localeCompare(b.codigo);
+    }
     if (sortOrder === 'codigo') return a.codigo.localeCompare(b.codigo);
     if (sortOrder === 'precio-mayor') return b.precio - a.precio;
     if (sortOrder === 'precio-menor') return a.precio - b.precio;
@@ -141,25 +171,45 @@ export default function Favoritos() {
         <div>
           <h1 className="page-title">Favoritos de Divisas</h1>
           <p className="page-sub">
-            {loading ? 'Cargando...' : `${favoritesCodes.size} divisas marcadas como favoritas`}
+            {loading ? 'Cargando cotizaciones...' : `${favoritesCodes.size} divisas marcadas como favoritas`}
           </p>
         </div>
       </header>
 
+      {/* Barra de Filtros y Búsqueda */}
       <div className="favoritos-top-bar">
+        <div className="favoritos-tabs">
+          <button 
+            type="button"
+            className={`fav-tab-btn ${viewTab === 'mis-favoritas' ? 'active' : ''}`}
+            onClick={() => { setViewTab('mis-favoritas'); setCurrentPage(1); }}
+          >
+            <Icon name="star" size={14} style={{ fill: viewTab === 'mis-favoritas' ? 'var(--brand-gold)' : 'none' }} />
+            Mis favoritas <span className="badge-count">{favoritesCodes.size}</span>
+          </button>
+          <button 
+            type="button"
+            className={`fav-tab-btn ${viewTab === 'todas' ? 'active' : ''}`}
+            onClick={() => { setViewTab('todas'); setCurrentPage(1); }}
+          >
+            Todas las divisas <span className="badge-count">{DIVISAS_CATALOG.length}</span>
+          </button>
+        </div>
+
         <div className="favoritos-search-group">
-          <label>Buscar divisa</label>
+          <label>Buscar</label>
           <div className="favoritos-search-input">
             <Icon name="search" size={15} />
             <input
               type="text"
-              placeholder="Buscar por divisa..."
+              placeholder="Buscar por nombre o código..."
               value={searchTerm}
               onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
             />
           </div>
         </div>
-        <button className="btn btn-outline" onClick={() => showToast('Filtros aplicados')}>
+
+        <button className="btn btn-outline" onClick={() => { setCurrentPage(1); showToast('Filtros aplicados'); }}>
           <Icon name="settings" size={14} /> Aplicar filtros
         </button>
       </div>
@@ -168,14 +218,16 @@ export default function Favoritos() {
         <div className="favoritos-card-header">
           <div className="favoritos-card-title">
             <span>
-              {sortOrder === 'mis-favoritas' ? 'Mis favoritas' : 'Todas las divisas'}
+              {viewTab === 'mis-favoritas' ? 'Mis favoritas' : 'Catálogo completo'}
             </span>
-            <span className="badge-count">{favoritesCodes.size}</span>
+            <span className="badge-count">
+              {viewTab === 'mis-favoritas' ? favoritesCodes.size : sortedList.length}
+            </span>
           </div>
           <div className="favoritos-card-sort">
             <label>Ordenar por</label>
             <select value={sortOrder} onChange={(e) => { setSortOrder(e.target.value); setCurrentPage(1); }}>
-              <option value="mis-favoritas">Mis favoritas primero</option>
+              <option value="favoritas-primero">Favoritas primero</option>
               <option value="codigo">Código (A-Z)</option>
               <option value="precio-mayor">Precio Mayor</option>
               <option value="precio-menor">Precio Menor</option>
@@ -208,14 +260,15 @@ export default function Favoritos() {
                     <tr key={item.codigo}>
                       <td>
                         <div className="fav-star-cell">
-                          <span
-                            className={`star-icon ${isToggling ? 'toggling' : ''}`}
+                          <button
+                            type="button"
+                            className={`star-icon-btn ${isToggling ? 'toggling' : ''}`}
                             onClick={() => handleToggleFavorite(item.codigo)}
                             title={item.isFav ? 'Quitar de favoritos' : 'Agregar a favoritos'}
-                            style={{ cursor: isToggling ? 'wait' : 'pointer', opacity: isToggling ? 0.5 : 1 }}
+                            disabled={isToggling}
                           >
-                            <Icon name="star" size={18} style={{ fill: item.isFav ? 'var(--brand-gold)' : 'none' }} />
-                          </span>
+                            <Icon name="star" size={18} style={{ fill: item.isFav ? 'var(--brand-gold)' : 'none', color: item.isFav ? 'var(--brand-gold)' : 'inherit' }} />
+                          </button>
                           {item.isFav ? (
                             <div className="fav-toggle-pill">
                               <div className="fav-toggle-dot"></div>
@@ -258,12 +311,14 @@ export default function Favoritos() {
                           <button
                             className="btn-quick-convert"
                             onClick={() => handleQuickConvert(item.codigo)}
+                            title={`Convertir ${item.codigo} en la Calculadora`}
                           >
                             Quick Convert
                           </button>
                           <button
                             className="btn-reconsultar"
-                            onClick={() => showToast(`Precio ${item.codigo}: ${item.precio > 0 ? '$' + item.precio.toLocaleString('es-AR') : 'sin datos'}`)}
+                            onClick={() => handleRefreshRates(item)}
+                            title={`Actualizar cotización de ${item.codigo}`}
                           >
                             <Icon name="refresh" size={13} /> Re-consultar
                           </button>
@@ -274,10 +329,21 @@ export default function Favoritos() {
                 })
               ) : (
                 <tr>
-                  <td colSpan="5" style={{ textAlign: 'center', padding: '48px', color: 'var(--text-muted)' }}>
-                    {sortOrder === 'mis-favoritas'
-                      ? 'No tenés favoritos guardados. Hacé click en ★ para agregar.'
-                      : 'No se encontraron divisas.'}
+                  <td colSpan="5">
+                    {viewTab === 'mis-favoritas' && favoritesCodes.size === 0 ? (
+                      <div className="fav-empty-card">
+                        <Icon name="star" size={36} style={{ color: 'var(--brand-gold)' }} />
+                        <h3 style={{ margin: '4px 0', color: 'var(--text-main)', fontSize: '16px' }}>No tenés favoritos guardados todavía</h3>
+                        <p style={{ margin: 0, fontSize: '13px' }}>Hacé click en "Ver todas las divisas" y marcá las monedas que más consultás con la estrella ★.</p>
+                        <button className="btn btn-primary btn-sm" onClick={() => { setViewTab('todas'); setCurrentPage(1); }}>
+                          Ver todas las divisas
+                        </button>
+                      </div>
+                    ) : (
+                      <div style={{ textAlign: 'center', padding: '48px', color: 'var(--text-muted)' }}>
+                        No se encontraron divisas con el filtro actual.
+                      </div>
+                    )}
                   </td>
                 </tr>
               )}

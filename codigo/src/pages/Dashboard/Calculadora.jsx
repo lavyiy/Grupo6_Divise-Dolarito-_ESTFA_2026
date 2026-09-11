@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, Link } from 'react-router-dom';
-import { fetchRates } from '../../services/api';
+import { fetchRates, getFavorites, toggleFavorite } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 import CountUp from 'react-countup';
 import { Icon } from '../../components/ui/Icon';
 import { flagIcon, currencyName } from '../../utils';
@@ -8,7 +9,10 @@ import './Calculadora.css';
 
 export default function Calculadora() {
   const location = useLocation();
+  const { token } = useAuth();
   const [rates, setRates] = useState([]);
+  const [favoritesCodes, setFavoritesCodes] = useState(new Set());
+  const [toast, setToast] = useState('');
   const [amount, setAmount] = useState('1000');
   const [fromCurrency, setFromCurrency] = useState(location.state?.currency || 'USD');
   const [toCurrency, setToCurrency] = useState('ARS');
@@ -27,17 +31,56 @@ export default function Calculadora() {
     }
   }, [location.state]);
 
+  const showToast = (msg) => {
+    setToast(msg);
+    setTimeout(() => setToast(''), 3500);
+  };
+
   useEffect(() => {
     async function load() {
       try {
-        const data = await fetchRates();
-        if (Array.isArray(data)) setRates(data);
+        const [data, favs] = await Promise.allSettled([
+          fetchRates(),
+          token ? getFavorites(token) : Promise.resolve([])
+        ]);
+        if (data.status === 'fulfilled' && Array.isArray(data.value)) setRates(data.value);
+        if (favs.status === 'fulfilled' && Array.isArray(favs.value)) setFavoritesCodes(new Set(favs.value));
       } catch (err) {
         console.error("Error fetching live rates", err);
       }
     }
     load();
-  }, []);
+  }, [token]);
+
+  const handleToggleFavorite = async () => {
+    if (!token) {
+      showToast('Iniciá sesión para guardar favoritos.');
+      return;
+    }
+    const isFav = favoritesCodes.has(fromCurrency);
+    // Optimistic update
+    setFavoritesCodes(prev => {
+      const next = new Set(prev);
+      isFav ? next.delete(fromCurrency) : next.add(fromCurrency);
+      return next;
+    });
+    showToast(isFav ? `${fromCurrency} quitado de favoritos` : `★ ${fromCurrency} guardado en favoritos`);
+    try {
+      await toggleFavorite(fromCurrency, token);
+    } catch {
+      setFavoritesCodes(prev => {
+        const next = new Set(prev);
+        isFav ? next.add(fromCurrency) : next.delete(fromCurrency);
+        return next;
+      });
+      showToast('Error al actualizar favoritos');
+    }
+  };
+
+  const handleConvertClick = () => {
+    const formatted = result ? result.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 4}) : '0';
+    showToast(`Conversión: ${amount} ${fromCurrency} = ${formatted} ${toCurrency}`);
+  };
 
   const handleSwap = () => {
     const temp = fromCurrency;
@@ -79,6 +122,8 @@ export default function Calculadora() {
 
   return (
     <div className="calc-container page-enter">
+      {toast && <div className="toast" style={{ position: 'fixed', top: '24px', right: '24px', zIndex: 9999 }}>{toast}</div>}
+
       <header className="page-header">
         <div>
           <h1 className="page-title">Calculadora</h1>
@@ -182,11 +227,23 @@ export default function Calculadora() {
           )}
 
           <div className="calc-actions">
-            <button className="btn btn-primary btn-block">
+            <button type="button" className="btn btn-primary btn-block" onClick={handleConvertClick}>
               Convertir <Icon name="arrowRight" size={15} />
             </button>
-            <button className="btn btn-outline btn-block">
-              <Icon name="star" size={15} /> Agregar a favoritos
+            <button 
+              type="button" 
+              className={`btn btn-outline btn-block ${favoritesCodes.has(fromCurrency) ? 'calc-fav-active' : ''}`}
+              onClick={handleToggleFavorite}
+            >
+              <Icon 
+                name="star" 
+                size={15} 
+                style={{ 
+                  fill: favoritesCodes.has(fromCurrency) ? 'var(--brand-gold)' : 'none', 
+                  color: favoritesCodes.has(fromCurrency) ? 'var(--brand-gold)' : 'inherit' 
+                }} 
+              />
+              {favoritesCodes.has(fromCurrency) ? `${fromCurrency} en tus favoritos` : `Agregar ${fromCurrency} a favoritos`}
             </button>
           </div>
 

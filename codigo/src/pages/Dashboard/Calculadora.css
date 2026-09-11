@@ -176,6 +176,12 @@
   gap: 10px;
 }
 
+.calc-fav-active {
+  border-color: rgba(240, 185, 11, 0.45) !important;
+  color: var(--brand-gold) !important;
+  background: var(--gold-soft) !important;
+}
+
 /* Resultado (input) */
 .calc-result-display {
   background: transparent;
