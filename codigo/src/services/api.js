@@ -201,6 +201,34 @@ export function toggleFavorite(codigo_divisa, token) {
   });
 }
 
+// ── Historial de consultas (Tarea 14) ─────────────────────────────────────────
+
+/**
+ * Registra en la tabla historial_de_consultas que el usuario consultó un par.
+ * Se llama cuando el usuario hace clic en una card de divisa en la pantalla Divisas.
+ * Falla silenciosamente para no interrumpir la UX.
+ * @param {{ par_consultado: string, valor_momento: number }} data
+ * @param {string} token JWT del usuario autenticado
+ */
+export function recordHistorial({ par_consultado, valor_momento }, token) {
+  return request('/api/historial', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ par_consultado, valor_momento }),
+  });
+}
+
+/**
+ * Devuelve el historial de consultas del usuario autenticado.
+ * @param {string} token
+ * @param {number} [limit=50]
+ */
+export function getHistorial(token, limit = 50) {
+  return request(`/api/historial?limit=${limit}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
 // ── Cotizaciones en Tiempo Real (DolarApi & Cripto en vivo) ────────────────
 
 /**

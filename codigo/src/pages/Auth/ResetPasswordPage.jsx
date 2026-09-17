@@ -22,7 +22,7 @@ export default function ResetPasswordPage() {
     setError('');
 
     if (!token.trim()) {
-      setError('El token de restablecimiento es requerido.');
+      setError('No se encontró el token de restablecimiento. Usá el enlace del email que recibiste.');
       return;
     }
 
@@ -32,7 +32,7 @@ export default function ResetPasswordPage() {
     }
 
     if (password !== confirmPassword) {
-      setError('Las contraseñas no coinciden.');
+      setError('Las contraseñas no coinciden. Verificá que las dos sean iguales.');
       return;
     }
 
@@ -41,7 +41,15 @@ export default function ResetPasswordPage() {
       await authResetPassword({ token: token.trim(), newPassword: password });
       setSuccess(true);
     } catch (err) {
-      setError(err.message || 'El enlace de restablecimiento es inválido o ha expirado.');
+      // Tarea 15: Mensajes de error específicos según el tipo de falla
+      const msg = err.message || '';
+      if (msg.toLowerCase().includes('expirado') || msg.toLowerCase().includes('expired')) {
+        setError('El enlace de recuperación expiró (válido por 30 minutos). Pedí uno nuevo desde "¿Olvidaste tu contraseña?".');
+      } else if (msg.toLowerCase().includes('inválido') || msg.toLowerCase().includes('invalid') || msg.toLowerCase().includes('no encontrado')) {
+        setError('El enlace de recuperación es inválido o ya fue utilizado. Pedí uno nuevo desde "¿Olvidaste tu contraseña?".');
+      } else {
+        setError(msg || 'Ocurrió un error al restablecer la contraseña. Intentá de nuevo.');
+      }
     } finally {
       setLoading(false);
     }
@@ -74,7 +82,18 @@ export default function ResetPasswordPage() {
             Ingresá tu nueva clave para actualizar el acceso a tu cuenta.
           </p>
 
-          {error && <div className="auth-alert error">{error}</div>}
+          {error && (
+            <div className="auth-alert error">
+              {error}
+              {(error.includes('expiró') || error.includes('inválido') || error.includes('utilizado')) && (
+                <div style={{ marginTop: '8px' }}>
+                  <Link to="/forgot" className="auth-link" style={{ fontSize: '13px', fontWeight: 600 }}>
+                    → Solicitar nuevo enlace de recuperación
+                  </Link>
+                </div>
+              )}
+            </div>
+          )}
 
           {success ? (
             <div style={{ textAlign: 'center', padding: '20px 0' }}>

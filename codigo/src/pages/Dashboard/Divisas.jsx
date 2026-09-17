@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { fetchRates, getFavorites, toggleFavorite } from '../../services/api';
+import { fetchRates, getFavorites, toggleFavorite, recordHistorial } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { Icon } from '../../components/ui/Icon';
 import Sparkline from '../../components/ui/Sparkline';
@@ -93,6 +93,18 @@ export default function Divisas() {
     }
   };
 
+  /**
+   * Tarea 14: Registra en historial cuando el usuario hace clic en una card de divisa.
+   * Solo actúa si hay sesión activa. Falla silenciosamente para no interrumpir la UX.
+   */
+  const handleCardClick = (divisa) => {
+    if (!token) return; // sin sesión, no registramos
+    const par = `${divisa.nombre} - ${divisa.codigo}`;
+    const valor = divisa.venta ?? divisa.compra ?? 0;
+    recordHistorial({ par_consultado: par, valor_momento: valor }, token)
+      .catch(err => console.warn('[Historial] No se pudo registrar la consulta:', err.message));
+  };
+
   const filteredRates = rates.filter((r) => {
     const matchesSearch =
       r.nombre.toLowerCase().includes(search.toLowerCase()) ||
@@ -174,7 +186,12 @@ export default function Divisas() {
             const isToggling = togglingCode === d.codigo;
 
             return (
-              <div className="divisa-card stagger" key={`${d.codigo}-${d.tipo_mercado}-${i}`} style={{ '--i': i }}>
+              <div
+                className="divisa-card stagger"
+                key={`${d.codigo}-${d.tipo_mercado}-${i}`}
+                style={{ '--i': i, cursor: 'pointer' }}
+                onClick={() => handleCardClick(d)}
+              >
                 <div className="dc-header">
                   <div className="dc-identity">
                     <div className="dc-icon">{currencyIcon(d.codigo)}</div>

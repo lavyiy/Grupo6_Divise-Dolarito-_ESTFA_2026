@@ -39,10 +39,20 @@ const updateProfile = async (req, res) => {
 
 const deleteAccount = async (req, res) => {
   try {
-    // El ID siempre sale del token, nunca del body.
+    // El ID siempre sale del token, nunca del body. (Tarea 4)
     const id_usuario = req.user.id_usuario;
+    const email = req.user.email || '(desconocido)';
+
+    console.log(`🗑️  [DELETE ACCOUNT] Eliminando cuenta id=${id_usuario} email=${email}`);
     const deleted = await userService.removeUser(id_usuario);
-    res.status(200).json({ message: 'Cuenta eliminada correctamente', deleted });
+
+    console.log(`✅ [DELETE ACCOUNT] Cuenta eliminada correctamente: id=${id_usuario}`);
+    // El campo 'logout: true' le indica al frontend que debe limpiar el JWT y redirigir al login.
+    res.status(200).json({
+      message: 'Cuenta eliminada correctamente. Todos tus datos han sido borrados permanentemente.',
+      logout: true,
+      deleted
+    });
   } catch (error) {
     console.error('Error en deleteAccount:', error);
     res.status(error.status || 500).json({ error: error.message || 'Error interno del servidor' });

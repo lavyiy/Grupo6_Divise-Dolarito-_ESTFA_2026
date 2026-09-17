@@ -23,17 +23,19 @@ const ratesRoutes = require('./routes/ratesRoutes');
 const alertRoutes = require('./routes/alertRoutes');
 const favoritesRoutes = require('./routes/favoritesRoutes');
 const userRoutes = require('./routes/userRoutes');
+const historialRoutes = require('./routes/historialRoutes'); // Tarea 14
 app.use('/api/auth', authRoutes);
 app.use('/api/rates', ratesRoutes);
 app.use('/api/alerts', alertRoutes);
 app.use('/api/favorites', favoritesRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/historial', historialRoutes); // Tarea 14
 
 // Ruta raíz de la API para evitar "Cannot GET /api"
 app.get('/api', (req, res) => {
   res.json({
     message: 'Divise API',
-    endpoints: ['/api/auth', '/api/rates', '/api/alerts', '/api/favorites', '/api/users']
+    endpoints: ['/api/auth', '/api/rates', '/api/alerts', '/api/favorites', '/api/users', '/api/historial']
   });
 });
 
