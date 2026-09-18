@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { fetchRates, getFavorites, toggleFavorite, recordHistorial } from '../../services/api';
+import { useNavigate } from 'react-router-dom';
+import { fetchDatabaseRates, getFavorites, toggleFavorite, recordHistorial } from '../../services/api';
+import { isCrypto } from '../../services/rateTypes.mjs';
 import { useAuth } from '../../context/AuthContext';
 import { Icon } from '../../components/ui/Icon';
-import Sparkline from '../../components/ui/Sparkline';
-import { stableVariation, formatARS, currencyIcon, hashSeed } from '../../utils';
+import CurrencyBadge from '../../components/ui/CurrencyBadge';
+import { formatARS } from '../../utils';
 import './Divisas.css';
 
 const CATEGORIES = [
@@ -12,20 +14,17 @@ const CATEGORIES = [
   { id: 'cripto', label: 'Cripto', icon: 'spark' },
 ];
 
-const isCrypto = (r) =>
-  r.tipo_mercado === 'Cripto' ||
-  r.tipo === 'Cripto' ||
-  ['BTC', 'ETH', 'USDT', 'USDC', 'BNB', 'DOGE'].includes(r.codigo);
-
 export default function Divisas() {
   const { token } = useAuth();
+  const navigate = useNavigate();
   const [rates, setRates] = useState([]);
   const [favoritesCodes, setFavoritesCodes] = useState(new Set());
   const [togglingCode, setTogglingCode] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+  const [retryCount, setRetryCount] = useState(0);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('todos');
-  const [now, setNow] = useState(new Date());
   const [toast, setToast] = useState('');
 
   const showToast = (msg) => {
@@ -34,32 +33,39 @@ export default function Divisas() {
   };
 
   useEffect(() => {
+    let cancelled = false;
     async function load() {
+      setLoading(true);
+      setLoadError('');
       try {
         const [data, favs] = await Promise.allSettled([
-          fetchRates(),
+          fetchDatabaseRates(),
           token ? getFavorites(token) : Promise.resolve([])
         ]);
+        if (cancelled) return;
         if (data.status === 'fulfilled' && Array.isArray(data.value)) {
           setRates(data.value);
+        } else {
+          setRates([]);
+          setLoadError('No se pudieron cargar las cotizaciones. Volvé a intentar.');
         }
         if (favs.status === 'fulfilled' && Array.isArray(favs.value)) {
           setFavoritesCodes(new Set(favs.value));
         }
       } catch (err) {
-        console.error("Error fetching live rates or favorites", err);
+        console.error("Error fetching database rates or favorites", err);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     }
     load();
-  }, [token]);
+    return () => { cancelled = true; };
+  }, [token, retryCount]);
 
-  // Reloj de "última actualización" en vivo
-  useEffect(() => {
-    const timer = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
+  const lastUpdated = rates.reduce((latest, rate) => {
+    const timestamp = Date.parse(rate.updated_at || rate.fecha);
+    return Number.isFinite(timestamp) ? Math.max(latest, timestamp) : latest;
+  }, 0);
 
   const handleToggleFavorite = async (codigo) => {
     if (!token) {
@@ -98,11 +104,16 @@ export default function Divisas() {
    * Solo actúa si hay sesión activa. Falla silenciosamente para no interrumpir la UX.
    */
   const handleCardClick = (divisa) => {
-    if (!token) return; // sin sesión, no registramos
-    const par = `${divisa.nombre} - ${divisa.codigo}`;
-    const valor = divisa.venta ?? divisa.compra ?? 0;
-    recordHistorial({ par_consultado: par, valor_momento: valor }, token)
-      .catch(err => console.warn('[Historial] No se pudo registrar la consulta:', err.message));
+    const mercado = divisa.tipo_mercado || divisa.tipo || '';
+    // Registra la consulta en el historial (solo con sesión activa)
+    if (token) {
+      const par = `${divisa.nombre} - ${divisa.codigo}`;
+      const valor = divisa.venta ?? divisa.compra ?? 0;
+      recordHistorial({ par_consultado: par, valor_momento: valor }, token)
+        .catch(err => console.warn('[Historial] No se pudo registrar la consulta:', err.message));
+    }
+    // Navega al gráfico de esa moneda
+    navigate('/dashboard/graficos', { state: { codigo: divisa.codigo, mercado } });
   };
 
   const filteredRates = rates.filter((r) => {
@@ -125,12 +136,12 @@ export default function Divisas() {
         <div>
           <h1 className="page-title">Cotizaciones</h1>
           <p className="page-sub">
-            Precios de compra y venta actualizados al día.
+            Cotizaciones de divisas y criptomonedas.
           </p>
         </div>
         <div className="divisas-updated" title="Última actualización">
           <span className="live-dot"></span>
-          Actualizado {now.toLocaleTimeString('es-AR')}
+          {lastUpdated ? `Último dato: ${new Date(lastUpdated).toLocaleString('es-AR')}` : 'Sin actualización'}
         </div>
       </header>
 
@@ -169,6 +180,13 @@ export default function Divisas() {
             <div className="divisa-card skeleton" key={`s-${i}`} style={{ minHeight: '172px' }} />
           ))}
         </div>
+      ) : loadError ? (
+        <div className="divisas-empty" role="alert">
+          <p>{loadError}</p>
+          <button className="btn btn-outline" onClick={() => setRetryCount(value => value + 1)}>
+            Reintentar
+          </button>
+        </div>
       ) : filteredRates.length === 0 ? (
         <div className="divisas-empty">
           <Icon name="search" size={28} />
@@ -177,24 +195,19 @@ export default function Divisas() {
       ) : (
         <div className="divisas-grid">
           {filteredRates.map((d, i) => {
-            const variation = stableVariation(
-              hashSeed(d.codigo, d.tipo_mercado || d.tipo || 'x')
-            );
-            const isUp = variation >= 0;
-            const seed = hashSeed(d.codigo, d.tipo_mercado || d.tipo || 'x');
             const isFav = favoritesCodes.has(d.codigo);
             const isToggling = togglingCode === d.codigo;
 
             return (
               <div
                 className="divisa-card stagger"
-                key={`${d.codigo}-${d.tipo_mercado}-${i}`}
+                key={`${d.codigo}-${d.tipo_mercado || d.tipo}-${i}`}
                 style={{ '--i': i, cursor: 'pointer' }}
                 onClick={() => handleCardClick(d)}
               >
                 <div className="dc-header">
                   <div className="dc-identity">
-                    <div className="dc-icon">{currencyIcon(d.codigo)}</div>
+                    <CurrencyBadge code={d.codigo} size={42} title={`${d.codigo} · ${d.nombre}`} />
                     <div className="dc-names">
                       <span className="dc-code">{d.codigo}</span>
                       <span className="dc-name">{d.nombre}</span>
@@ -228,21 +241,13 @@ export default function Divisas() {
                 </div>
 
                 <div className="dc-price">
-                  {['BTC', 'ETH'].includes(d.codigo) ? `US$ ${formatARS(d.venta)}` : `$ ${formatARS(d.venta)}`}
+                  {isCrypto(d) ? `US$ ${formatARS(d.venta)}` : `$ ${formatARS(d.venta)}`}
                 </div>
 
                 <div className="dc-bottom">
-                  <span className={`dc-change ${isUp ? 'up' : 'down'}`}>
-                    <Icon name={isUp ? 'trendUp' : 'trendDown'} size={13} />
-                    {isUp ? '+' : ''}
-                    {variation.toFixed(2)}% hoy
+                  <span className="dc-change">
+                    {d.fecha ? `Fecha: ${new Date(d.fecha).toLocaleDateString('es-AR')}` : 'Variación no disponible'}
                   </span>
-                  <Sparkline
-                    seed={seed}
-                    stroke={isUp ? 'var(--success)' : 'var(--danger)'}
-                    width={76}
-                    height={26}
-                  />
                 </div>
               </div>
             );

@@ -1,32 +1,41 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Icon } from '../../components/ui/Icon';
+import CurrencyBadge from '../../components/ui/CurrencyBadge';
 import Sparkline from '../../components/ui/Sparkline';
 import { stableVariation, hashSeed } from '../../utils';
 import { useAuth } from '../../context/AuthContext';
 import { getFavorites, toggleFavorite, fetchRates } from '../../services/api';
 import './Favoritos.css';
 
-// Catálogo de divisas disponibles para mostrar (con flag y nombre)
+// Catálogo de divisas disponibles para mostrar
 const DIVISAS_CATALOG = [
-  { codigo: 'USD', nombre: 'Dólar Estadounidense', flag: '🇺🇸' },
-  { codigo: 'EUR', nombre: 'Euro',                 flag: '🇪🇺' },
-  { codigo: 'BRL', nombre: 'Real Brasileño',       flag: '🇧🇷' },
-  { codigo: 'BTC', nombre: 'Bitcoin',              flag: '₿'  },
-  { codigo: 'ETH', nombre: 'Ethereum',             flag: '⟠'  },
-  { codigo: 'USDT', nombre: 'Tether',              flag: '💵' },
-  { codigo: 'BNB',  nombre: 'Binance Coin',        flag: '🔶' },
-  { codigo: 'DOGE', nombre: 'Dogecoin',            flag: '🐕' },
+  { codigo: 'USD', nombre: 'Dólar Estadounidense' },
+  { codigo: 'EUR', nombre: 'Euro' },
+  { codigo: 'BRL', nombre: 'Real Brasileño' },
+  { codigo: 'UYU', nombre: 'Peso Uruguayo' },
+  { codigo: 'CLP', nombre: 'Peso Chileno' },
+  { codigo: 'GBP', nombre: 'Libra Esterlina' },
+  { codigo: 'JPY', nombre: 'Yen Japonés' },
+  { codigo: 'MXN', nombre: 'Peso Mexicano' },
+  { codigo: 'CHF', nombre: 'Franco Suizo' },
+  { codigo: 'CNY', nombre: 'Yuan Chino' },
+  { codigo: 'BTC', nombre: 'Bitcoin' },
+  { codigo: 'ETH', nombre: 'Ethereum' },
+  { codigo: 'USDT', nombre: 'Tether' },
+  { codigo: 'BNB',  nombre: 'Binance Coin' },
+  { codigo: 'DOGE', nombre: 'Dogecoin' },
 ];
 
+const CRYPTO_CODES = new Set(['BTC', 'ETH', 'USDT', 'BNB', 'DOGE']);
+
 export default function Favoritos() {
-  const navigate = useNavigate();
   const { token } = useAuth();
 
   const [loading, setLoading] = useState(true);
   const [favoritesCodes, setFavoritesCodes] = useState(new Set()); // códigos en Supabase
   const [rates, setRates] = useState({});                           // precios en vivo
   const [searchTerm, setSearchTerm] = useState('');
+  const [typeFilter, setTypeFilter] = useState('todas');            // 'todas' | 'divisas' | 'cripto'
   const [viewTab, setViewTab] = useState('todas');                  // 'todas' | 'mis-favoritas'
   const [sortOrder, setSortOrder] = useState('favoritas-primero');
   const [currentPage, setCurrentPage] = useState(1);
@@ -101,10 +110,6 @@ export default function Favoritos() {
     }
   };
 
-  const handleQuickConvert = (codigo) => {
-    navigate('/dashboard/calculadora', { state: { currency: codigo } });
-  };
-
   const handleRefreshRates = async (item) => {
     try {
       showToast(`Consultando cotización de ${item.codigo}...`);
@@ -130,7 +135,6 @@ export default function Favoritos() {
     id: i + 1,
     codigo: d.codigo,
     nombre: d.nombre,
-    flag: d.flag,
     precio: rates[d.codigo] || 0,
     isFav: favoritesCodes.has(d.codigo),
   }));
@@ -140,11 +144,16 @@ export default function Favoritos() {
     ? allItems.filter(i => i.isFav)
     : allItems;
 
-  // Filtrado por término de búsqueda
-  const filteredList = baseList.filter(item =>
-    item.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.codigo.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filtrado por término de búsqueda + tipo de moneda
+  const filteredList = baseList.filter(item => {
+    const matchesSearch =
+      item.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.codigo.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesType =
+      typeFilter === 'todas' ||
+      (typeFilter === 'cripto' ? CRYPTO_CODES.has(item.codigo) : !CRYPTO_CODES.has(item.codigo));
+    return matchesSearch && matchesType;
+  });
 
   // Ordenamiento
   const sortedList = [...filteredList].sort((a, b) => {
@@ -207,6 +216,19 @@ export default function Favoritos() {
               onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
             />
           </div>
+        </div>
+
+        <div className="favoritos-search-group">
+          <label>Moneda</label>
+          <select
+            className="favoritos-filter-select"
+            value={typeFilter}
+            onChange={(e) => { setTypeFilter(e.target.value); setCurrentPage(1); }}
+          >
+            <option value="todas">Todas las monedas</option>
+            <option value="divisas">Divisas</option>
+            <option value="cripto">Criptomonedas</option>
+          </select>
         </div>
 
         <button className="btn btn-outline" onClick={() => { setCurrentPage(1); showToast('Filtros aplicados'); }}>
@@ -283,7 +305,7 @@ export default function Favoritos() {
                       </td>
                       <td>
                         <div className="currency-info">
-                          <span className="flag-icon">{item.flag}</span>
+                          <CurrencyBadge code={item.codigo} size={30} title={item.nombre} />
                           <div className="currency-text">
                             <span className="currency-code">{item.codigo}</span>
                             <span className="currency-name">{item.nombre}</span>
@@ -309,11 +331,14 @@ export default function Favoritos() {
                       <td style={{ textAlign: 'right' }}>
                         <div className="fav-actions">
                           <button
-                            className="btn-quick-convert"
-                            onClick={() => handleQuickConvert(item.codigo)}
-                            title={`Convertir ${item.codigo} en la Calculadora`}
+                            type="button"
+                            className={`btn-add-fav ${item.isFav ? 'is-fav' : ''}`}
+                            onClick={() => handleToggleFavorite(item.codigo)}
+                            disabled={isToggling}
+                            title={item.isFav ? `Quitar ${item.codigo} de favoritos` : `Agregar ${item.codigo} a favoritos`}
                           >
-                            Quick Convert
+                            <Icon name="star" size={14} style={{ fill: item.isFav ? 'currentColor' : 'none' }} />
+                            {item.isFav ? 'Quitar favorito' : 'Agregar favorito'}
                           </button>
                           <button
                             className="btn-reconsultar"

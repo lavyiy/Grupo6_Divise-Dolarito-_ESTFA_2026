@@ -125,6 +125,20 @@
   font-size: 14px;
 }
 
+.favoritos-filter-select {
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm, 8px);
+  padding: 9px 14px;
+  color: var(--text-main);
+  font-size: 14px;
+  outline: none;
+  cursor: pointer;
+  min-width: 180px;
+  transition: border-color 0.2s;
+}
+.favoritos-filter-select:focus { border-color: var(--brand-gold); }
+
 /* Card table container */
 .favoritos-table-card {
   background: var(--bg-card);
@@ -329,14 +343,14 @@
 }
 
 /* Action buttons */
-.btn-quick-convert {
+.btn-add-fav {
   background: var(--brand-gold);
   color: var(--bg-dark);
   font-weight: 600;
   font-size: 13px;
   padding: 8px 16px;
   border-radius: var(--radius-sm, 8px);
-  border: none;
+  border: 1px solid var(--brand-gold);
   cursor: pointer;
   transition: all 0.2s ease;
   display: inline-flex;
@@ -344,10 +358,27 @@
   gap: 6px;
 }
 
-.btn-quick-convert:hover {
+.btn-add-fav:hover {
   background: var(--brand-gold-hover);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(240, 185, 11, 0.2);
+}
+
+.btn-add-fav:disabled {
+  opacity: 0.6;
+  cursor: default;
+  transform: none;
+}
+
+.btn-add-fav.is-fav {
+  background: transparent;
+  color: var(--brand-gold);
+  border: 1px solid var(--brand-gold);
+}
+
+.btn-add-fav.is-fav:hover {
+  background: rgba(240, 185, 11, 0.12);
+  box-shadow: none;
 }
 
 .btn-reconsultar {

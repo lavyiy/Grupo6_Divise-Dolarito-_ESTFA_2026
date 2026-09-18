@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { fetchRates } from '../../services/api';
+import { Link, useNavigate } from 'react-router-dom';
+import { fetchRates, recordHistorial } from '../../services/api';
 import CountUp from 'react-countup';
 import { Icon } from '../../components/ui/Icon';
+import CurrencyBadge from '../../components/ui/CurrencyBadge';
 import Sparkline from '../../components/ui/Sparkline';
-import { stableVariation, formatARS, currencyIcon, hashSeed } from '../../utils';
+import { useAuth } from '../../context/AuthContext';
+import { stableVariation, formatARS, hashSeed } from '../../utils';
 import './Inicio.css';
 
 const KPI_CARDS = [
@@ -40,8 +42,18 @@ const KPI_CARDS = [
 ];
 
 export default function Inicio() {
+  const navigate = useNavigate();
+  const { token } = useAuth();
   const [rates, setRates] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const openCurrencyChart = (codigo, mercado, nombre, valor) => {
+    if (token) {
+      recordHistorial({ par_consultado: `${nombre} - ${codigo}`, valor_momento: valor || 0 }, token)
+        .catch(() => {});
+    }
+    navigate('/dashboard/graficos', { state: { codigo, mercado } });
+  };
 
   useEffect(() => {
     async function load() {
@@ -101,7 +113,9 @@ export default function Inicio() {
             <div
               className="stat-card stagger"
               key={kpi.seed}
-              style={{ '--i': i }}
+              style={{ '--i': i, cursor: 'pointer' }}
+              onClick={() => openCurrencyChart(kpi.code, kpi.market, kpi.title, price)}
+              title={`Ver gráfico de ${kpi.title}`}
             >
               <div className="sc-header">
                 <span className="sc-title">{kpi.title}</span>
@@ -151,9 +165,15 @@ export default function Inicio() {
               const variation = stableVariation(hashSeed(item.codigo, item.tipo_mercado || item.tipo || 'x'));
               const isUp = variation >= 0;
               return (
-                <div className="featured-row" key={`${item.codigo}-${item.tipo_mercado}-${i}`}>
+                <div
+                  className="featured-row"
+                  key={`${item.codigo}-${item.tipo_mercado}-${i}`}
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => openCurrencyChart(item.codigo, item.tipo_mercado || item.tipo, item.nombre, item.venta)}
+                  title={`Ver gráfico de ${item.nombre}`}
+                >
                   <div className="fr-main">
-                    <span className="fr-icon">{currencyIcon(item.codigo)}</span>
+                    <CurrencyBadge code={item.codigo} size={34} title={item.codigo} />
                     <div className="fr-info">
                       <span className="fr-name">{item.nombre}</span>
                       <span className="fr-market">{item.tipo_mercado || item.tipo}</span>

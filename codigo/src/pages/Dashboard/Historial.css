@@ -108,6 +108,19 @@
   font-size: 13px;
 }
 
+.historial-filter-select {
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm, 8px);
+  padding: 9px 14px;
+  color: var(--text-main);
+  font-size: 13px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+.historial-filter-select:focus { border-color: var(--brand-gold); }
+
 .historial-actions {
   display: flex;
   align-items: center;

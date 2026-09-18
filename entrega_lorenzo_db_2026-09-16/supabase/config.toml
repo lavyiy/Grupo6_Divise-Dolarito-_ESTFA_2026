@@ -1,0 +1,2 @@
+[functions.eliminar-mi-cuenta]
+verify_jwt = true

@@ -26,49 +26,6 @@ export function formatARS(value, decimals = 2) {
   });
 }
 
-/** Icono/emoji representativo por código de moneda. */
-export function currencyIcon(codigo) {
-  switch (codigo) {
-    case 'USD': return '💵';
-    case 'EUR': return '💶';
-    case 'BRL': return '🇧🇷';
-    case 'UYU': return '🇺🇾';
-    case 'CLP': return '🇨🇱';
-    case 'GBP': return '🇬🇧';
-    case 'JPY': return '🇯🇵';
-    case 'CAD': return '🇨🇦';
-    case 'CHF': return '🇨🇭';
-    case 'AUD': return '🇦🇺';
-    case 'BTC': return '₿';
-    case 'ETH': return 'Ξ';
-    case 'USDT': return '₮';
-    case 'BNB': return '◆';
-    case 'DOGE': return 'Đ';
-    default: return '💰';
-  }
-}
-
-/** Bandera/emoji por código de moneda (para selects y conversiones). */
-export function flagIcon(code) {
-  switch (code) {
-    case 'USD': return '🇺🇸';
-    case 'ARS': return '🇦🇷';
-    case 'EUR': return '🇪🇺';
-    case 'BRL': return '🇧🇷';
-    case 'GBP': return '🇬🇧';
-    case 'JPY': return '🇯🇵';
-    case 'CAD': return '🇨🇦';
-    case 'CHF': return '🇨🇭';
-    case 'AUD': return '🇦🇺';
-    case 'BTC': return '₿';
-    case 'ETH': return 'Ξ';
-    case 'USDT': return '💵';
-    case 'BNB': return '◆';
-    case 'DOGE': return '🐶';
-    default: return '💰';
-  }
-}
-
 /** Nombre legible por código de moneda. */
 export function currencyName(code) {
   switch (code) {
@@ -81,6 +38,10 @@ export function currencyName(code) {
     case 'CAD': return 'Dólar Canadiense';
     case 'CHF': return 'Franco Suizo';
     case 'AUD': return 'Dólar Australiano';
+    case 'UYU': return 'Peso Uruguayo';
+    case 'CLP': return 'Peso Chileno';
+    case 'MXN': return 'Peso Mexicano';
+    case 'CNY': return 'Yuan Chino';
     case 'BTC': return 'Bitcoin';
     case 'ETH': return 'Ethereum';
     case 'USDT': return 'Tether (USDT)';

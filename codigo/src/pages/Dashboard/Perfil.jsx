@@ -220,10 +220,6 @@ export default function Perfil() {
             <span className="badge badge-success">Activa</span>
           </div>
           <div className="pc-info-row">
-            <span className="pc-label">Plan actual</span>
-            <span className="badge badge-gold">Divise Pro</span>
-          </div>
-          <div className="pc-info-row">
             <span className="pc-label">Seguridad 2FA</span>
             <span className={`badge-2fa ${twoFactorActive ? 'active' : 'inactive'}`}>
               {twoFactorActive ? '✓ Protegida' : 'Desactivada'}

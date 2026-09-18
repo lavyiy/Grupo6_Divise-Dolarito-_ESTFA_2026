@@ -11,8 +11,8 @@ const BASE_URL = import.meta.env.VITE_API_URL || '';
 async function request(path, options = {}) {
   try {
     const res = await fetch(`${BASE_URL}${path}`, {
-      headers: { 'Content-Type': 'application/json', ...options.headers },
       ...options,
+      headers: { 'Content-Type': 'application/json', ...options.headers },
     });
 
     const data = await res.json().catch(() => ({}));
@@ -229,6 +229,22 @@ export function getHistorial(token, limit = 50) {
   });
 }
 
+// ── Noticias (múltiples fuentes RSS por región) ───────────────────────────────
+
+export function getNews(region = 'todas') {
+  return request(`/api/news?region=${encodeURIComponent(region)}`);
+}
+
+export async function fetchDatabaseRates() {
+  const rates = await request('/api/cotizaciones', {
+    signal: AbortSignal.timeout(10000),
+  });
+  if (!Array.isArray(rates)) {
+    throw new Error('La respuesta de cotizaciones no es valida.');
+  }
+  return rates;
+}
+
 // ── Cotizaciones en Tiempo Real (DolarApi & Cripto en vivo) ────────────────
 
 /**
@@ -352,6 +368,39 @@ export async function fetchRates() {
       formattedRates.push(...mappedCotiz);
     }
 
+    // Monedas del mundo que no están en DolarApi (Libra, Yen, Peso Mexicano,
+    // Franco, Yuan) → cruce en ARS vía open.er-api (CORS abierto).
+    const worldMissing = ['GBP', 'JPY', 'MXN', 'CHF', 'CNY', 'BRL', 'CLP', 'UYU'].filter(
+      code => !formattedRates.some(r => r.codigo === code)
+    );
+    if (worldMissing.length > 0) {
+      try {
+        const fxRes = await fetch('https://open.er-api.com/v6/latest/USD').then(r => r.json());
+        const fxRates = fxRes.rates || {};
+        const arsRef = Number(fxRates.ARS);
+        const names = { BRL: 'Real Brasileño', CLP: 'Peso Chileno', UYU: 'Peso Uruguayo', GBP: 'Libra Esterlina', JPY: 'Yen Japonés', MXN: 'Peso Mexicano', CHF: 'Franco Suizo', CNY: 'Yuan Chino' };
+        if (Number.isFinite(arsRef) && arsRef > 0) {
+          worldMissing.forEach(code => {
+            const cur = Number(fxRates[code]);
+            if (Number.isFinite(cur) && cur > 0) {
+              const venta = Number((arsRef / cur).toFixed(4));
+              formattedRates.push({
+                codigo: code,
+                nombre: names[code] || code,
+                tipo_mercado: 'Oficial',
+                tipo: 'Oficial',
+                compra: Number((venta * 0.999).toFixed(4)),
+                venta,
+                updated_at: new Date().toISOString()
+              });
+            }
+          });
+        }
+      } catch (err) {
+        console.warn('[World FX API] No se pudieron obtener monedas del mundo:', err.message);
+      }
+    }
+
     // Monedas Cripto en tiempo real (en USD)
     const cryptoData = cryptoRes.status === 'fulfilled' && cryptoRes.value
       ? cryptoRes.value
@@ -395,6 +444,13 @@ export async function fetchRates() {
       { codigo: 'USD', nombre: 'Dólar Tarjeta', tipo_mercado: 'Tarjeta', tipo: 'Oficial', compra: 1904, venta: 1969 },
       { codigo: 'EUR', nombre: 'Euro', tipo_mercado: 'Oficial', tipo: 'Oficial', compra: 1707, venta: 1722 },
       { codigo: 'BRL', nombre: 'Real Brasileño', tipo_mercado: 'Oficial', tipo: 'Oficial', compra: 286, venta: 287 },
+      { codigo: 'UYU', nombre: 'Peso Uruguayo', tipo_mercado: 'Oficial', tipo: 'Oficial', compra: 37, venta: 37 },
+      { codigo: 'CLP', nombre: 'Peso Chileno', tipo_mercado: 'Oficial', tipo: 'Oficial', compra: 1.5, venta: 1.6 },
+      { codigo: 'GBP', nombre: 'Libra Esterlina', tipo_mercado: 'Oficial', tipo: 'Oficial', compra: 2000, venta: 2018 },
+      { codigo: 'JPY', nombre: 'Yen Japonés', tipo_mercado: 'Oficial', tipo: 'Oficial', compra: 9.6, venta: 9.7 },
+      { codigo: 'MXN', nombre: 'Peso Mexicano', tipo_mercado: 'Oficial', tipo: 'Oficial', compra: 87, venta: 88 },
+      { codigo: 'CHF', nombre: 'Franco Suizo', tipo_mercado: 'Oficial', tipo: 'Oficial', compra: 1825, venta: 1831 },
+      { codigo: 'CNY', nombre: 'Yuan Chino', tipo_mercado: 'Oficial', tipo: 'Oficial', compra: 224, venta: 225 },
       { codigo: 'BTC', nombre: 'Bitcoin', tipo_mercado: 'Cripto', tipo: 'Cripto', compra: 81100, venta: 81200 },
       { codigo: 'ETH', nombre: 'Ethereum', tipo_mercado: 'Cripto', tipo: 'Cripto', compra: 2490, venta: 2500 },
       { codigo: 'USDT', nombre: 'Tether', tipo_mercado: 'Cripto', tipo: 'Cripto', compra: 1.00, venta: 1.00 },

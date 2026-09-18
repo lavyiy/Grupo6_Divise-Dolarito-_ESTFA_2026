@@ -137,6 +137,17 @@ button {
 
 input, select, textarea { font-family: inherit; }
 
+/* Los popups nativos de los <select> se ven blancos sobre blanco en modo oscuro:
+   fuerzo fondo/color de las opciones según el tema activo. */
+select option {
+  background-color: var(--bg-input);
+  color: var(--text-main);
+}
+select option:checked {
+  background-color: var(--bg-elevated);
+  color: var(--brand-gold);
+}
+
 ::selection { background: rgba(240, 185, 11, 0.28); color: #fff; }
 
 :focus-visible {

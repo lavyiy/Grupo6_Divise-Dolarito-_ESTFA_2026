@@ -1,0 +1,26 @@
+/* ── src/components/ui/CurrencyBadge.css ───────────────────────────────────── */
+
+.currency-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  font-family: var(--font-main);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  user-select: none;
+  color: var(--cb-color, #7c8db5);
+  border: 1px solid color-mix(in srgb, var(--cb-color, #7c8db5) 34%, transparent);
+  background: linear-gradient(
+    150deg,
+    color-mix(in srgb, var(--cb-color, #7c8db5) 20%, transparent),
+    color-mix(in srgb, var(--cb-color, #7c8db5) 4%, transparent)
+  );
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+}
+
+.currency-badge--glow {
+  box-shadow: 0 0 18px color-mix(in srgb, var(--cb-color, #7c8db5) 22%, transparent);
+}

@@ -63,9 +63,6 @@ export default function DashboardLayout() {
         </div>
 
         <div className="nav-right">
-          <button className="nav-icon-btn" title="Notificaciones">
-            <Icon name="bell" size={17} />
-          </button>
           <Link to="/dashboard/perfil" className="profile-link" title="Ver perfil">
             <div className="avatar">
               {user?.nombre?.charAt(0)?.toUpperCase() || 'U'}

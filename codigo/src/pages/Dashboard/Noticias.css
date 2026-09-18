@@ -10,8 +10,109 @@
 .noticias-error {
   font-size: 14px;
 }
-.noticias-status { color: var(--text-muted); }
-.noticias-error { color: var(--danger); }
+.noticias-status {
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.noticias-error {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--danger);
+  background: var(--danger-soft, rgba(246, 70, 93, 0.12));
+  border: 1px solid rgba(246, 70, 93, 0.3);
+  border-radius: var(--radius-md, 12px);
+  padding: 14px 18px;
+}
+
+/* Controles: regiones + orden */
+.noticias-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.noticias-controls .tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  padding: 4px;
+  border-radius: var(--radius-md, 12px);
+}
+
+.noticias-controls .tab {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 7px 14px;
+  border-radius: var(--radius-sm, 8px);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+.noticias-controls .tab:hover { color: var(--text-main); }
+.noticias-controls .tab.active {
+  background: var(--bg-input);
+  color: var(--brand-gold);
+  box-shadow: var(--shadow-card);
+}
+
+.noticias-sort {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.noticias-sort label {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.noticias-sort select {
+  background: var(--bg-input);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  padding: 8px 14px;
+  border-radius: var(--radius-sm, 8px);
+  font-size: 13px;
+  outline: none;
+  cursor: pointer;
+}
+.noticias-sort select:focus { border-color: var(--brand-gold); }
+
+/* Fuente + popularidad */
+.nc-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.nc-topline .nc-tag { margin-bottom: 0; }
+
+.nc-fame {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.nc-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14);
+}
+.nc-dot.on {
+  background: var(--brand-gold);
+  box-shadow: 0 0 5px rgba(240, 185, 11, 0.6);
+}
 
 .noticias-grid {
   display: grid;

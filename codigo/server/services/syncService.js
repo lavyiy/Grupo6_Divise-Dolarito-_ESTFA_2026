@@ -34,11 +34,36 @@ async function syncRates() {
       const euro = await euroRes.json();
       await updateRate(client, 'EUR', 'Oficial', euro.compra, euro.venta);
     }
+
+    // 2b. Monedas del mundo en ARS (open.er-api como referencia, USD base oficial)
+    const worldCurrencies = [
+      'BRL', 'CLP', 'UYU', 'GBP', 'JPY', 'MXN', 'CHF', 'CNY',
+    ];
+    try {
+      const fxRes = await fetch('https://open.er-api.com/v6/latest/USD');
+      if (fxRes.ok) {
+        const fx = await fxRes.json();
+        const ratesFx = fx.rates || {};
+        const arsRef = Number(ratesFx.ARS);
+        if (Number.isFinite(arsRef) && arsRef > 0) {
+          for (const code of worldCurrencies) {
+            const cur = Number(ratesFx[code]);
+            if (!Number.isFinite(cur) || cur <= 0) continue;
+            const venta = Number((arsRef / cur).toFixed(4));
+            const compra = Number((venta * 0.999).toFixed(4));
+            await updateRate(client, code, 'Oficial', compra, venta);
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Sync monedas del mundo error:', e.message);
+    }
     
     // 3. Fetch Cripto en USD (Binance primero, CoinGecko como fallback)
     const cryptoSymbols = [
       { key: 'btc', binance: 'BTCUSDT', coingecko: 'bitcoin', code: 'BTC' },
       { key: 'eth', binance: 'ETHUSDT', coingecko: 'ethereum', code: 'ETH' },
+      { key: 'usdt', binance: null, coingecko: 'tether', code: 'USDT' },
       { key: 'bnb', binance: 'BNBUSDT', coingecko: 'binancecoin', code: 'BNB' },
       { key: 'doge', binance: 'DOGEUSDT', coingecko: 'dogecoin', code: 'DOGE' },
     ];
@@ -47,7 +72,7 @@ async function syncRates() {
     // Binance
     try {
       const binanceResults = await Promise.all(
-        cryptoSymbols.map(s =>
+        cryptoSymbols.filter(s => s.binance).map(s =>
           fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${s.binance}`)
             .then(r => r.json())
             .then(data => ({ key: s.key, price: parseFloat(data?.price) }))
@@ -85,9 +110,6 @@ async function syncRates() {
       }
     }
 
-    // USDT siempre ~1 USD
-    await updateRate(client, 'USDT', 'Cripto', 0.999, 1.00);
-    
     await client.query('COMMIT');
     console.log('✅ Cotizaciones sincronizadas con éxito.');
     

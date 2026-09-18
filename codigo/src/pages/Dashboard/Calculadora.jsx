@@ -4,7 +4,8 @@ import { fetchRates, getFavorites, toggleFavorite } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import CountUp from 'react-countup';
 import { Icon } from '../../components/ui/Icon';
-import { flagIcon, currencyName } from '../../utils';
+import CurrencyBadge from '../../components/ui/CurrencyBadge';
+import { currencyName } from '../../utils';
 import './Calculadora.css';
 
 export default function Calculadora() {
@@ -140,7 +141,7 @@ export default function Calculadora() {
             <div className="calc-group">
               <span className="calc-label">Desde</span>
               <div className="calc-select">
-                <span className="flag">{flagIcon(fromCurrency)}</span>
+                <CurrencyBadge code={fromCurrency} size={30} />
                 <div className="details">
                   <span className="code">{fromCurrency}</span>
                   <span className="name">{currencyName(fromCurrency)}</span>
@@ -181,7 +182,7 @@ export default function Calculadora() {
             <div className="calc-group">
               <span className="calc-label">Hacia</span>
               <div className="calc-select">
-                <span className="flag">{flagIcon(toCurrency)}</span>
+                <CurrencyBadge code={toCurrency} size={30} />
                 <div className="details">
                   <span className="code">{toCurrency}</span>
                   <span className="name">{currencyName(toCurrency)}</span>
@@ -288,8 +289,12 @@ export default function Calculadora() {
                 <div className="calc-history-item" key={i}>
                   <div className="chi-left">
                     <div className="chi-flags">
-                      <span style={{marginRight: '-8px', zIndex: 1}}>{flagIcon(h.from)}</span>
-                      <span>{flagIcon(h.to)}</span>
+                      <span style={{ marginRight: '-8px', zIndex: 1, display: 'inline-flex' }}>
+                        <CurrencyBadge code={h.from} size={22} />
+                      </span>
+                      <span style={{ display: 'inline-flex' }}>
+                        <CurrencyBadge code={h.to} size={22} />
+                      </span>
                     </div>
                     <div className="chi-pair">{h.from} ➔ {h.to}</div>
                   </div>

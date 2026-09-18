@@ -1,22 +1,28 @@
 const express = require('express');
 const router = express.Router();
-const pool = require('../config/db');
+const db = require('../config/db');
 const { verifyToken } = require('../middlewares/authMiddleware');
+
+// El cliente se lee dinámicamente desde db para permitir inyección en tests.
+const supabase = () => db.supabase;
 
 router.use(verifyToken);
 
 // GET /api/favorites
+// Devuelve el listado de códigos de divisa favoritos del usuario autenticado.
 router.get('/', async (req, res) => {
   try {
-    const result = await pool.query(
-      `SELECT d.codigo 
-       FROM favoritos f
-       JOIN divisas d ON f.id_divisa = d.id_divisa
-       WHERE f.id_usuario = $1
-       ORDER BY f.created_at ASC`,
-      [req.user.id_usuario]
-    );
-    const favorites = result.rows.map(r => r.codigo);
+    const { data, error } = await supabase().from('favoritos')
+      .select('id_favorito, created_at, divisas ( codigo )')
+      .eq('id_usuario', req.user.id_usuario)
+      .order('created_at', { ascending: true });
+
+    if (error) throw error;
+
+    const favorites = (data || [])
+      .map((row) => row.divisas?.codigo)
+      .filter(Boolean);
+
     res.json(favorites);
   } catch (error) {
     console.error('Error fetching favorites:', error);
@@ -25,44 +31,61 @@ router.get('/', async (req, res) => {
 });
 
 // POST /api/favorites/toggle
+// Alterna una divisa como favorita para el usuario autenticado.
 router.post('/toggle', async (req, res) => {
   try {
     const { codigo_divisa } = req.body;
-    
+
     if (!codigo_divisa) {
       return res.status(400).json({ error: 'Falta codigo_divisa' });
     }
-    
+
     const cleanCode = String(codigo_divisa).trim().toUpperCase();
-    
+
     // Buscar id_divisa insensible a mayúsculas
-    const divisaRes = await pool.query('SELECT id_divisa, codigo FROM divisas WHERE UPPER(codigo) = $1', [cleanCode]);
-    if (divisaRes.rows.length === 0) {
+    const { data: divisas, error: divisaError } = await supabase().from('divisas')
+      .select('id_divisa, codigo')
+      .ilike('codigo', cleanCode)
+      .limit(1);
+
+    if (divisaError) throw divisaError;
+    if (!divisas || divisas.length === 0) {
       return res.status(404).json({ error: `Divisa ${cleanCode} no encontrada` });
     }
-    const id_divisa = divisaRes.rows[0].id_divisa;
-    const resolvedCode = divisaRes.rows[0].codigo;
-    
+
+    const { id_divisa } = divisas[0];
+    const resolvedCode = divisas[0].codigo;
+
     // Comprobar si ya es favorito
-    const checkRes = await pool.query(
-      'SELECT id_favorito FROM favoritos WHERE id_usuario = $1 AND id_divisa = $2',
-      [req.user.id_usuario, id_divisa]
-    );
-    
-    let isFavorite = false;
-    if (checkRes.rows.length > 0) {
+    const { data: existing, error: existingError } = await supabase().from('favoritos')
+      .select('id_favorito')
+      .eq('id_usuario', req.user.id_usuario)
+      .eq('id_divisa', id_divisa)
+      .limit(1);
+
+    if (existingError) throw existingError;
+
+    let isFavorite;
+    if (existing && existing.length > 0) {
       // Eliminar
-      await pool.query('DELETE FROM favoritos WHERE id_favorito = $1', [checkRes.rows[0].id_favorito]);
+      const { error: deleteError } = await supabase().from('favoritos')
+        .delete()
+        .eq('id_favorito', existing[0].id_favorito);
+
+      if (deleteError) throw deleteError;
       isFavorite = false;
     } else {
-      // Agregar
-      await pool.query(
-        'INSERT INTO favoritos (id_usuario, id_divisa) VALUES ($1, $2) ON CONFLICT (id_usuario, id_divisa) DO NOTHING',
-        [req.user.id_usuario, id_divisa]
-      );
+      // Agregar (ignora el conflicto si ya existiera por la UNIQUE)
+      const { error: insertError } = await supabase().from('favoritos')
+        .upsert(
+          { id_usuario: req.user.id_usuario, id_divisa },
+          { onConflict: 'id_usuario,id_divisa', ignoreDuplicates: true }
+        );
+
+      if (insertError) throw insertError;
       isFavorite = true;
     }
-    
+
     res.json({ success: true, isFavorite, codigo: resolvedCode });
   } catch (error) {
     console.error('Error toggling favorite:', error);

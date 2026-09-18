@@ -62,8 +62,39 @@ export default function Alertas() {
   };
 
   const getIcon = (codigo) => {
+    const base = String(codigo || '').split('_')[0].toUpperCase();
     const map = { BTC: 'bitcoin', ETH: 'ethereum', USD: 'dollar', EUR: 'dollar', BNB: 'bitcoin', DOGE: 'bitcoin', USDT: 'dollar' };
-    return map[codigo] || 'dollar';
+    return map[base] || 'dollar';
+  };
+
+  const alertLabel = (codigo) => {
+    const key = String(codigo || '').toUpperCase();
+    const base = key.split('_')[0];
+    const labels = {
+      'USD_INFORMAL': 'Dólar Blue',
+      'USD_BLUE': 'Dólar Blue',
+      'USD_OFICIAL': 'Dólar Oficial',
+      'EUR_OFICIAL': 'Euro',
+      'BRL_OFICIAL': 'Real Brasileño',
+      'UYU_OFICIAL': 'Peso Uruguayo',
+      'CLP_OFICIAL': 'Peso Chileno',
+      'GBP_OFICIAL': 'Libra Esterlina',
+      'JPY_OFICIAL': 'Yen Japonés',
+      'MXN_OFICIAL': 'Peso Mexicano',
+      'CHF_OFICIAL': 'Franco Suizo',
+      'CNY_OFICIAL': 'Yuan Chino',
+      'BTC': 'Bitcoin',
+      'ETH': 'Ethereum',
+      'USDT': 'Tether (USDT)',
+      'BNB': 'BNB',
+      'DOGE': 'Dogecoin',
+    };
+    const byBase = {
+      BRL: 'Real Brasileño', UYU: 'Peso Uruguayo', CLP: 'Peso Chileno',
+      GBP: 'Libra Esterlina', JPY: 'Yen Japonés', MXN: 'Peso Mexicano',
+      CHF: 'Franco Suizo', CNY: 'Yuan Chino', EUR: 'Euro',
+    };
+    return labels[key] || byBase[base] || String(codigo || '');
   };
 
   return (
@@ -116,7 +147,7 @@ export default function Alertas() {
                 <div className="ac-header">
                   <div className="ac-title">
                     <span className="ac-icon"><Icon name={getIcon(codigo)} size={22} /></span>
-                    {codigo}
+                    {alertLabel(codigo)}
                   </div>
                   <div className="ac-status">Activa</div>
                 </div>

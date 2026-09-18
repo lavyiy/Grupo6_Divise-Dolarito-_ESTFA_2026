@@ -1,43 +1,41 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Icon } from '../../components/ui/Icon';
+import CurrencyBadge from '../../components/ui/CurrencyBadge';
 import { useAuth } from '../../context/AuthContext';
-import { getHistorial } from '../../services/api';
+import { getHistorial, recordHistorial } from '../../services/api';
 import './Historial.css';
 
-const FLAG_MAP = {
-  USD: '🇺🇸',
-  EUR: '🇪🇺',
-  BRL: '🇧🇷',
-  BTC: '₿',
-  ETH: '⟠',
-  USDT: '💵',
-  BNB: '🔶',
-  DOGE: '🐕',
-  ARS: '🇦🇷',
-  GBP: '🇬🇧',
-  JPY: '🇯🇵',
-  CAD: '🇨🇦',
-  CHF: '🇨🇭',
-  AUD: '🇦🇺'
-};
+const CRYPTO_CODES = new Set(['BTC', 'ETH', 'USDT', 'BNB', 'DOGE']);
 
 // Datos de demostración en caso de no haber sesión iniciada
 const MOCK_HISTORY = [
-  { id: 'm1', fecha: '31/07/2024', hora: '10:15', rawDate: new Date('2024-07-31T10:15:00'), codigo: 'USD', nombre: 'Dólar Estadounidense', flag: '🇺🇸', precio: 1213.50 },
-  { id: 'm2', fecha: '30/07/2024', hora: '19:42', rawDate: new Date('2024-07-30T19:42:00'), codigo: 'EUR', nombre: 'Euro', flag: '🇪🇺', precio: 1423.80 },
-  { id: 'm3', fecha: '30/07/2024', hora: '09:25', rawDate: new Date('2024-07-30T09:25:00'), codigo: 'BRL', nombre: 'Real Brasileño', flag: '🇧🇷', precio: 234.10 },
-  { id: 'm4', fecha: '29/07/2024', hora: '19:34', rawDate: new Date('2024-07-29T19:34:00'), codigo: 'GBP', nombre: 'Libra Esterlina', flag: '🇬🇧', precio: 1677.90 },
-  { id: 'm5', fecha: '28/07/2024', hora: '11:11', rawDate: new Date('2024-07-28T11:11:00'), codigo: 'JPY', nombre: 'Yen Japonés', flag: '🇯🇵', precio: 33.14 },
-  { id: 'm6', fecha: '28/07/2024', hora: '21:33', rawDate: new Date('2024-07-28T21:33:00'), codigo: 'ARS', nombre: 'Peso Argentino', flag: '🇦🇷', precio: 1.00 },
-  { id: 'm7', fecha: '26/07/2024', hora: '17:35', rawDate: new Date('2024-07-26T17:35:00'), codigo: 'CAD', nombre: 'Dólar Canadiense', flag: '🇨🇦', precio: 55.00 },
-  { id: 'm8', fecha: '15/07/2024', hora: '16:42', rawDate: new Date('2024-07-15T16:42:00'), codigo: 'CHF', nombre: 'Franco Suizo', flag: '🇨🇭', precio: 37.10 },
-  { id: 'm9', fecha: '13/07/2024', hora: '18:25', rawDate: new Date('2024-07-13T18:25:00'), codigo: 'AUD', nombre: 'Dólar Australiano', flag: '🇦🇺', precio: 1433.00 }
+  { id: 'm1', fecha: '31/07/2024', hora: '10:15', rawDate: new Date('2024-07-31T10:15:00'), codigo: 'USD', nombre: 'Dólar Estadounidense', precio: 1213.50 },
+  { id: 'm2', fecha: '30/07/2024', hora: '19:42', rawDate: new Date('2024-07-30T19:42:00'), codigo: 'EUR', nombre: 'Euro', precio: 1423.80 },
+  { id: 'm3', fecha: '30/07/2024', hora: '09:25', rawDate: new Date('2024-07-30T09:25:00'), codigo: 'BRL', nombre: 'Real Brasileño', precio: 234.10 },
+  { id: 'm4', fecha: '29/07/2024', hora: '19:34', rawDate: new Date('2024-07-29T19:34:00'), codigo: 'GBP', nombre: 'Libra Esterlina', precio: 1677.90 },
+  { id: 'm5', fecha: '28/07/2024', hora: '11:11', rawDate: new Date('2024-07-28T11:11:00'), codigo: 'JPY', nombre: 'Yen Japonés', precio: 33.14 },
+  { id: 'm6', fecha: '28/07/2024', hora: '21:33', rawDate: new Date('2024-07-28T21:33:00'), codigo: 'ARS', nombre: 'Peso Argentino', precio: 1.00 },
+  { id: 'm7', fecha: '26/07/2024', hora: '17:35', rawDate: new Date('2024-07-26T17:35:00'), codigo: 'CAD', nombre: 'Dólar Canadiense', precio: 55.00 },
+  { id: 'm8', fecha: '15/07/2024', hora: '16:42', rawDate: new Date('2024-07-15T16:42:00'), codigo: 'CHF', nombre: 'Franco Suizo', precio: 37.10 },
+  { id: 'm9', fecha: '13/07/2024', hora: '18:25', rawDate: new Date('2024-07-13T18:25:00'), codigo: 'AUD', nombre: 'Dólar Australiano', precio: 1433.00 }
 ];
+
+const pad2 = (n) => String(n).padStart(2, '0');
+const toInputDate = (date) => `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
+
+// Convierte "YYYY-MM-DD" a un número comparable (ej: 20260918).
+const parseInputDay = (s) => {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s || '');
+  return m ? Number(m[1]) * 10000 + Number(m[2]) * 100 + Number(m[3]) : 0;
+};
+
+// Número de calendario (año/mes/día local) de una fecha.
+const dayNumOf = (d) => d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
 
 export default function Historial() {
   const navigate = useNavigate();
-  const { token } = useAuth();
+  const { token, user } = useAuth();
 
   const [historyList, setHistoryList] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -46,6 +44,8 @@ export default function Historial() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [typeFilter, setTypeFilter] = useState('todas');
+  const [currencyFilter, setCurrencyFilter] = useState('todas');
   const [sortOrder, setSortOrder] = useState('recientes');
   const [currentPage, setCurrentPage] = useState(1);
   const [notification, setNotification] = useState('');
@@ -53,6 +53,41 @@ export default function Historial() {
   const showToast = (msg) => {
     setNotification(msg);
     setTimeout(() => setNotification(''), 3000);
+  };
+
+  // Límites del selector de fechas:
+  //  · máximo: hoy
+  //  · mínimo: fecha de creación del perfil (si está disponible)
+  const todayStr = toInputDate(new Date());
+  const minDateStr = (() => {
+    const raw = user?.created_at || user?.fecha_registro;
+    if (!raw) return '';
+    const d = new Date(raw);
+    return Number.isNaN(d.getTime()) ? '' : toInputDate(d);
+  })();
+
+  const clampDate = (value) => {
+    if (!value) return '';
+    let v = value;
+    if (minDateStr && v < minDateStr) v = minDateStr;
+    if (v > todayStr) v = todayStr;
+    return v;
+  };
+
+  const handleStartDateChange = (value) => {
+    const v = clampDate(value);
+    setStartDate(v);
+    // No permitir que el inicio quede después del fin
+    if (v && endDate && v > endDate) setEndDate(v);
+    setCurrentPage(1);
+  };
+
+  const handleEndDateChange = (value) => {
+    const v = clampDate(value);
+    setEndDate(v);
+    // No permitir que el fin quede antes del inicio
+    if (v && startDate && v < startDate) setStartDate(v);
+    setCurrentPage(1);
   };
 
   // Cargar historial real desde el backend (o mock si no hay sesión)
@@ -87,8 +122,6 @@ export default function Historial() {
             codigo = rawPar.trim().toUpperCase();
           }
 
-          const flag = FLAG_MAP[codigo] || '🌐';
-
           return {
             id: item.id_historial,
             fecha,
@@ -96,7 +129,6 @@ export default function Historial() {
             rawDate: dateObj,
             codigo,
             nombre,
-            flag,
             precio: parseFloat(item.valor_momento) || 0
           };
         });
@@ -123,6 +155,8 @@ export default function Historial() {
     setStartDate('');
     setEndDate('');
     setSearchTerm('');
+    setTypeFilter('todas');
+    setCurrencyFilter('todas');
     setCurrentPage(1);
     showToast("Filtros limpiados");
   };
@@ -133,7 +167,11 @@ export default function Historial() {
   };
 
   const handleReconsultar = (item) => {
-    showToast(`Re-consultando cotización de ${item.codigo}... actual: $${item.precio.toLocaleString('es-AR', { minimumFractionDigits: 2 })}`);
+    if (token) {
+      recordHistorial({ par_consultado: `${item.nombre} - ${item.codigo}`, valor_momento: item.precio }, token)
+        .catch(() => {});
+    }
+    navigate('/dashboard/graficos', { state: { codigo: item.codigo, mercado: '' } });
   };
 
   // Filter & Sort
@@ -143,17 +181,18 @@ export default function Historial() {
       item.codigo.toLowerCase().includes(searchTerm.toLowerCase());
     if (!matchesSearch) return false;
 
+    const matchesCurrency = currencyFilter === 'todas' || item.codigo === currencyFilter;
+    if (!matchesCurrency) return false;
+
+    const matchesType =
+      typeFilter === 'todas' ||
+      (typeFilter === 'cripto' ? CRYPTO_CODES.has(item.codigo) : !CRYPTO_CODES.has(item.codigo));
+    if (!matchesType) return false;
+
     if (item.rawDate && !isNaN(item.rawDate.getTime())) {
-      if (startDate) {
-        const start = new Date(startDate);
-        start.setHours(0, 0, 0, 0);
-        if (item.rawDate < start) return false;
-      }
-      if (endDate) {
-        const end = new Date(endDate);
-        end.setHours(23, 59, 59, 999);
-        if (item.rawDate > end) return false;
-      }
+      const dayNum = dayNumOf(item.rawDate);
+      if (startDate && dayNum < parseInputDay(startDate)) return false;
+      if (endDate && dayNum > parseInputDay(endDate)) return false;
     }
     return true;
   });
@@ -165,6 +204,8 @@ export default function Historial() {
     if (sortOrder === 'antiguas') return timeA - timeB;
     return 0;
   });
+
+  const currencyOptions = Array.from(new Set(historyList.map(i => i.codigo))).sort();
 
   const itemsPerPage = 6;
   const totalPages = Math.ceil(sortedHistory.length / itemsPerPage) || 1;
@@ -216,7 +257,9 @@ export default function Historial() {
               <input 
                 type="date" 
                 value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
+                min={minDateStr || undefined}
+                max={todayStr}
+                onChange={(e) => handleStartDateChange(e.target.value)}
               />
             </div>
             <span className="range-separator"><Icon name="arrowRight" size={14} /></span>
@@ -225,7 +268,9 @@ export default function Historial() {
               <input 
                 type="date" 
                 value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
+                min={minDateStr || undefined}
+                max={todayStr}
+                onChange={(e) => handleEndDateChange(e.target.value)}
               />
             </div>
           </div>
@@ -245,6 +290,33 @@ export default function Historial() {
               }}
             />
           </div>
+        </div>
+
+        <div className="historial-filter-group">
+          <label>Moneda</label>
+          <select
+            className="historial-filter-select"
+            value={currencyFilter}
+            onChange={(e) => { setCurrencyFilter(e.target.value); setCurrentPage(1); }}
+          >
+            <option value="todas">Todas</option>
+            {currencyOptions.map((code) => (
+              <option key={code} value={code}>{code}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="historial-filter-group">
+          <label>Tipo</label>
+          <select
+            className="historial-filter-select"
+            value={typeFilter}
+            onChange={(e) => { setTypeFilter(e.target.value); setCurrentPage(1); }}
+          >
+            <option value="todas">Todas</option>
+            <option value="divisas">Divisas</option>
+            <option value="cripto">Cripto</option>
+          </select>
         </div>
 
         <div className="historial-actions">
@@ -311,7 +383,7 @@ export default function Historial() {
                     </td>
                     <td>
                       <div className="currency-info">
-                        <span className="flag-icon">{item.flag}</span>
+                        <CurrencyBadge code={item.codigo} size={30} title={item.nombre} />
                         <div className="currency-text">
                           <span className="currency-code">{item.codigo}</span>
                           <span className="currency-name">{item.nombre}</span>

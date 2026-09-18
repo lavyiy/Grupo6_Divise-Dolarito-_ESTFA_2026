@@ -2,11 +2,21 @@ import React, { useState } from 'react';
 import { Icon } from '../ui/Icon';
 import './AlertModal.css';
 
-// Mapeo nombre legible → código de divisa para el backend
+// Mapeo nombre legible → código de divisa para el backend.
+// Las divisas fiat llevan el mercado en el código (ej: USD_INFORMAL) para
+// que la alerta se compare contra la cotización correcta.
 const DIVISAS = [
-  { label: 'Dólar Blue',    codigo: 'USD' },
-  { label: 'Dólar Oficial', codigo: 'USD' },
-  { label: 'Euro',          codigo: 'EUR' },
+  { label: 'Dólar Blue',    codigo: 'USD', mercado: 'Informal' },
+  { label: 'Dólar Oficial', codigo: 'USD', mercado: 'Oficial' },
+  { label: 'Euro',          codigo: 'EUR', mercado: 'Oficial' },
+  { label: 'Real Brasileño', codigo: 'BRL', mercado: 'Oficial' },
+  { label: 'Peso Uruguayo', codigo: 'UYU', mercado: 'Oficial' },
+  { label: 'Peso Chileno',  codigo: 'CLP', mercado: 'Oficial' },
+  { label: 'Libra Esterlina', codigo: 'GBP', mercado: 'Oficial' },
+  { label: 'Yen Japonés',   codigo: 'JPY', mercado: 'Oficial' },
+  { label: 'Peso Mexicano', codigo: 'MXN', mercado: 'Oficial' },
+  { label: 'Franco Suizo',  codigo: 'CHF', mercado: 'Oficial' },
+  { label: 'Yuan Chino',    codigo: 'CNY', mercado: 'Oficial' },
   { label: 'Bitcoin',       codigo: 'BTC' },
   { label: 'Ethereum',      codigo: 'ETH' },
   { label: 'Tether (USDT)', codigo: 'USDT' },
@@ -27,9 +37,14 @@ export default function AlertModal({ onClose, onSave }) {
     }
     setError('');
     if (onSave) {
+      const divisa = DIVISAS[divisaIdx];
+      const codigoKey = divisa.mercado
+        ? `${divisa.codigo}_${divisa.mercado.toUpperCase()}`
+        : divisa.codigo;
       onSave({
-        codigo_divisa: DIVISAS[divisaIdx].codigo,
-        divisa: DIVISAS[divisaIdx].label,
+        codigo_divisa: codigoKey,
+        divisa: divisa.label,
+        mercado: divisa.mercado || 'Cripto',
         condicion,
         valor_limite: parseFloat(valor.replace(',', '.')),
         valor: valor

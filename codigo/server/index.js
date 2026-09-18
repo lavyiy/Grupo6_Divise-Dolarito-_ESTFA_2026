@@ -24,18 +24,23 @@ const alertRoutes = require('./routes/alertRoutes');
 const favoritesRoutes = require('./routes/favoritesRoutes');
 const userRoutes = require('./routes/userRoutes');
 const historialRoutes = require('./routes/historialRoutes'); // Tarea 14
+const newsRoutes = require('./routes/newsRoutes');
+const fxHistoryRoutes = require('./routes/fxHistoryRoutes');
 app.use('/api/auth', authRoutes);
 app.use('/api/rates', ratesRoutes);
+app.use('/api/cotizaciones', ratesRoutes);
 app.use('/api/alerts', alertRoutes);
 app.use('/api/favorites', favoritesRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/historial', historialRoutes); // Tarea 14
+app.use('/api/news', newsRoutes);
+app.use('/api/fx-history', fxHistoryRoutes);
 
 // Ruta raíz de la API para evitar "Cannot GET /api"
 app.get('/api', (req, res) => {
   res.json({
     message: 'Divise API',
-    endpoints: ['/api/auth', '/api/rates', '/api/alerts', '/api/favorites', '/api/users', '/api/historial']
+    endpoints: ['/api/auth', '/api/rates', '/api/cotizaciones', '/api/alerts', '/api/favorites', '/api/users', '/api/historial', '/api/news']
   });
 });
 
@@ -80,4 +85,3 @@ app.listen(PORT, async () => {
   // Ejecutar sincronización cada 5 minutos (300,000 ms)
   setInterval(runSync, 5 * 60 * 1000);
 });
-
