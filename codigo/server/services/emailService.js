@@ -11,57 +11,62 @@ const dns = require('dns');
 const FRONTEND_URL = process.env.FRONTEND_URL || process.env.APP_URL || 'http://localhost:5173';
 
 /**
- * Obtiene el transportador de Nodemailer configurado con Gmail.
- * Render free no tiene salida IPv6, y smtp.gmail.com resuelve IPv6 primero:
- * por eso forzamos la conexión a su dirección IPv4 directamente.
+ * Construye transportadores SMTP de Gmail con reintentos.
+ * Render free no tiene salida IPv6 (y smtp.gmail.com resuelve IPv6 primero),
+ * así que forzamos IPv4 y probamos 465 (TLS implícito) y 587 (STARTTLS).
  */
-async function getGmailTransporter() {
+async function buildGmailTransporters() {
   const user = process.env.EMAIL_USER || process.env.GMAIL_USER;
   const rawPass = process.env.EMAIL_PASS || process.env.GMAIL_PASS || process.env.GMAIL_APP_PASSWORD;
   const pass = rawPass ? rawPass.replace(/\s+/g, '') : null;
 
-  if (user && pass) {
-    const host4 = await dns.promises
-      .lookup('smtp.gmail.com', { family: 4 })
-      .then(r => r.address)
-      .catch(() => 'smtp.gmail.com');
+  if (!user || !pass) return [];
 
-    return nodemailer.createTransport({
-      host: host4,
-      port: 465,
-      secure: true,
-      auth: { user, pass },
-      tls: { servername: 'smtp.gmail.com' },
-      connectionTimeout: 30000,
-      greetingTimeout: 30000,
-    });
-  }
-  return null;
+  const host4 = await dns.promises
+    .lookup('smtp.gmail.com', { family: 4 })
+    .then(r => r.address)
+    .catch(() => 'smtp.gmail.com');
+
+  const common = {
+    auth: { user, pass },
+    tls: { servername: 'smtp.gmail.com' },
+    connectionTimeout: 25000,
+    greetingTimeout: 25000,
+  };
+
+  return [
+    nodemailer.createTransport({ ...common, host: host4, port: 465, secure: true }),
+    nodemailer.createTransport({ ...common, host: host4, port: 587, secure: false, requireTLS: true }),
+    nodemailer.createTransport({ ...common, host: 'smtp.gmail.com', port: 587, secure: false, requireTLS: true }),
+  ];
 }
 
 /**
- * Envía un correo electrónico utilizando Gmail SMTP (Nodemailer), Brevo o simulación en consola.
+ * Envía un correo electrónico utilizando Gmail SMTP (Nodemailer), Resend, Brevo o simulación en consola.
  */
 async function sendEmail({ to, subject, html, from }) {
-  const gmail = await getGmailTransporter();
-
-  // 1. Gmail SMTP (Nodemailer)
-  if (gmail) {
+  // 1. Gmail SMTP (Nodemailer) con reintentos (IPv4 465 / 587 STARTTLS)
+  const gmailTransporters = await buildGmailTransporters();
+  if (gmailTransporters.length > 0) {
     const user = process.env.EMAIL_USER || process.env.GMAIL_USER;
     const defaultFrom = process.env.EMAIL_FROM || `"Divise" <${user}>`;
-    try {
-      const info = await gmail.sendMail({
-        from: from || defaultFrom,
-        to: Array.isArray(to) ? to.join(', ') : to,
-        subject,
-        html,
-      });
-      console.log(`\n📧 [GMAIL SMTP SUCCESS] Correo enviado a ${to} (MessageId: ${info.messageId})`);
-      return { success: true, provider: 'gmail', data: { id: info.messageId } };
-    } catch (err) {
-      console.error('\n❌ [GMAIL SMTP ERROR]:', err.message);
-      return { success: false, provider: 'gmail', error: err.message };
+    const errors = [];
+    for (const transporter of gmailTransporters) {
+      try {
+        const info = await transporter.sendMail({
+          from: from || defaultFrom,
+          to: Array.isArray(to) ? to.join(', ') : to,
+          subject,
+          html,
+        });
+        console.log(`\n📧 [GMAIL SMTP SUCCESS] Correo enviado a ${to} (MessageId: ${info.messageId})`);
+        return { success: true, provider: 'gmail', data: { id: info.messageId } };
+      } catch (err) {
+        errors.push(err.message);
+        console.error(`\n❌ [GMAIL SMTP ERROR]: ${err.message}`);
+      }
     }
+    console.error(`[GMAIL] Todos los intentos fallaron: ${errors.join(' | ')} → probando proveedores de respaldo.`);
   }
 
   // 2. Resend API (si está configurada RESEND_API_KEY)
@@ -121,7 +126,12 @@ async function sendEmail({ to, subject, html, from }) {
     }
   }
 
-  // 3. Modo desarrollo / consola
+  // 4. Modo desarrollo / consola
+  const hadProviders = gmailTransporters.length > 0 || resendApiKey || (brevoKey && brevoSender);
+  if (hadProviders) {
+    console.error('❌ [EMAIL] Ningún proveedor pudo enviar el correo.');
+    return { success: false, provider: 'none', error: 'Ningún proveedor de email pudo enviar el correo.' };
+  }
   console.warn(`\n⚠️ [EMAIL NO CONFIGURADO] Para enviar correos reales, definí EMAIL_USER y EMAIL_PASS en server/.env`);
   console.warn(`📩 [SIMULACIÓN CONSOLA] Destino: ${to} | Asunto: ${subject}`);
   return {
