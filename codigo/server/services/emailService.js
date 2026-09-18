@@ -30,14 +30,13 @@ async function buildGmailTransporters() {
   const common = {
     auth: { user, pass },
     tls: { servername: 'smtp.gmail.com' },
-    connectionTimeout: 25000,
-    greetingTimeout: 25000,
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
   };
 
   return [
     nodemailer.createTransport({ ...common, host: host4, port: 465, secure: true }),
     nodemailer.createTransport({ ...common, host: host4, port: 587, secure: false, requireTLS: true }),
-    nodemailer.createTransport({ ...common, host: 'smtp.gmail.com', port: 587, secure: false, requireTLS: true }),
   ];
 }
 
