@@ -6,21 +6,34 @@
 //   FRONTEND_URL                  -> URL de la app (http://localhost:5173 o en Render)
 
 const nodemailer = require('nodemailer');
+const dns = require('dns');
 
 const FRONTEND_URL = process.env.FRONTEND_URL || process.env.APP_URL || 'http://localhost:5173';
 
 /**
  * Obtiene el transportador de Nodemailer configurado con Gmail.
+ * Render free no tiene salida IPv6, y smtp.gmail.com resuelve IPv6 primero:
+ * por eso forzamos la conexión a su dirección IPv4 directamente.
  */
-function getGmailTransporter() {
+async function getGmailTransporter() {
   const user = process.env.EMAIL_USER || process.env.GMAIL_USER;
   const rawPass = process.env.EMAIL_PASS || process.env.GMAIL_PASS || process.env.GMAIL_APP_PASSWORD;
   const pass = rawPass ? rawPass.replace(/\s+/g, '') : null;
 
   if (user && pass) {
+    const host4 = await dns.promises
+      .lookup('smtp.gmail.com', { family: 4 })
+      .then(r => r.address)
+      .catch(() => 'smtp.gmail.com');
+
     return nodemailer.createTransport({
-      service: 'gmail',
+      host: host4,
+      port: 465,
+      secure: true,
       auth: { user, pass },
+      tls: { servername: 'smtp.gmail.com' },
+      connectionTimeout: 30000,
+      greetingTimeout: 30000,
     });
   }
   return null;
@@ -30,7 +43,7 @@ function getGmailTransporter() {
  * Envía un correo electrónico utilizando Gmail SMTP (Nodemailer), Brevo o simulación en consola.
  */
 async function sendEmail({ to, subject, html, from }) {
-  const gmail = getGmailTransporter();
+  const gmail = await getGmailTransporter();
 
   // 1. Gmail SMTP (Nodemailer)
   if (gmail) {
