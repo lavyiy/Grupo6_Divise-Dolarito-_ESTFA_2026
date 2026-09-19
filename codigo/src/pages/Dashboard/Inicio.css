@@ -314,20 +314,54 @@
   .stat-card {
     padding: 18px 16px;
   }
+  .sc-header { margin-bottom: 12px; }
+  .sc-title {
+    font-size: 12.5px;
+    letter-spacing: 0.8px;
+  }
   .sc-price {
-    font-size: 24px;
+    font-size: 27px;
+  }
+  .sc-change {
+    font-size: 13.5px;
+    padding: 6px 12px;
   }
   .page-title {
-    font-size: 22px;
+    font-size: 23px;
   }
   .page-sub {
-    font-size: 13px;
+    font-size: 13.5px;
   }
   .live-status {
     font-size: 11px;
-    padding: 4px 10px;
+    padding: 5px 11px;
+  }
+  .panel-header h2 {
+    font-size: 17px;
+  }
+  .panel-link {
+    font-size: 13.5px;
+  }
+  .featured-row {
+    padding: 15px 14px;
+  }
+  .fr-name {
+    font-size: 14.5px;
+  }
+  .fr-market {
+    font-size: 12.5px;
+  }
+  .fr-price {
+    font-size: 16px;
+  }
+  .fr-change {
+    font-size: 13px;
   }
   .quick-action-card {
-    padding: 14px 16px;
+    padding: 16px;
+    min-height: 60px;
   }
+  .qac-icon { width: 44px; height: 44px; }
+  .qac-info h4 { font-size: 15px; }
+  .qac-info p { font-size: 13px; }
 }

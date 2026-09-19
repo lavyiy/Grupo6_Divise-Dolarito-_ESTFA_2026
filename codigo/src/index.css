@@ -511,6 +511,20 @@ input, select, textarea {
   font-size: 16px !important;
 }
 
+@media (max-width: 768px) {
+  .page-header { gap: var(--space-3); }
+  .page-title { font-size: 24px; }
+  .page-sub { font-size: 13.5px; }
+  .btn:not(.btn-sm):not(.icon-btn-square):not(.ct-btn) { min-height: 46px; }
+  .auth-input, .auth-input-lg { font-size: 16px; }
+}
+
+@media (max-width: 600px) {
+  .page-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .live-status { align-self: flex-start; }
+  .page-title { font-size: 23px; }
+}
+
 @supports (padding: env(safe-area-inset-bottom)) {
   .dashboard-content { padding-bottom: calc(32px + env(safe-area-inset-bottom)); }
   body { padding-bottom: env(safe-area-inset-bottom); }
