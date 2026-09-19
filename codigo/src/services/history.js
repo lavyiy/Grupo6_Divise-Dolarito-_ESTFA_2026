@@ -9,7 +9,8 @@ const CRYPTO_CODES = new Set(['BTC', 'ETH', 'USDT', 'BNB', 'DOGE']);
 const BINANCE_SYMBOL = { BTC: 'BTCUSDT', ETH: 'ETHUSDT', BNB: 'BNBUSDT', DOGE: 'DOGEUSDT' };
 
 // Monedas del mundo cuyo histórico se sirve desde el backend (evita CORS).
-const WORLD_EXTRA_CODES = new Set(['GBP', 'JPY', 'MXN', 'CHF', 'CNY']);
+// USDT se cruza contra currency-api como las demás: valor en pesos argentinos.
+const WORLD_EXTRA_CODES = new Set(['GBP', 'JPY', 'MXN', 'CHF', 'CNY', 'USDT']);
 const API_BASE = import.meta.env.VITE_API_URL || '';
 
 // Catálogo completo que se ofrece en el gráfico (canónico).
@@ -168,21 +169,17 @@ export async function getCurrencyHistory(currency) {
     return { points: [{ t: now - 30 * 864e5, v: 1 }, { t: now, v: 1 }], source: 'Base' };
   }
 
+  if (WORLD_EXTRA_CODES.has(codigo)) {
+    return { points: await fetchMonedaMundial(codigo), source: 'currency-api' };
+  }
+
   if (CRYPTO_CODES.has(codigo)) {
-    if (codigo === 'USDT') {
-      const now = Date.now();
-      return { points: [{ t: now - 30 * 864e5, v: 1 }, { t: now, v: 1 }], source: 'Paridad USD' };
-    }
     return { points: await fetchBinance(BINANCE_SYMBOL[codigo]), source: 'Binance' };
   }
 
   if (codigo === 'USD') {
     const casa = CASA_BY_MERCADO[mercado] || 'blue';
     return { points: await fetchDolarCasa(casa), source: `ArgentinaDatos · ${casa}` };
-  }
-
-  if (WORLD_EXTRA_CODES.has(codigo)) {
-    return { points: await fetchMonedaMundial(codigo), source: 'currency-api' };
   }
 
   return { points: await fetchMonedaArgentina(codigo), source: 'ArgentinaDatos' };
