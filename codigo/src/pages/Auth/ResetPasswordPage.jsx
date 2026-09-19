@@ -21,8 +21,9 @@ export default function ResetPasswordPage() {
     e.preventDefault();
     setError('');
 
-    if (!token.trim()) {
-      setError('No se encontró el token de restablecimiento. Usá el enlace del email que recibiste.');
+    const code = token.trim().replace(/\D/g, '');
+    if (!/^\d{6}$/.test(code)) {
+      setError('Ingresá el código de 6 dígitos que te enviamos por email.');
       return;
     }
 
@@ -38,15 +39,15 @@ export default function ResetPasswordPage() {
 
     setLoading(true);
     try {
-      await authResetPassword({ token: token.trim(), newPassword: password });
+      await authResetPassword({ token: code, newPassword: password });
       setSuccess(true);
     } catch (err) {
       // Tarea 15: Mensajes de error específicos según el tipo de falla
       const msg = err.message || '';
       if (msg.toLowerCase().includes('expirado') || msg.toLowerCase().includes('expired')) {
-        setError('El enlace de recuperación expiró (válido por 30 minutos). Pedí uno nuevo desde "¿Olvidaste tu contraseña?".');
+        setError('El código expiró (válido por 30 minutos). Pedí uno nuevo desde "¿Olvidaste tu contraseña?".');
       } else if (msg.toLowerCase().includes('inválido') || msg.toLowerCase().includes('invalid') || msg.toLowerCase().includes('no encontrado')) {
-        setError('El enlace de recuperación es inválido o ya fue utilizado. Pedí uno nuevo desde "¿Olvidaste tu contraseña?".');
+        setError('El código es inválido o ya fue utilizado. Pedí uno nuevo desde "¿Olvidaste tu contraseña?".');
       } else {
         setError(msg || 'Ocurrió un error al restablecer la contraseña. Intentá de nuevo.');
       }
@@ -79,7 +80,7 @@ export default function ResetPasswordPage() {
         <div className="auth-right">
           <h2 className="auth-right-title">Nueva contraseña</h2>
           <p className="auth-right-subtitle">
-            Ingresá tu nueva clave para actualizar el acceso a tu cuenta.
+            Ingresá el <strong>código de 6 dígitos</strong> que te enviamos por email y tu nueva clave.
           </p>
 
           {error && (
@@ -88,7 +89,7 @@ export default function ResetPasswordPage() {
               {(error.includes('expiró') || error.includes('inválido') || error.includes('utilizado')) && (
                 <div style={{ marginTop: '8px' }}>
                   <Link to="/forgot" className="auth-link" style={{ fontSize: '13px', fontWeight: 600 }}>
-                    → Solicitar nuevo enlace de recuperación
+                    → Solicitar un nuevo código de recuperación
                   </Link>
                 </div>
               )}
@@ -111,18 +112,26 @@ export default function ResetPasswordPage() {
             <form className="auth-form" onSubmit={handleSubmit}>
               {!tokenFromUrl && (
                 <div className="form-group">
-                  <label>Token de recuperación</label>
+                  <label>Código de recuperación</label>
                   <div className="input-wrapper">
                     <span className="input-icon"><Icon name="shield" size={16} /></span>
                     <input 
                       type="text" 
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      maxLength={6}
                       className="auth-input" 
-                      placeholder="Pegá aquí el token recibido" 
+                      placeholder="••••••" 
                       value={token}
-                      onChange={(e) => setToken(e.target.value)}
+                      onChange={(e) => setToken(e.target.value.replace(/\D/g, '').slice(0, 6))}
                       required 
                     />
                   </div>
+                </div>
+              )}
+              {tokenFromUrl && (
+                <div style={{ marginBottom: '18px', padding: '12px 14px', borderRadius: '8px', background: 'rgba(201,168,76,.1)', border: '1px solid rgba(201,168,76,.35)', color: 'var(--brand-gold, #c9a84c)', fontSize: '13px', textAlign: 'center' }}>
+                  Código recibido por email: <strong>{tokenFromUrl}</strong>
                 </div>
               )}
 
@@ -169,7 +178,7 @@ export default function ResetPasswordPage() {
               </button>
 
               <div className="auth-footer" style={{ marginTop: '20px' }}>
-                <Link to="/login" className="auth-link">Volver al inicio de sesión</Link>
+                ¿No te llegó el código? <Link to="/forgot" className="auth-link">Solicitarlo de nuevo</Link>
               </div>
             </form>
           )}

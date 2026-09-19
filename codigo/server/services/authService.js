@@ -186,24 +186,25 @@ async function forgotPassword(email) {
   if (!user) {
     console.warn(`⚠️ [FORGOT PASSWORD] Email no registrado en la base de datos: "${cleanEmail}"`);
     // Para no revelar qué emails están registrados, no devolvemos error
-    return { success: true, message: 'Si el correo existe, enviaremos un enlace.' };
+    return { success: true, message: 'Si el correo existe, te enviaremos un código de 6 dígitos.' };
   }
 
-  // Generar token seguro
-  const resetToken = crypto.randomBytes(32).toString('hex');
+  // Código de 6 dígitos (misma experiencia que la verificación de email),
+  // guardado en reset_token + expiración de 30 min.
+  const resetToken = generateCode();
   const expires = new Date(Date.now() + 1000 * 60 * 30); // 30 min
 
   await userModel.updateResetToken(user.email, resetToken, expires.toISOString());
   
-  console.log(`📤 [FORGOT PASSWORD] Enviando correo de recuperación a: ${user.email}`);
-  const sendResult = await emailService.sendResetPasswordEmail(user.email, resetToken);
+  console.log(`📤 [FORGOT PASSWORD] Enviando código de recuperación a: ${user.email}`);
+  const sendResult = await emailService.sendResetPasswordEmail(user.email, resetToken, user.nombre);
   if (!sendResult?.success) {
     console.error('❌ [FORGOT PASSWORD] Error al enviar correo:', sendResult?.error);
   } else {
     console.log(`✅ [FORGOT PASSWORD] Correo enviado exitosamente a: ${user.email}`);
   }
 
-  return { success: true, message: 'Si el correo existe, enviaremos un enlace.' };
+  return { success: true, message: 'Si el correo existe, te enviaremos un código de 6 dígitos.' };
 }
 
 async function resetPassword(token, newPassword) {

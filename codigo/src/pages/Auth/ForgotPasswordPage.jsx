@@ -18,7 +18,7 @@ export default function ForgotPasswordPage() {
 
     try {
       const res = await authForgotPassword({ email });
-      setInfo(res?.message || 'Si la cuenta existe, te enviamos un enlace de recuperación a tu email.');
+      setInfo(res?.message || 'Si la cuenta existe, te enviamos un código de 6 dígitos a tu email.');
     } catch (err) {
       setError(err.message || 'Error al procesar la solicitud.');
     } finally {
@@ -50,11 +50,15 @@ export default function ForgotPasswordPage() {
         <div className="auth-right">
           <h2 className="auth-right-title">Recuperar contraseña</h2>
           <p className="auth-right-subtitle">
-            Ingresá el email asociado a tu cuenta para recibir las instrucciones de restablecimiento.
+            Ingresá el email asociado a tu cuenta y te enviamos un <strong>código de 6 dígitos</strong> para restablecer tu clave.
           </p>
 
           {error && <div className="auth-alert error">{error}</div>}
-          {info && <div className="auth-alert error" style={{ background: 'rgba(46,204,138,.12)', borderColor: 'rgba(46,204,138,.4)', color: '#2ecc8a' }}>{info}</div>}
+          {info && (
+            <div className="auth-alert" style={{ background: 'rgba(46,204,138,.12)', borderColor: 'rgba(46,204,138,.4)', color: '#2ecc8a' }}>
+              {info}
+            </div>
+          )}
 
           <form className="auth-form" onSubmit={handleSubmit}>
             <div className="form-group">
@@ -74,11 +78,14 @@ export default function ForgotPasswordPage() {
             </div>
 
             <button type="submit" className="btn btn-primary" disabled={loading}>
-              {loading ? <div className="spinner"></div> : <><span>Enviar enlace de recuperación</span><Icon name="arrowRight" size={16} /></>}
+              {loading ? <div className="spinner"></div> : <><span>Enviar código de recuperación</span><Icon name="arrowRight" size={16} /></>}
             </button>
           </form>
 
           <div className="auth-footer" style={{ marginTop: '24px' }}>
+            ¿Ya tenés el código? <Link to="/reset-password" className="auth-link">Ingresar código</Link>
+          </div>
+          <div className="auth-footer">
             ¿Recordaste tu clave? <Link to="/login" className="auth-link">Iniciar sesión</Link>
           </div>
         </div>

@@ -501,3 +501,21 @@ select option:checked {
 .mt-3 { margin-top: var(--space-3); }
 .mt-4 { margin-top: var(--space-4); }
 .mt-5 { margin-top: var(--space-5); }
+
+/* ===== Pulido móvil / PWA ===== */
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+input, select, textarea {
+  font-size: 16px !important;
+}
+
+@supports (padding: env(safe-area-inset-bottom)) {
+  .dashboard-content { padding-bottom: calc(32px + env(safe-area-inset-bottom)); }
+  body { padding-bottom: env(safe-area-inset-bottom); }
+}
+
+@media (max-width: 768px) {
+  .dashboard-content { padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)); }
+}

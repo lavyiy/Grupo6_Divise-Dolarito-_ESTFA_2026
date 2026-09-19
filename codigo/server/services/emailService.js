@@ -196,47 +196,51 @@ async function sendVerificationEmail(toEmail, nombre, codigo, verifyUrl) {
 
 // ── Recuperación de contraseña ────────────────────────────────────────────────
 
-async function sendResetPasswordEmail(toEmail, token) {
-  const resetUrl = `${FRONTEND_URL}/reset-password?token=${token}`;
+async function sendResetPasswordEmail(toEmail, codigo, nombre) {
+  const resetUrl = `${FRONTEND_URL}/reset-password?token=${codigo}`;
   console.log(`\n======================================================`);
-  console.log(`🔗 [ENLACE DE RECUPERACIÓN GMAIL]`);
-  console.log(`👤 Para: ${toEmail}`);
-  console.log(`🔗 Link: ${resetUrl}`);
+  console.log(`🔑 [CÓDIGO DE RECUPERACIÓN GMAIL]`);
+  console.log(`👤 Para: ${toEmail} (${nombre || 'Usuario'})`);
+  console.log(`🔢 Código de 6 dígitos: ${codigo}`);
+  console.log(`🔗 Enlace directo: ${resetUrl}`);
   console.log(`======================================================\n`);
 
   return await sendEmail({
     to: toEmail,
-    subject: 'Restablecer tu contraseña de Divise',
+    subject: `Tu código de recuperación Divise: ${codigo}`,
     html: `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #0b0f19; color: #f0f4ff; padding: 32px 20px; border-radius: 12px; max-width: 540px; margin: 0 auto; border: 1px solid rgba(255, 255, 255, 0.08);">
         <div style="text-align: center; margin-bottom: 24px;">
           <h1 style="color: #c9a84c; font-size: 26px; font-weight: 800; margin: 0; letter-spacing: 1px;">DIVISE</h1>
+          <p style="color: #94a3b8; font-size: 13px; margin-top: 4px;">Cotizaciones & Mercado en Tiempo Real</p>
         </div>
 
         <div style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 24px; text-align: center;">
           <h2 style="color: #ffffff; font-size: 18px; margin-top: 0;">Recuperación de Contraseña</h2>
           <p style="color: #cbd5e1; font-size: 14px; line-height: 1.5;">
-            Recibimos una solicitud para restablecer la contraseña de tu cuenta. Hacé clic en el siguiente botón para continuar:
+            Hola <strong>${nombre || 'Usuario'}</strong>, ingresá este código en Divise para restablecer tu contraseña:
           </p>
 
           <div style="margin: 24px 0;">
-            <a href="${resetUrl}" target="_blank" style="display: inline-block; padding: 12px 28px; background: #c9a84c; color: #0b0f19; font-weight: 700; text-decoration: none; border-radius: 8px; font-size: 15px;">
-              Restablecer Contraseña
+            <span style="display: inline-block; padding: 14px 32px; background: rgba(201, 168, 76, 0.15); border: 2px solid #c9a84c; border-radius: 10px; font-size: 32px; letter-spacing: 8px; font-weight: 800; color: #f2cf66; font-family: monospace;">
+              ${codigo}
+            </span>
+          </div>
+
+          <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 20px; margin-top: 20px;">
+            <p style="color: #94a3b8; font-size: 13px; margin-top: 0;">O restablecé directamente haciendo clic aquí:</p>
+            <a href="${resetUrl}" target="_blank" style="display: inline-block; padding: 12px 28px; background: #c9a84c; color: #0b0f19; font-weight: 700; text-decoration: none; border-radius: 8px; font-size: 14px;">
+              ✔ Restablecer contraseña
             </a>
           </div>
 
-          <p style="color: #94a3b8; font-size: 12px;">
-            O copiá este enlace en tu navegador:<br/>
-            <span style="color: #c9a84c; word-break: break-all;">${resetUrl}</span>
-          </p>
-
-          <p style="color: #94a3b8; font-size: 12px; margin-top: 16px; margin-bottom: 0;">
-            El enlace es válido por <strong>30 minutos</strong>. Si no solicitaste este cambio, ignorá este mensaje.
+          <p style="color: #94a3b8; font-size: 12px; margin-top: 20px; margin-bottom: 0;">
+            Este código y enlace expiran en <strong>30 minutos</strong>. Si no solicitaste este cambio, podés ignorar este correo de forma segura.
           </p>
         </div>
 
         <div style="text-align: center; margin-top: 24px; color: #64748b; font-size: 11px;">
-          <p style="margin: 0;">© ${new Date().getFullYear()} Divise.</p>
+          <p style="margin: 0;">© ${new Date().getFullYear()} Divise. Todos los derechos reservados.</p>
         </div>
       </div>
     `,
