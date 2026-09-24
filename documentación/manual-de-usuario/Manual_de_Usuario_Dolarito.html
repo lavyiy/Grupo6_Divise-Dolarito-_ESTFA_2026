@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manual de Usuario — Dolarito (divise.)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #1e3a8a;
+      --primary-light: #eff6ff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --bg-card: #ffffff;
+      --bg-subtle: #f8fafc;
+      --badge-bg: #e0e7ff;
+      --badge-text: #3730a3;
+      --accent: #2563eb;
+      --gold: #d97706;
+      --gold-bg: #fef3c7;
+      --gold-text: #92400e;
+      --green: #15803d;
+      --green-bg: #dcfce7;
+      --green-text: #166534;
+      --danger: #b91c1c;
+      --danger-bg: #fee2e2;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #f1f5f9;
+      color: var(--text-main);
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .doc-wrapper {
+      max-width: 860px;
+      margin: 30px auto;
+      background: #ffffff;
+    }
+
+    /* Page container simulating PDF / Print A4 */
+    .page {
+      padding: 48px 52px;
+      min-height: 1080px;
+      background: #ffffff;
+      position: relative;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    /* Floating Print Button */
+    .print-bar {
+      position: sticky;
+      top: 15px;
+      z-index: 1000;
+      display: flex;
+      justify-content: center;
+      margin-bottom: -45px;
+    }
+    .print-btn {
+      background: #0f172a;
+      color: #ffffff;
+      border: none;
+      padding: 10px 22px;
+      border-radius: 9999px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .print-btn:hover {
+      background: #1e293b;
+      transform: translateY(-1px);
+    }
+
+    /* Typography & Layout elements */
+    .top-badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: var(--primary-light);
+      padding: 4px 12px;
+      border-radius: 6px;
+      margin-bottom: 14px;
+    }
+
+    .doc-title {
+      font-size: 30px;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -0.02em;
+      margin-bottom: 10px;
+    }
+
+    .doc-subtitle {
+      font-size: 14.5px;
+      color: var(--text-muted);
+      line-height: 1.55;
+      margin-bottom: 24px;
+    }
+
+    /* Meta Cards Grid */
+    .meta-box {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 25px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    .meta-item {
+      display: flex;
+      flex-direction: column;
+    }
+    .meta-label {
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 3px;
+    }
+    .meta-val {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: #0f172a;
+    }
+    .meta-val.verified {
+      color: var(--green);
+    }
+
+    /* Index Box */
+    .index-card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      background: #ffffff;
+    }
+    .index-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 18px;
+      color: #0f172a;
+    }
+    .index-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      column-gap: 36px;
+      row-gap: 14px;
+    }
+    .index-link {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      text-decoration: none;
+      color: #334155;
+      font-size: 13.5px;
+      font-weight: 500;
+      padding-bottom: 4px;
+      border-bottom: 1px dashed #e2e8f0;
+      transition: color 0.15s;
+    }
+    .index-link:hover {
+      color: var(--accent);
+    }
+    .index-link span.page-num {
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    /* Section Headings */
+    .section-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      background: var(--primary-light);
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 700;
+      margin-right: 8px;
+    }
+    .section-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+    .subsection-title {
+      font-size: 15.5px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-top: 12px;
+      margin-bottom: 6px;
+    }
+
+    /* Content Cards */
+    .card-block {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin-bottom: 14px;
+      background: #ffffff;
+    }
+    .card-block-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 8px;
+    }
+    .card-block p {
+      font-size: 13px;
+      color: #334155;
+      line-height: 1.5;
+      margin-bottom: 6px;
+    }
+    .card-block p:last-child {
+      margin-bottom: 0;
+    }
+
+    /* Bullet List */
+    ul.styled-list {
+      list-style: none;
+      margin: 8px 0;
+    }
+    ul.styled-list li {
+      position: relative;
+      padding-left: 18px;
+      margin-bottom: 6px;
+      font-size: 13px;
+      color: #334155;
+      line-height: 1.5;
+    }
+    ul.styled-list li::before {
+      content: "•";
+      position: absolute;
+      left: 4px;
+      color: var(--accent);
+      font-weight: bold;
+    }
+
+    /* Step List */
+    .step-list {
+      margin-top: 10px;
+    }
+    .step-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .step-num {
+      flex-shrink: 0;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--primary-light);
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 2px;
+    }
+    .step-content {
+      font-size: 13px;
+      color: #334155;
+      line-height: 1.5;
+    }
+
+    /* Callout Note */
+    .callout-box {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin: 12px 0;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 12.5px;
+      color: #166534;
+      line-height: 1.45;
+    }
+    .callout-box.info {
+      background: #eff6ff;
+      border-color: #bfdbfe;
+      color: #1e40af;
+    }
+    .callout-box.tip {
+      background: #fffbeb;
+      border-color: #fde68a;
+      color: #92400e;
+    }
+
+    /* Tables */
+    .table-container {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 14px 0;
+    }
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 12.5px;
+    }
+    table.data-table th {
+      background: var(--bg-subtle);
+      color: #475569;
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 10.5px;
+      letter-spacing: 0.05em;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    table.data-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid #f1f5f9;
+      color: #334155;
+      vertical-align: top;
+      line-height: 1.45;
+    }
+    table.data-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* QA Cards */
+    .qa-item {
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .qa-question {
+      font-size: 14px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .qa-question::before {
+      content: "•";
+      color: var(--accent);
+      font-size: 16px;
+    }
+    .qa-answer {
+      font-size: 13px;
+      color: #475569;
+      line-height: 1.5;
+      padding-left: 14px;
+    }
+
+    /* Footer */
+    .page-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      color: #94a3b8;
+      border-top: 1px solid #f1f5f9;
+      padding-top: 10px;
+      margin-top: 20px;
+    }
+
+    .badge-route {
+      float: right;
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      font-family: monospace;
+      font-size: 11.5px;
+      color: #475569;
+      padding: 2px 7px;
+      border-radius: 5px;
+      font-weight: 500;
+    }
+
+    .block-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 5px;
+    }
+
+    /* --- PRINT OPTIMIZATIONS (PREVENTS ACCIDENTAL SPILLOVERS) --- */
+    @page {
+      size: A4 portrait;
+      margin: 10mm 14mm 12mm 14mm;
+    }
+
+    @media print {
+      body {
+        background: #ffffff;
+        font-size: 12.5px;
+      }
+      .doc-wrapper {
+        margin: 0;
+        max-width: 100%;
+        box-shadow: none;
+      }
+      .page {
+        border-bottom: none;
+        page-break-after: always;
+        break-after: page;
+        page-break-inside: avoid;
+        break-inside: avoid;
+        min-height: auto;
+        height: auto;
+        padding: 0 0 10px 0 !important;
+      }
+      .card-block {
+        padding: 12px 16px;
+        margin-bottom: 10px;
+        border-radius: 8px;
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+      .card-block-title {
+        font-size: 14px;
+        margin-bottom: 5px;
+      }
+      .card-block p {
+        font-size: 12px;
+        line-height: 1.42;
+        margin-bottom: 4px;
+      }
+      .section-title {
+        font-size: 18px;
+        margin-bottom: 12px;
+      }
+      .subsection-title {
+        font-size: 14px;
+        margin-top: 8px;
+        margin-bottom: 4px;
+      }
+      .step-list {
+        margin-top: 6px;
+      }
+      .step-item {
+        gap: 8px;
+        margin-bottom: 6px;
+      }
+      .step-num {
+        width: 19px;
+        height: 19px;
+        font-size: 10.5px;
+      }
+      .step-content {
+        font-size: 12px;
+        line-height: 1.42;
+      }
+      ul.styled-list {
+        margin: 6px 0;
+      }
+      ul.styled-list li {
+        font-size: 12px;
+        line-height: 1.42;
+        margin-bottom: 4px;
+      }
+      .callout-box {
+        padding: 8px 12px;
+        margin: 8px 0;
+        font-size: 11.5px;
+        line-height: 1.38;
+      }
+      .table-container {
+        margin: 8px 0;
+      }
+      table.data-table th {
+        padding: 8px 10px;
+        font-size: 10px;
+      }
+      table.data-table td {
+        padding: 8px 10px;
+        font-size: 11.5px;
+        line-height: 1.38;
+      }
+      .qa-item {
+        margin-bottom: 10px;
+        padding-bottom: 8px;
+      }
+      .qa-question {
+        font-size: 13px;
+        margin-bottom: 3px;
+      }
+      .qa-answer {
+        font-size: 12px;
+        line-height: 1.42;
+      }
+      .page-footer {
+        margin-top: 10px;
+        padding-top: 6px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="print-bar no-print">
+    <button class="print-btn" onclick="window.print()">
+      <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/><path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/></svg>
+      Imprimir / Guardar como PDF
+    </button>
+  </div>
+
+  <div class="doc-wrapper">
+
+    <!-- PÁGINA 1: PORTADA E ÍNDICE -->
+    <section class="page" id="page-1">
+      <div class="top-badge">DOCUMENTACIÓN OFICIAL DE PRODUCTO</div>
+      <h1 class="doc-title">Manual de Usuario — Dolarito</h1>
+      <p class="doc-subtitle">
+        Guía práctica y detallada para el seguimiento cambiario en tiempo real, conversión multidivisa, análisis de curvas temporales y administración segura de cuenta.
+      </p>
+
+      <div class="meta-box">
+        <div class="meta-item">
+          <span class="meta-label">Versión del Manual</span>
+          <span class="meta-val">1.2 (Actualizado)</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Última Actualización</span>
+          <span class="meta-val">Septiembre 2026</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Versión Cubierta</span>
+          <span class="meta-val">Plataforma Web & PWA v1.0</span>
+        </div>
+        <div class="meta-item" style="grid-column: span 3; border-top: 1px solid #e2e8f0; padding-top: 12px; margin-top: -4px;">
+          <span class="meta-label">Estado de Edición</span>
+          <span class="meta-val verified">✓ Vigente y Sincronizado con Código Fuente (Git Main)</span>
+        </div>
+      </div>
+
+      <div class="index-card">
+        <div class="index-header">
+          <svg width="18" height="18" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z"/></svg>
+          Tabla de Contenidos
+        </div>
+        <div class="index-grid">
+          <a href="#page-2" class="index-link">
+            <span>1. Introducción</span>
+            <span class="page-num">Pág. 2</span>
+          </a>
+          <a href="#page-3" class="index-link">
+            <span>2. Requisitos del sistema y PWA</span>
+            <span class="page-num">Pág. 3</span>
+          </a>
+          <a href="#page-4" class="index-link">
+            <span>3. Primeros pasos</span>
+            <span class="page-num">Pág. 4</span>
+          </a>
+          <a href="#page-5" class="index-link">
+            <span>4. Funcionalidades principales</span>
+            <span class="page-num">Pág. 5</span>
+          </a>
+          <a href="#page-10" class="index-link">
+            <span>5. Casos de uso comunes</span>
+            <span class="page-num">Pág. 10</span>
+          </a>
+          <a href="#page-11" class="index-link">
+            <span>6. Preguntas frecuentes (FAQ)</span>
+            <span class="page-num">Pág. 11</span>
+          </a>
+          <a href="#page-12" class="index-link">
+            <span>7. Solución de problemas</span>
+            <span class="page-num">Pág. 12</span>
+          </a>
+          <a href="#page-13" class="index-link">
+            <span>8. Contacto y soporte</span>
+            <span class="page-num">Pág. 13</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="page-footer">
+        <span>Dolarito — Plataforma de Consulta de Cotizaciones Multidivisa</span>
+        <span>Página 1</span>
+      </div>
+    </section>
+
+    <!-- PÁGINA 2: INTRODUCCIÓN -->
+    <section class="page" id="page-2">
+      <h2 class="section-title"><span class="section-num">1</span> Introducción</h2>
+
+      <div class="card-block">
+        <h3 class="card-block-title">¿Qué es Dolarito?</h3>
+        <p>
+          <strong>Dolarito</strong> (identificado en la interfaz web como <em>divise.</em>) es una plataforma digital centralizada y ágil diseñada para el seguimiento, cálculo, conversión y análisis del mercado cambiario. La aplicación recopila en tiempo real los valores de:
+        </p>
+        <ul class="styled-list">
+          <li><strong>Dólar y variantes locales:</strong> Mercado Oficial, Informal (<em>Dólar Blue</em>), Financieros (<em>MEP / Bolsa</em> y <em>CCL / Contado con Liqui</em>), Tarjeta, Mayorista y Solidario.</li>
+          <li><strong>Monedas de la región y globales:</strong> Euro (EUR), Real Brasileño (BRL), Peso Uruguayo (UYU), Peso Chileno (CLP), Libra Esterlina (GBP), Yen Japonés (JPY), Peso Mexicano (MXN), Franco Suizo (CHF) y Yuan Chino (CNY).</li>
+          <li><strong>Criptoactivos líderes:</strong> Bitcoin (BTC), Ethereum (ETH), Tether (USDT valorizado en pesos), Binance Coin (BNB) y Dogecoin (DOGE).</li>
+        </ul>
+      </div>
+
+      <div class="card-block">
+        <h3 class="card-block-title">¿A quién está dirigida? (Perfil del usuario)</h3>
+        <p>La plataforma fue concebida con un enfoque accesible, eliminando barreras técnicas complejas:</p>
+        <ul class="styled-list">
+          <li><strong>Particulares y ahorristas:</strong> Personas que desean conocer la cotización del día para proteger sus ahorros o planificar gastos cotidianos.</li>
+          <li><strong>Comerciantes, autónomos y freelancers:</strong> Profesionales que fijan presupuestos, compran insumos o facturan servicios en múltiples monedas extranjeras.</li>
+          <li><strong>Operadores y analistas:</strong> Usuarios interesados en observar la brecha cambiaria, tendencias históricas reales (hasta 5 años o serie completa) y fluctuaciones de mercado.</li>
+        </ul>
+      </div>
+
+      <div class="card-block">
+        <h3 class="card-block-title">¿Qué problema resuelve y qué beneficio principal ofrece?</h3>
+        <p>
+          En economías con múltiples tipos de cambio y alta volatilidad, la información cambiaria suele encontrarse fragmentada, desactualizada o saturada de publicidad invasiva.
+        </p>
+        <p>
+          <strong>Dolarito</strong> resuelve este obstáculo brindando una fuente confiable, inmediata y unificada: conversiones exactas con tipos de cambio reales, almacenamiento de consultas en base de datos segura, alertas automáticas por correo electrónico ante oscilaciones significativas y gráficos analíticos interactivos basados en datos de mercado reales.
+        </p>
+      </div>
+
+      <div class="page-footer">
+        <span>Dolarito — Plataforma de Consulta de Cotizaciones Multidivisa</span>
+        <span>Página 2</span>
+      </div>
+    </section>
+
+    <!-- PÁGINA 3: REQUISITOS DEL SISTEMA Y PWA -->
+    <section class="page" id="page-3">
+      <h2 class="section-title"><span class="section-num">2</span> Requisitos del Sistema y PWA</h2>
+      <p style="font-size: 13.5px; color: #475569; margin-bottom: 12px;">
+        Dolarito funciona como una Single Page Application (React 18 + Vite 7 + Express 5 + PostgreSQL), y además ofrece soporte como Aplicación Web Progresiva (PWA instalable):
+      </p>
+
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width: 28%;">COMPONENTE</th>
+              <th>REQUISITO O ESPECIFICACIÓN</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Sistemas Operativos</strong></td>
+              <td>Windows 10 / 11, macOS (11.0 o superior), distribuciones Linux de escritorio (Ubuntu, Debian, Fedora), Android 9.0+ e iOS 14.0+.</td>
+            </tr>
+            <tr>
+              <td><strong>Navegadores Compatibles</strong></td>
+              <td>Google Chrome (v90+), Mozilla Firefox (v88+), Microsoft Edge (v90+), Apple Safari (v14+) o cualquier navegador moderno basado en Chromium.</td>
+            </tr>
+            <tr>
+              <td><strong>Soporte PWA (Instalable)</strong></td>
+              <td><strong>Compatible con Progressive Web App.</strong> Puede instalarse directamente desde el navegador en la pantalla de inicio del celular o escritorio ("Instalar aplicación"), abriéndose en ventana nativa independiente sin barra de navegación del navegador.</td>
+            </tr>
+            <tr>
+              <td><strong>Conexión a Internet</strong></td>
+              <td>Requerida. Se sugiere una conexión estable (mínimo 1 Mbps) para la recepción fluida de cotizaciones y flujos de precios en vivo.</td>
+            </tr>
+            <tr>
+              <td><strong>Cuenta de Usuario</strong></td>
+              <td>Requerida para acceder al Panel de Control (Dashboard), guardar divisas favoritas, registrar alertas y sincronizar historiales personales.</td>
+            </tr>
+            <tr>
+              <td><strong>Permisos Especiales</strong></td>
+              <td><strong>No requiere permisos de cámara, micrófono ni geolocalización.</strong> Las alertas y códigos de seguridad se despachan directamente por correo electrónico, por lo que no es necesario otorgar permisos adicionales en el navegador.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout-box info" style="margin-top: 18px;">
+        <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/></svg>
+        <div>
+          <strong>Optimizado para dispositivos móviles:</strong> La aplicación incorpora navegación inferior tipo app nativa (*bottom nav*) con gestos táctiles fluidos y soporte offline básico mediante Service Worker.
+        </div>
+      </div>
+
+      <div class="page-footer">
+        <span>Dolarito — Plataforma de Consulta de Cotizaciones Multidivisa</span>
+        <span>Página 3</span>
+      </div>
+    </section>
+
+    <!-- PÁGINA 4: PRIMEROS PASOS -->
+    <section class="page" id="page-4">
+      <h2 class="section-title"><span class="section-num">3</span> Primeros Pasos</h2>
+
+      <div class="subsection-title">3.1 Acceso a la Plataforma e Instalación</div>
+      <p style="font-size: 13px; color: #475569; margin-bottom: 12px;">
+        Para ingresar a la plataforma, abra su navegador web e ingrese a la dirección oficial: <strong>https://dolarito.onrender.com</strong> (o el dominio web provisto). Para instalarla en su celular o PC, toque el menú del navegador y presione <em>"Agregar a la pantalla principal"</em> o <em>"Instalar aplicación"</em>.
+      </p>
+
+      <div class="subsection-title">3.2 Registro y Creación de Cuenta</div>
+      <div class="step-list">
+        <div class="step-item">
+          <div class="step-num">1</div>
+          <div class="step-content">Desde la pantalla principal, presione el enlace <strong>"Crear cuenta"</strong> o <strong>"Registrarse"</strong>.</div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">2</div>
+          <div class="step-content">Complete los campos requeridos: <strong>Nombre completo</strong>, <strong>Correo electrónico</strong>, cree una <strong>Contraseña segura (mínimo 8 caracteres)</strong> y confírmela en el campo siguiente.</div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">3</div>
+          <div class="step-content">Marque la casilla obligatoria: <strong>"Acepto los términos y condiciones de uso"</strong> y haga clic en <strong>"Registrarse"</strong>.</div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">4</div>
+          <div class="step-content">El sistema enviará inmediatamente un <strong>código de verificación de 6 dígitos</strong> a su casilla de correo. Ingréselo en la pantalla emergente para activar su usuario e iniciar sesión automáticamente.</div>
+        </div>
+      </div>
+
+      <div class="subsection-title" style="margin-top: 14px;">3.3 Inicio de Sesión y Recuperación con Código OTP</div>
+      <div class="step-list">
+        <div class="step-item">
+          <div class="step-num">1</div>
+          <div class="step-content">Acceda a la ruta de ingreso (<code>/login</code>) y escriba su <strong>Correo electrónico</strong> y <strong>Contraseña</strong>.</div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">2</div>
+          <div class="step-content">Presione el botón <strong>"Iniciar Sesión"</strong>. Si tiene activada la <strong>Verificación en Dos Pasos (2FA)</strong>, ingrese el código de 6 dígitos enviado a su correo electrónico.</div>
+        </div>
+        <div class="step-item">
+          <div class="step-num">3</div>
+          <div class="step-content"><strong>¿Olvidó su clave?</strong> Toque <em>"¿Olvidaste tu contraseña?"</em> (<code>/forgot</code>), ingrese su email y el sistema le enviará un código de 6 dígitos para restablecer su clave en <code>/reset-password</code>.</div>
+        </div>
+      </div>
+
+      <div class="subsection-title" style="margin-top: 14px;">3.4 Recorrido Inicial e Interfaz (Desktop y Navegación Móvil)</div>
+      <p style="font-size: 13px; color: #475569;">
+        En escritorio, la navegación se realiza desde la barra superior modular. En móviles, despliega una <strong>barra inferior (*bottom nav*)</strong> con accesos a <strong>Inicio</strong>, <strong>Cotizaciones</strong>, <strong>Gráficos</strong>, <strong>Alertas</strong> y botón <strong>"Más"</strong> que abre una hoja con las demás secciones.
+      </p>
+
+      <div class="page-footer">
+        <span>Dolarito — Plataforma de Consulta de Cotizaciones Multidivisa</span>
+        <span>Página 4</span>
+      </div>
+    </section>
+
+    <!-- PÁGINA 5: FUNCIONALIDADES (INICIO Y DIVISAS) -->
+    <section class="page" id="page-5">
+      <h2 class="section-title"><span class="section-num">4</span> Funcionalidades Principales</h2>
+
+      <div class="card-block">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div>
+            <h3 class="card-block-title" style="margin-bottom: 2px;">4.1 Panel de Inicio (Dashboard y Cotizaciones Clave)</h3>
+            <p style="font-size: 12.5px; color: var(--text-muted); margin-bottom: 10px;">Monitor principal de referencia con indicadores KPI de alto impacto.</p>
+          </div>
+          <span class="badge-route">/dashboard</span>
+        </div>
+
+        <div class="block-label">¿QUÉ HACE?</div>
+        <p>
+          Centraliza los tipos de cambio más consultados en el mercado argentino: <strong>Dólar Blue</strong>, <strong>Dólar Oficial</strong>, <strong>Euro Oficial</strong> y <strong>Bitcoin</strong>. Cada tarjeta exhibe el precio de venta en vivo mediante contadores animados, porcentaje de variación diaria y micro-gráfica (<em>sparkline</em>).
+        </p>
+
+        <div class="block-label" style="margin-top: 10px;">¿CÓMO SE USA?</div>
+        <div class="step-list">
+          <div class="step-item">
+            <div class="step-num">1</div>
+            <div class="step-content">Al entrar al Dashboard, observe las 4 tarjetas superiores con los precios actualizados al instante.</div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">2</div>
+            <div class="step-content">Consulte la tabla inferior de <em>Cotizaciones destacadas</em> para ver un resumen de compras y ventas.</div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">3</div>
+            <div class="step-content">Utilice el enlace directo <em>"Ver todas"</em> para dirigirse al catálogo completo de divisas.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-block">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div>
+            <h3 class="card-block-title" style="margin-bottom: 2px;">4.2 Monitor de Cotizaciones y Catálogo Multidivisa Mundial</h3>
+            <p style="font-size: 12.5px; color: var(--text-muted); margin-bottom: 10px;">Listado exhaustivo de tipos de cambio fiduciarios internacionales y criptoactivos.</p>
+          </div>
+          <span class="badge-route">/dashboard/divisas</span>
+        </div>
+
+        <div class="block-label">¿QUÉ HACE?</div>
+        <p>
+          Ofrece un catálogo ordenado de cotizaciones con desglose de precios de <strong>Compra</strong> y <strong>Venta</strong>, mercado y cálculo de variación porcentual. Incluye las principales monedas del mundo (USD, EUR, BRL, UYU, CLP, GBP, JPY, MXN, CHF, CNY, BTC, ETH, USDT, BNB, DOGE).
+        </p>
+
+        <div class="block-label" style="margin-top: 10px;">¿CÓMO SE USA?</div>
+        <div class="step-list">
+          <div class="step-item">
+            <div class="step-num">1</div>
+            <div class="step-content">Navegue a la pestaña <strong>Cotizaciones</strong> desde la barra superior o inferior móvil.</div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">2</div>
+            <div class="step-content">Utilice los filtros rápidos por categoría: <strong>"Todos"</strong>, <strong>"Divisas"</strong> o <strong>"Cripto"</strong>.</div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">3</div>
+            <div class="step-content">En la barra de búsqueda, ingrese el nombre o código de la divisa (ej. "Real", "BRL", "BTC").</div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">4</div>
+            <div class="step-content">Haga clic sobre cualquier tarjeta para inspeccionar sus valores y registrar la consulta en su historial de auditoría.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="page-footer">
+        <span>Dolarito — Plataforma de Consulta de Cotizaciones Multidivisa</span>
+        <span>Página 5</span>
+      </div>
+    </section>
+
+    <!-- PÁGINA 6: CALCULADORA Y GRÁFICOS -->
+    <section class="page" id="page-6">
+      <div class="card-block">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div>
+            <h3 class="card-block-title" style="margin-bottom: 2px;">4.3 Calculadora y Conversor de Divisas</h3>
+            <p style="font-size: 12.5px; color: var(--text-muted); margin-bottom: 10px;">Conversión instantánea entre monedas nacionales, internacionales y cripto.</p>
+          </div>
+          <span class="badge-route">/dashboard/calculadora</span>
+        </div>
+
+        <div class="block-label">¿QUÉ HACE?</div>
+        <p>
+          Permite ingresar un monto en una divisa origen y calcular al instante su equivalente exacto en la divisa destino, aplicando los tipos de cambio de venta vigentes y resolviendo el cruce cambiario adecuado (incluso para criptoactivos en pesos mediante paridad de mercado).
+        </p>
+
+        <div class="block-label" style="margin-top: 10px;">¿CÓMO SE USA?</div>
+        <div class="step-list">
+          <div class="step-item">
+            <div class="step-num">1</div>
+            <div class="step-content">Ingrese en el campo <strong>"Monto"</strong> la cantidad numérica a convertir (ej. 1000).</div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">2</div>
+            <div class="step-content">Seleccione la <strong>Moneda de Origen</strong> en el desplegable izquierdo (ej. USD, EUR, BRL, BTC).</div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">3</div>
+            <div class="step-content">Seleccione la <strong>Moneda de Destino</strong> en el desplegable derecho (ej. ARS - Peso Argentino).</div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">4</div>
+            <div class="step-content">Presione el botón circular <strong>Swap (⇄)</strong> para invertir el sentido de la conversión.</div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">5</div>
+            <div class="step-content">Visualice el resultado numérico en tiempo real con desglose del tipo de cambio aplicado.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-block">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div>
+            <h3 class="card-block-title" style="margin-bottom: 2px;">4.4 Gráficos Interactivos, Series Históricas Reales y Horizontes</h3>
+            <p style="font-size: 12.5px; color: var(--text-muted); margin-bottom: 10px;">Análisis gráfico dinámico conectado a datos reales de mercado con comparativa.</p>
+          </div>
+          <span class="badge-route">/dashboard/graficos</span>
+        </div>
+
+        <div class="block-label">¿QUÉ HACE?</div>
+        <p>
+          Renderiza gráficos vectoriales que muestran la trayectoria de precios a lo largo del tiempo conectándose a fuentes oficiales y APIs de series históricas reales. Incluye soporte para todas las cotizaciones del dólar, monedas del mundo y cripto (con serie histórica real de USDT en pesos).
+        </p>
+
+        <div class="block-label" style="margin-top: 10px;">¿CÓMO SE USA?</div>
+        <div class="step-list">
+          <div class="step-item">
+            <div class="step-num">1</div>
+            <div class="step-content">Seleccione la divisa principal en el selector superior (ej. Dólar Blue, Oficial, Euro, Real Brasileño, USDT).</div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">2</div>
+            <div class="step-content">Elija el horizonte temporal: <strong>7 días</strong>, <strong>30 días</strong>, <strong>90 días</strong>, <strong>1 año</strong>, <strong>5 años</strong> o <strong>Todo</strong>.</div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">3</div>
+            <div class="step-content">Active o desactive el interruptor <strong>"Comparar divisas"</strong> para proyectar una segunda línea de referencia.</div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">4</div>
+            <div class="step-content">Alterne entre el estilo de gráfico de <strong>Línea</strong> o <strong>Área</strong>, y pase el cursor para ver fecha y precio.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="page-footer">
+        <span>Dolarito — Plataforma de Consulta de Cotizaciones Multidivisa</span>
+        <span>Página 6</span>
+      </div>
+    </section>
+
+    <!-- PÁGINA 7: FAVORITOS Y ALERTAS -->
+    <section class="page" id="page-7">
+      <div class="card-block">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div>
+            <h3 class="card-block-title" style="margin-bottom: 2px;">4.5 Gestión de Divisas Favoritas con Filtro Fiat/Cripto</h3>
+            <p style="font-size: 12.5px; color: var(--text-muted); margin-bottom: 10px;">Panel personalizado de seguimiento rápido para monedas de uso frecuente.</p>
+          </div>
+          <span class="badge-route">/dashboard/favoritos</span>
+        </div>
+
+        <div class="block-label">¿QUÉ HACE?</div>
+        <p>
+          Permite armar una lista personalizada con las monedas que el usuario necesita tener siempre a la vista, persistida en la base de datos, con soporte para 16 divisas mundiales, filtros por tipo (Todas / Divisas / Cripto) y atajo directo a la Calculadora.
+        </p>
+
+        <div class="block-label" style="margin-top: 10px;">¿CÓMO SE USA?</div>
+        <div class="step-list">
+          <div class="step-item">
+            <div class="step-num">1</div>
+            <div class="step-content">En Favoritos o Cotizaciones, haga clic sobre el icono de <strong>Estrella (★)</strong> junto a cualquier divisa.</div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">2</div>
+            <div class="step-content">Alterne entre ver <em>"Todas"</em> o <em>"Mis Favoritas"</em>, y filtre por categoría <em>"Divisas"</em> o <em>"Cripto"</em>.</div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">3</div>
+            <div class="step-content">Utilice el botón de <strong>Conversión rápida</strong> en la tarjeta para abrir la Calculadora con dicha moneda preseleccionada.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-block">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div>
+            <h3 class="card-block-title" style="margin-bottom: 2px;">4.6 Sistema de Alertas de Precios Automáticas</h3>
+            <p style="font-size: 12.5px; color: var(--text-muted); margin-bottom: 10px;">Monitoreo automático con notificaciones configuradas por umbral.</p>
+          </div>
+          <span class="badge-route">/dashboard/alertas</span>
+        </div>
+
+        <div class="block-label">¿QUÉ HACE?</div>
+        <p>
+          Supervisa constantemente el mercado y envía un aviso por correo electrónico cuando una divisa supera un valor máximo establecido o desciende por debajo de un valor mínimo de interés. Soporta todas las variantes de dólar, monedas internacionales y criptomonedas.
+        </p>
+
+        <div class="block-label" style="margin-top: 10px;">¿CÓMO SE USA?</div>
+        <div class="step-list">
+          <div class="step-item">
+            <div class="step-num">1</div>
+            <div class="step-content">Presione el botón <strong>"+ Nueva Alerta"</strong> en la cabecera del módulo.</div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">2</div>
+            <div class="step-content">En la ventana modal, escoja la divisa a vigilar (Dólar Blue, Oficial, Euro, Real, Libra, Bitcoin, etc.).</div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">3</div>
+            <div class="step-content">Defina la regla de activación: <strong>"Supera el valor"</strong> o <strong>"Cae por debajo de"</strong>.</div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">4</div>
+            <div class="step-content">Especifique el precio objetivo (asociado automáticamente a su correo de cuenta registrada).</div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">5</div>
+            <div class="step-content">Haga clic en <strong>"Guardar Alerta"</strong>. La regla quedará activa y visible en su tablero.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="page-footer">
+        <span>Dolarito — Plataforma de Consulta de Cotizaciones Multidivisa</span>
+        <span>Página 7</span>
+      </div>
+    </section>
+
+    <!-- PÁGINA 8: NOTICIAS E HISTORIAL -->
+    <section class="page" id="page-8">
+      <div class="card-block">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div>
+            <h3 class="card-block-title" style="margin-bottom: 2px;">4.7 Centro de Noticias por Región (Argentina, Mundo, Cripto)</h3>
+            <p style="font-size: 12.5px; color: var(--text-muted); margin-bottom: 10px;">Feed de actualidad económica en tiempo real con clasificación regional.</p>
+          </div>
+          <span class="badge-route">/dashboard/noticias</span>
+        </div>
+
+        <div class="block-label">¿QUÉ HACE?</div>
+        <p>
+          Sincroniza y presenta titulares y síntesis informativas del mercado financiero servidas por el backend de Dolarito, organizadas en tarjetas legibles con fecha relativa (<em>"Hace 15 min"</em>, <em>"Hace 2 h"</em>), fuente y etiqueta temática.
+        </p>
+
+        <div class="block-label" style="margin-top: 10px;">¿CÓMO SE USA?</div>
+        <div class="step-list">
+          <div class="step-item">
+            <div class="step-num">1</div>
+            <div class="step-content">Ingrese a la sección <strong>Noticias</strong> en el menú principal o barra inferior móvil.</div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">2</div>
+            <div class="step-content">Filtre por región temática: <strong>"Todas"</strong>, <strong>"Argentina"</strong>, <strong>"Mundo"</strong> o <strong>"Cripto"</strong>.</div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">3</div>
+            <div class="step-content">Ordene por <strong>"Relevancia"</strong> o <strong>"Más recientes"</strong>, y toque cualquier tarjeta para abrir la nota original.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-block">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div>
+            <h3 class="card-block-title" style="margin-bottom: 2px;">4.8 Historial de Consultas con Filtros Avanzados</h3>
+            <p style="font-size: 12.5px; color: var(--text-muted); margin-bottom: 10px;">Auditoría y registro cronológico de consultas realizadas con validación de fechas.</p>
+          </div>
+          <span class="badge-route">/dashboard/historial</span>
+        </div>
+
+        <div class="block-label">¿QUÉ HACE?</div>
+        <p>
+          Conserva un registro en base de datos con fecha, hora, divisa y precio registrado cada vez que el usuario consulta o interactúa con una cotización en la plataforma, permitiendo auditoría y trazabilidad histórica.
+        </p>
+
+        <div class="block-label" style="margin-top: 10px;">¿CÓMO SE USA?</div>
+        <div class="step-list">
+          <div class="step-item">
+            <div class="step-num">1</div>
+            <div class="step-content">Acceda al módulo <strong>Historial</strong> desde el menú superior o móvil.</div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">2</div>
+            <div class="step-content">Filtre por rango de fechas ingresando una <em>Fecha Desde</em> y una <em>Fecha Hasta</em> (con límites validados).</div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">3</div>
+            <div class="step-content">Filtre por tipo (Todas / Fiat / Cripto) o seleccione una divisa específica en el selector desplegable.</div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">4</div>
+            <div class="step-content">Presione <strong>"Limpiar filtros"</strong> para restablecer la vista completa paginada.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="page-footer">
+        <span>Dolarito — Plataforma de Consulta de Cotizaciones Multidivisa</span>
+        <span>Página 8</span>
+      </div>
+    </section>
+
+    <!-- PÁGINA 9: PERFIL Y SEGURIDAD -->
+    <section class="page" id="page-9">
+      <h2 class="section-title"><span class="section-num">4</span> Funcionalidades Principales</h2>
+
+      <div class="card-block">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div>
+            <h3 class="card-block-title" style="margin-bottom: 2px;">4.9 Perfil de Usuario, Preferencias y Seguridad (2FA)</h3>
+            <p style="font-size: 12.5px; color: var(--text-muted); margin-bottom: 10px;">Gestión de credenciales, preferencias visuales, verificación en dos pasos y cuenta.</p>
+          </div>
+          <span class="badge-route">/dashboard/perfil</span>
+        </div>
+
+        <div class="block-label">¿QUÉ HACE?</div>
+        <p>
+          Permite actualizar el nombre público y correo del titular, personalizar el tema visual (Modo Oscuro / Claro) y la divisa principal predeterminada, cambiar la contraseña de acceso, habilitar la protección con <strong>Verificación en Dos Pasos (2FA por correo electrónico)</strong> y gestionar la baja voluntaria de la cuenta.
+        </p>
+
+        <div class="block-label" style="margin-top: 10px;">¿CÓMO SE USA?</div>
+        <div class="step-list">
+          <div class="step-item">
+            <div class="step-num">1</div>
+            <div class="step-content">Haga clic en su avatar en la esquina superior derecha (o menú "Más" en móviles) para entrar a <strong>Perfil</strong>.</div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">2</div>
+            <div class="step-content"><strong>Editar Perfil:</strong> Presione "Editar Perfil" para corregir su nombre o email registrado.</div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">3</div>
+            <div class="step-content"><strong>Preferencias Visuales:</strong> Seleccione el tema de la aplicación (<em>Oscuro Divise Pro</em> o <em>Claro Light Gold</em>) y fije su divisa principal favorita.</div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">4</div>
+            <div class="step-content"><strong>Cambio de Contraseña:</strong> Ingrese su contraseña actual seguida de la nueva contraseña (<strong>mínimo 8 caracteres</strong>) y su confirmación.</div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">5</div>
+            <div class="step-content"><strong>Activar 2FA:</strong> Presione <strong>"Activar 2FA"</strong>. A partir de ese momento, en cada inicio de sesión se enviará automáticamente un código numérico de 6 dígitos a su correo electrónico.</div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">6</div>
+            <div class="step-content"><strong>Eliminar Cuenta:</strong> En la Zona de Peligro, presione "Eliminar cuenta", escriba la palabra confirmatoria <strong>ELIMINAR</strong> en mayúsculas y confirme la baja definitiva.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout-box tip">
+        <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/></svg>
+        <div>
+          <strong>Borrado seguro:</strong> Al confirmar la eliminación con la palabra ELIMINAR, la base de datos ejecuta un borrado en cascada eliminando permanentemente sus favoritos, alertas e historial.
+        </div>
+      </div>
+
+      <div class="page-footer">
+        <span>Dolarito — Plataforma de Consulta de Cotizaciones Multidivisa</span>
+        <span>Página 9</span>
+      </div>
+    </section>
+
+    <!-- PÁGINA 10: CASOS DE USO -->
+    <section class="page" id="page-10">
+      <h2 class="section-title"><span class="section-num">5</span> Casos de Uso Comunes</h2>
+
+      <div class="card-block">
+        <h3 class="card-block-title">Caso 1: Comparar la brecha entre el Dólar Blue y el Dólar Oficial antes de una operación</h3>
+        <p><strong>Objetivo:</strong> Un usuario desea saber cuántos pesos de diferencia existen entre la cotización bancaria y la del mercado libre para definir una compra o cobro de servicios.</p>
+        <p><strong>Solución:</strong> Ingrese a <em>Inicio</em> o <em>Cotizaciones</em>. Observe directamente las tarjetas de Dólar Blue y Dólar Oficial colocadas de forma contigua en el panel. El valor de venta y la variación diaria le permitirán calcular el spread cambiario en cuestión de segundos.</p>
+      </div>
+
+      <div class="card-block">
+        <h3 class="card-block-title">Caso 2: Calcular el valor en pesos de una compra internacional o presupuesto</h3>
+        <p><strong>Objetivo:</strong> Un profesional recibe una cotización o presupuesto de 750 USD y necesita saber el monto equivalente exacto en pesos argentinos al momento de abonar.</p>
+        <p><strong>Solución:</strong> Diríjase a <em>Calculadora</em> (<code>/dashboard/calculadora</code>). Digite 750 en el campo monto, elija origen USD y destino ARS. En pantalla obtendrá el importe total con los centavos calculados sobre el tipo de cambio oficial o paralelo según corresponda.</p>
+      </div>
+
+      <div class="card-block">
+        <h3 class="card-block-title">Caso 3: Recibir un aviso preventivo cuando una cotización supere un umbral crítico</h3>
+        <p><strong>Objetivo:</strong> Un usuario desea comprar divisa únicamente si el precio baja de un valor objetivo, o proteger un activo si el valor sobrepasa un determinado nivel.</p>
+        <p><strong>Solución:</strong> Vaya a <em>Alertas</em> (<code>/dashboard/alertas</code>) > presione "+ Nueva Alerta" > seleccione la divisa > elija la condición (ej. "Cae por debajo de") y determine la cifra. La plataforma se encargará de avisarle por correo automáticamente sin necesidad de que usted permanezca con la página abierta todo el día.</p>
+      </div>
+
+      <div class="card-block">
+        <h3 class="card-block-title">Caso 4: Reforzar la seguridad personal activando la verificación en dos pasos (2FA)</h3>
+        <p><strong>Objetivo:</strong> Garantizar que nadie pueda acceder a la cuenta personal aunque conozca o adivine la contraseña.</p>
+        <p><strong>Solución:</strong> Abra <em>Perfil</em> (<code>/dashboard/perfil</code>) > presione el botón <strong>"Activar 2FA"</strong>. Desde ese momento, cada inicio requerirá su contraseña y un código numérico temporal de 6 dígitos que llegará al instante a su correo electrónico registrado.</p>
+      </div>
+
+      <div class="page-footer">
+        <span>Dolarito — Plataforma de Consulta de Cotizaciones Multidivisa</span>
+        <span>Página 10</span>
+      </div>
+    </section>
+
+    <!-- PÁGINA 11: PREGUNTAS FRECUENTES -->
+    <section class="page" id="page-11">
+      <h2 class="section-title"><span class="section-num">6</span> Preguntas Frecuentes (FAQ)</h2>
+
+      <div class="qa-item">
+        <div class="qa-question">¿Cada cuánto tiempo se actualizan las cotizaciones mostradas?</div>
+        <div class="qa-answer">
+          Las cotizaciones se sincronizan continuamente con los proveedores oficiales y mercados en línea. En la parte superior de cada pantalla encontrará un reloj en vivo que le indica la hora exacta de la última lectura recibida.
+        </div>
+      </div>
+
+      <div class="qa-item">
+        <div class="qa-question">¿Tiene algún costo o suscripción utilizar Dolarito?</div>
+        <div class="qa-answer">
+          No. Dolarito es una plataforma de acceso libre y gratuito para el usuario final. El registro solo es requerido para resguardar de forma segura sus preferencias, divisas favoritas y su historial de consultas.
+        </div>
+      </div>
+
+      <div class="qa-item">
+        <div class="qa-question">¿Cómo calcula la plataforma los valores de conversión de Bitcoin y Ethereum a Pesos?</div>
+        <div class="qa-answer">
+          Las criptomonedas cotizan globalmente en dólares estadounidenses (USD). La Calculadora realiza una conversión cruzada en dos fases: primero calcula el valor en USD del criptoactivo y luego lo convierte a pesos argentinos utilizando la referencia del tipo de cambio del mercado (Dólar Blue), logrando un valor fiel y transparente.
+        </div>
+      </div>
+
+      <div class="qa-item">
+        <div class="qa-question">¿Qué debo hacer si no recibí el código de verificación por correo?</div>
+        <div class="qa-answer">
+          Verifique en primer lugar su carpeta de correo no deseado o Spam. Si tras unos instantes no lo visualiza, presione el botón "Reenviar código" desde la misma ventana de verificación para que el servidor genere una nueva clave de acceso de 6 dígitos.
+        </div>
+      </div>
+
+      <div class="qa-item">
+        <div class="qa-question">¿Se almacenan mis transacciones financieras reales en la plataforma?</div>
+        <div class="qa-answer">
+          No. Dolarito es una herramienta estrictamente informativa, de cálculo y seguimiento de cotizaciones. No opera como billetera virtual, no procesa dinero físico ni solicita datos bancarios o números de tarjeta de crédito.
+        </div>
+      </div>
+
+      <div class="qa-item">
+        <div class="qa-question">¿Puedo utilizar la plataforma e instalarla en un teléfono móvil?</div>
+        <div class="qa-answer">
+          Sí. Toda la interfaz cuenta con diseño completamente responsivo y adaptativo con barra inferior táctil (*bottom nav*). Además, gracias a su compatibilidad como PWA (Progressive Web App), puede instalarse directamente en el inicio de Android o iOS seleccionando "Instalar aplicación" desde el menú del navegador.
+        </div>
+      </div>
+
+      <div class="page-footer">
+        <span>Dolarito — Plataforma de Consulta de Cotizaciones Multidivisa</span>
+        <span>Página 11</span>
+      </div>
+    </section>
+
+    <!-- PÁGINA 12: SOLUCIÓN DE PROBLEMAS -->
+    <section class="page" id="page-12">
+      <h2 class="section-title"><span class="section-num">7</span> Solución de Problemas</h2>
+      <p style="font-size: 13px; color: #475569; margin-bottom: 12px;">
+        Si experimenta algún comportamiento inesperado durante el uso de la aplicación, consulte la siguiente tabla de diagnóstico rápido:
+      </p>
+
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width: 25%;">PROBLEMA OBSERVADO</th>
+              <th style="width: 30%;">POSIBLE CAUSA</th>
+              <th>SOLUCIÓN RECOMENDADA</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>No puedo iniciar sesión</strong></td>
+              <td>Contraseña incorrecta, correo mal tipeado o cuenta pendiente de validación.</td>
+              <td>Revise que la tecla Bloq Mayús no esté activada. Asegúrese de que su contraseña tenga al menos 8 caracteres. Si olvidó su clave, utilice la opción "¿Olvidaste tu contraseña?" para recibir un código de recuperación de 6 dígitos.</td>
+            </tr>
+            <tr>
+              <td><strong>El sistema rechaza el código 2FA o de verificación</strong></td>
+              <td>Código temporal expirado, error de tipeo o ingreso de un código antiguo.</td>
+              <td>Verifique su bandeja de entrada (y la carpeta Spam) e introduzca el código de 6 dígitos del correo más reciente. Si caducó, presione "Reenviar código".</td>
+            </tr>
+            <tr>
+              <td><strong>Las cotizaciones no cambian o se muestran en cero</strong></td>
+              <td>Interrupción momentánea de la conexión a internet o mantenimiento de la API de origen.</td>
+              <td>Compruebe su acceso a internet y recargue la página (F5 o Ctrl+R). Si el servidor se encuentra reiniciándose, la plataforma utilizará de respaldo el último valor registrado de forma segura.</td>
+            </tr>
+            <tr>
+              <td><strong>El gráfico temporal no muestra datos</strong></td>
+              <td>Par de monedas sin historial para el rango de tiempo seleccionado o corte de conexión.</td>
+              <td>Seleccione un rango más amplio (por ejemplo, 30 días, 1 año o Todo) o elija pares tradicionales con volumen continuo como USD/ARS, EUR/ARS o BTC.</td>
+            </tr>
+            <tr>
+              <td><strong>No recibo las alertas de precio configuradas</strong></td>
+              <td>El mercado aún no alcanzó el umbral fijado o el correo fue clasificado como correo no deseado.</td>
+              <td>Revise en su panel de Alertas que la regla figure como "Activa" y verifique que las notificaciones del remitente no estén bloqueadas en su bandeja de correo o Spam.</td>
+            </tr>
+            <tr>
+              <td><strong>No puedo eliminar mi cuenta</strong></td>
+              <td>No se escribió exactamente la palabra de confirmación requerida.</td>
+              <td>En la ventana modal de confirmación, escriba exactamente la palabra <strong>ELIMINAR</strong> en mayúsculas antes de presionar el botón de confirmación.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="page-footer">
+        <span>Dolarito — Plataforma de Consulta de Cotizaciones Multidivisa</span>
+        <span>Página 12</span>
+      </div>
+    </section>
+
+    <!-- PÁGINA 13: CONTACTO Y SOPORTE -->
+    <section class="page" id="page-13">
+      <h2 class="section-title"><span class="section-num">8</span> Contacto y Soporte</h2>
+      <p style="font-size: 13px; color: #475569; margin-bottom: 20px;">
+        Si necesita asistencia adicional, desea reportar una inconsistencia o requiere soporte sobre su cuenta, ponemos a disposición los siguientes canales de atención institucional:
+      </p>
+
+      <div class="meta-box" style="grid-template-columns: 1fr 1fr; margin-bottom: 25px;">
+        <div class="meta-item">
+          <span class="meta-label">CORREO DE SOPORTE TÉCNICO</span>
+          <span class="meta-val">soporte@dolarito.app<br><small style="color:var(--text-muted); font-weight: normal;">divise.grupo6@gmail.com</small></span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">MESA DE AYUDA Y ACCESO</span>
+          <span class="meta-val">https://dolarito.onrender.com</span>
+        </div>
+        <div class="meta-item" style="border-top: 1px solid #e2e8f0; padding-top: 12px;">
+          <span class="meta-label">HORARIO DE ATENCIÓN</span>
+          <span class="meta-val">Lunes a Viernes, 09:00 a 18:00 (GMT-3)</span>
+        </div>
+        <div class="meta-item" style="border-top: 1px solid #e2e8f0; padding-top: 12px;">
+          <span class="meta-label">TIEMPO PROMEDIO DE RESPUESTA</span>
+          <span class="meta-val">Menor a 24 horas hábiles</span>
+        </div>
+      </div>
+
+      <div class="callout-box tip" style="margin-top: 16px;">
+        <svg width="22" height="22" fill="currentColor" viewBox="0 0 16 16"><path d="M2 6a6 6 0 1 1 10.174 4.31c-.203.196-.359.4-.453.619l-.762 1.769A.5.5 0 0 1 10.5 13a.5.5 0 0 1 0 1 .5.5 0 0 1 0 1l-.224.447a1 1 0 0 1-.894.553H6.618a1 1 0 0 1-.894-.553L5.5 15a.5.5 0 0 1 0-1 .5.5 0 0 1 0-1 .5.5 0 0 1-.46-.302l-.761-1.77a1.964 1.964 0 0 0-.453-.618A5.984 5.984 0 0 1 2 6zm6-5a5 5 0 0 0-3.479 8.592c.263.254.514.564.676.941L5.83 12h4.342l.632-1.467c.162-.377.413-.687.676-.941A5 5 0 0 0 8 1z"/></svg>
+        <div>
+          <strong>Recomendación para solicitar soporte:</strong> Al reportar un incidente, adjunte una descripción del paso que intentaba realizar, la hora aproximada y el mensaje de aviso observado en pantalla. Esto facilitará una resolución rápida por parte del equipo técnico.
+        </div>
+      </div>
+
+      <div class="page-footer">
+        <span>Dolarito — Plataforma de Consulta de Cotizaciones Multidivisa · Manual de Usuario v1.2</span>
+        <span>Página 13</span>
+      </div>
+    </section>
+
+  </div>
+
+</body>
+</html>
