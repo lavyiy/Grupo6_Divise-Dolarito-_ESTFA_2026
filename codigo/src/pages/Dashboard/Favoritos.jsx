@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Icon } from '../../components/ui/Icon';
 import CurrencyBadge from '../../components/ui/CurrencyBadge';
 import Sparkline from '../../components/ui/Sparkline';
 import { stableVariation, hashSeed } from '../../utils';
 import { useAuth } from '../../context/AuthContext';
-import { getFavorites, toggleFavorite, fetchRates } from '../../services/api';
+import { getFavorites, toggleFavorite, fetchRates, recordHistorial } from '../../services/api';
 import './Favoritos.css';
 
 // Catálogo de divisas disponibles para mostrar
@@ -30,6 +31,7 @@ const CRYPTO_CODES = new Set(['BTC', 'ETH', 'USDT', 'BNB', 'DOGE']);
 
 export default function Favoritos() {
   const { token } = useAuth();
+  const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
   const [favoritesCodes, setFavoritesCodes] = useState(new Set()); // códigos en Supabase
@@ -110,24 +112,12 @@ export default function Favoritos() {
     }
   };
 
-  const handleRefreshRates = async (item) => {
-    try {
-      showToast(`Consultando cotización de ${item.codigo}...`);
-      const live = await fetchRates();
-      if (Array.isArray(live)) {
-        const rateMap = {};
-        live.forEach(r => {
-          if (!rateMap[r.codigo] || r.tipo_mercado === 'Oficial') {
-            rateMap[r.codigo] = r.venta || r.compra || 0;
-          }
-        });
-        setRates(prev => ({ ...prev, ...rateMap }));
-        const current = rateMap[item.codigo] || item.precio;
-        showToast(`${item.codigo}: $${current.toLocaleString('es-AR', { minimumFractionDigits: 2 })} al instante`);
-      }
-    } catch {
-      showToast(`Cotización actual de ${item.codigo}: $${item.precio.toLocaleString('es-AR')}`);
+  const handleReconsultar = (item) => {
+    if (token) {
+      recordHistorial({ par_consultado: `${item.nombre} - ${item.codigo}`, valor_momento: item.precio }, token)
+        .catch(() => {});
     }
+    navigate('/dashboard/graficos', { state: { codigo: item.codigo, mercado: '' } });
   };
 
   // Construir lista con precio en vivo e isFav real
@@ -342,8 +332,8 @@ export default function Favoritos() {
                           </button>
                           <button
                             className="btn-reconsultar"
-                            onClick={() => handleRefreshRates(item)}
-                            title={`Actualizar cotización de ${item.codigo}`}
+                            onClick={() => handleReconsultar(item)}
+                            title={`Ver gráfico de ${item.codigo} y re-consultar`}
                           >
                             <Icon name="refresh" size={13} /> Re-consultar
                           </button>
