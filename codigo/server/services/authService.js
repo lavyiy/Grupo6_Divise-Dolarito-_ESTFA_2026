@@ -132,7 +132,7 @@ async function resendVerificationCode(email) {
     return { success: true, message: 'Si el correo existe, reenviamos el código.' };
   }
   if (user.email_verificado) {
-    throw Object.assign(new Error('Esta cuenta ya está verificada'), { status: 400 });
+    return { success: true, message: 'Tu cuenta ya está verificada. Ya podés iniciar sesión.' };
   }
 
   await sendVerificationCode(cleanEmail);

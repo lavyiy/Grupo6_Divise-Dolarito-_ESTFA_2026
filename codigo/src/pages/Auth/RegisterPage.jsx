@@ -105,6 +105,23 @@ export default function RegisterPage() {
     }
   };
 
+  const getPasswordStrength = (value) => {
+    if (!value) return { score: 0, label: '', level: '' };
+    let score = 0;
+    if (value.length >= 8) score++;
+    if (value.length >= 12) score++;
+    if (/[A-Z]/.test(value) && /[a-z]/.test(value)) score++;
+    if (/\d/.test(value)) score++;
+    if (/[^A-Za-z0-9]/.test(value)) score++;
+    score = Math.min(score, 4);
+    if (score <= 1) return { score, label: 'Débil', level: 'weak' };
+    if (score === 2) return { score, label: 'Regular', level: 'medium' };
+    if (score === 3) return { score, label: 'Buena', level: 'good' };
+    return { score, label: 'Muy fuerte', level: 'strong' };
+  };
+
+  const strength = getPasswordStrength(form.password);
+
   return (
     <div className="auth-container">
       <div className="auth-wrapper">
@@ -230,6 +247,21 @@ export default function RegisterPage() {
                   <Icon name={showPassword ? "eyeOff" : "eye"} size={16} />
                 </button>
               </div>
+              {form.password && (
+                <div className="pw-strength">
+                  <div className="pw-strength-bar">
+                    {[1, 2, 3, 4].map((i) => (
+                      <span
+                        key={i}
+                        className={`pw-strength-seg ${strength.score >= i ? strength.level : ''}`}
+                      />
+                    ))}
+                  </div>
+                  <span className={`pw-strength-label pw-strength-${strength.level}`}>
+                    {strength.level === 'weak' ? 'Contraseña débil' : strength.level === 'medium' ? 'Contraseña regular' : strength.level === 'good' ? 'Buena contraseña' : 'Contraseña muy fuerte'}
+                  </span>
+                </div>
+              )}
             </div>
 
             <div className="form-group">

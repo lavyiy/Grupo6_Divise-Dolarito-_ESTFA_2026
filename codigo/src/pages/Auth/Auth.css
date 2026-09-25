@@ -394,6 +394,36 @@
   border: 1px solid rgba(0, 192, 135, 0.3);
 }
 
+/* Password strength meter */
+.pw-strength {
+  margin-top: 8px;
+}
+.pw-strength-bar {
+  display: flex;
+  gap: 5px;
+}
+.pw-strength-seg {
+  flex: 1;
+  height: 5px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.12);
+  transition: background-color 0.25s ease;
+}
+.pw-strength-seg.weak { background: var(--danger, #f6465d); }
+.pw-strength-seg.medium { background: #f5c518; }
+.pw-strength-seg.good { background: #ff9f0a; }
+.pw-strength-seg.strong { background: var(--success, #00c087); }
+.pw-strength-label {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.pw-strength-weak { color: var(--danger, #f6465d); }
+.pw-strength-medium { color: #f5c518; }
+.pw-strength-good { color: #ff9f0a; }
+.pw-strength-strong { color: var(--success, #00c087); }
+
 /* Spinner */
 .spinner {
   width: 20px;
