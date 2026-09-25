@@ -125,6 +125,10 @@
   margin-bottom: 4px;
 }
 
+.auth-market-card .mc-price.mc-price-lg {
+  font-size: 22px;
+}
+
 .auth-market-card .mc-change {
   font-size: 14px;
   color: #4da3ff;
@@ -151,6 +155,49 @@
   bottom: 0;
   background: url('data:image/svg+xml;utf8,<svg preserveAspectRatio="none" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M0,80 Q10,70 20,80 T40,60 T60,70 T80,40 T100,50" fill="none" stroke="%230066FF" stroke-width="2"/></svg>') no-repeat;
   background-size: 100% 100%;
+}
+
+@keyframes mcSwapRight {
+  from { opacity: 0; transform: translateX(-16px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.auth-market-card .mc-body.mc-anim {
+  animation: mcSwapRight 0.5s ease;
+}
+.auth-market-card .mc-live {
+  font-size: 11px;
+  color: #8fa1c3;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.auth-market-card .mc-live .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #2ecc8a;
+  animation: mcPulse 1.6s infinite;
+}
+@keyframes mcPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+.auth-market-card .mc-dots {
+  display: flex;
+  gap: 5px;
+  margin-top: 14px;
+}
+.auth-market-card .mc-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #2c3a5c;
+  transition: background 0.3s, transform 0.3s;
+}
+.auth-market-card .mc-dots span.on {
+  background: var(--brand-gold);
+  transform: scale(1.2);
 }
 
 /* Right panel (Form) */

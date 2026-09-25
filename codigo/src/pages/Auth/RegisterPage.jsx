@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { authRegister, authVerifyEmail, authResendCode } from '../../services/api';
 import { Icon } from '../../components/ui/Icon';
+import AuthMarketCard from '../../components/AuthMarketCard';
 import './Auth.css';
 
 export default function RegisterPage() {
@@ -116,12 +117,7 @@ export default function RegisterPage() {
           <h1 className="auth-brand-title">divise</h1>
           <p className="auth-brand-subtitle">Todo el valor del mercado, en tiempo real.</p>
           
-          <div className="auth-market-card">
-            <div className="mc-title">Dólar Blue</div>
-            <div className="mc-price">$ 1.423,00</div>
-            <div className="mc-change"><Icon name="trendUp" size={14} /> +1,35% hoy</div>
-            <div className="mc-chart"></div>
-          </div>
+          <AuthMarketCard />
         </div>
 
         {/* Right Panel */}
