@@ -150,7 +150,6 @@ export default function Divisas() {
           </p>
         </div>
         <div className="divisas-updated" title="Última actualización">
-          <span className="live-dot"></span>
           {lastUpdated ? `Último dato: ${new Date(lastUpdated).toLocaleString('es-AR')}` : 'Sin actualización'}
         </div>
       </header>
