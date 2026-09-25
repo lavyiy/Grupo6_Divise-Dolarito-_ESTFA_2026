@@ -55,10 +55,6 @@
   box-shadow: 0 4px 14px rgba(240, 185, 11, 0.35);
 }
 
-.nav-logo-dot {
-  color: var(--brand-gold);
-}
-
 .nav-mobile-toggle {
   display: none;
   align-items: center;

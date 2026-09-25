@@ -49,7 +49,7 @@ export default function DashboardLayout() {
               <Icon name="spark" size={17} />
             </span>
             <span className="nav-logo-text">
-              divise<span className="nav-logo-dot">.</span>
+              divise
             </span>
           </Link>
           <button
