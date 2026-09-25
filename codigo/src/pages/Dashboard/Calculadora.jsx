@@ -14,6 +14,8 @@ export default function Calculadora() {
   const [rates, setRates] = useState([]);
   const [favoritesCodes, setFavoritesCodes] = useState(new Set());
   const [toast, setToast] = useState('');
+  const [favBusy, setFavBusy] = useState(false);
+  const [showResult, setShowResult] = useState(false);
   const [amount, setAmount] = useState('1000');
   const [fromCurrency, setFromCurrency] = useState(location.state?.currency || 'USD');
   const [toCurrency, setToCurrency] = useState('ARS');
@@ -58,6 +60,8 @@ export default function Calculadora() {
       showToast('Iniciá sesión para guardar favoritos.');
       return;
     }
+    if (favBusy) return;
+    setFavBusy(true);
     const isFav = favoritesCodes.has(fromCurrency);
     // Optimistic update
     setFavoritesCodes(prev => {
@@ -75,12 +79,13 @@ export default function Calculadora() {
         return next;
       });
       showToast('Error al actualizar favoritos');
+    } finally {
+      setFavBusy(false);
     }
   };
 
   const handleConvertClick = () => {
-    const formatted = result ? result.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 4}) : '0';
-    showToast(`Conversión: ${amount} ${fromCurrency} = ${formatted} ${toCurrency}`);
+    setShowResult(true);
   };
 
   const handleSwap = () => {
@@ -123,7 +128,7 @@ export default function Calculadora() {
 
   return (
     <div className="calc-container page-enter">
-      {toast && <div className="toast" style={{ position: 'fixed', top: '24px', right: '24px', zIndex: 9999 }}>{toast}</div>}
+      {toast && <div className="toast">{toast}</div>}
 
       <header className="page-header">
         <div>
@@ -231,19 +236,13 @@ export default function Calculadora() {
             <button type="button" className="btn btn-primary btn-block" onClick={handleConvertClick}>
               Convertir <Icon name="arrowRight" size={15} />
             </button>
-            <button 
-              type="button" 
+            <button
+              type="button"
               className={`btn btn-outline btn-block ${favoritesCodes.has(fromCurrency) ? 'calc-fav-active' : ''}`}
               onClick={handleToggleFavorite}
+              disabled={favBusy}
             >
-              <Icon 
-                name="star" 
-                size={15} 
-                style={{ 
-                  fill: favoritesCodes.has(fromCurrency) ? 'var(--brand-gold)' : 'none', 
-                  color: favoritesCodes.has(fromCurrency) ? 'var(--brand-gold)' : 'inherit' 
-                }} 
-              />
+              <Icon name="star" size={15} style={{ fill: favoritesCodes.has(fromCurrency) ? 'currentColor' : 'none' }} />
               {favoritesCodes.has(fromCurrency) ? `${fromCurrency} en tus favoritos` : `Agregar ${fromCurrency} a favoritos`}
             </button>
           </div>
@@ -307,6 +306,62 @@ export default function Calculadora() {
             </div>
           </div>
         </div>
+
+        {/* Modal de resultado de la conversión */}
+        {showResult && (
+          <div className="calc-modal-backdrop" onClick={() => setShowResult(false)}>
+            <div className="calc-modal" onClick={(e) => e.stopPropagation()}>
+              <button
+                type="button"
+                className="calc-modal-close"
+                onClick={() => setShowResult(false)}
+                aria-label="Cerrar"
+              >
+                <Icon name="close" size={18} />
+              </button>
+
+              <div className="calc-modal-badge">Conversión en tiempo real</div>
+
+              <div className="calc-modal-pair">
+                <div className="calc-modal-cur">
+                  <CurrencyBadge code={fromCurrency} size={34} />
+                  <span className="code">{fromCurrency}</span>
+                </div>
+                <Icon name="arrowRight" size={20} style={{ color: 'var(--brand-gold)' }} />
+                <div className="calc-modal-cur">
+                  <CurrencyBadge code={toCurrency} size={34} />
+                  <span className="code">{toCurrency}</span>
+                </div>
+              </div>
+
+              <div className="calc-modal-amount">
+                {Number(amount.replace(',', '.')) || 0} <span>{fromCurrency}</span>
+              </div>
+
+              <div className="calc-modal-equals">=</div>
+
+              <div className="calc-modal-result">
+                <CountUp
+                  end={result}
+                  decimals={['BTC', 'ETH', 'USDT', 'BNB', 'DOGE'].includes(toCurrency) ? 6 : 2}
+                  duration={0.9}
+                  separator="."
+                  decimal=","
+                />
+                <span>{toCurrency}</span>
+              </div>
+
+              <div className="calc-modal-rate">
+                <Icon name="spark" size={14} style={{ color: 'var(--brand-gold)' }} />
+                1 {fromCurrency} = {conversionRate ? conversionRate.toLocaleString('es-AR', { maximumFractionDigits: 4 }) : 0} {toCurrency}
+              </div>
+
+              <button type="button" className="btn btn-primary btn-block" onClick={() => setShowResult(false)}>
+                Listo
+              </button>
+            </div>
+          </div>
+        )}
 
       </div>
     </div>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { fetchDatabaseRates, getFavorites, toggleFavorite, recordHistorial } from '../../services/api';
+import { fetchRates, getFavorites, toggleFavorite, recordHistorial } from '../../services/api';
 import { isCrypto } from '../../services/rateTypes.mjs';
 import { useAuth } from '../../context/AuthContext';
 import { Icon } from '../../components/ui/Icon';
@@ -34,32 +34,42 @@ export default function Divisas() {
 
   useEffect(() => {
     let cancelled = false;
+    let timer = null;
+
     async function load() {
       setLoading(true);
       setLoadError('');
       try {
         const [data, favs] = await Promise.allSettled([
-          fetchDatabaseRates(),
+          fetchRates(),
           token ? getFavorites(token) : Promise.resolve([])
         ]);
         if (cancelled) return;
-        if (data.status === 'fulfilled' && Array.isArray(data.value)) {
+        if (data.status === 'fulfilled' && Array.isArray(data.value) && data.value.length > 0) {
           setRates(data.value);
+          setLoadError('');
         } else {
-          setRates([]);
           setLoadError('No se pudieron cargar las cotizaciones. Volvé a intentar.');
         }
         if (favs.status === 'fulfilled' && Array.isArray(favs.value)) {
           setFavoritesCodes(new Set(favs.value));
         }
       } catch (err) {
-        console.error("Error fetching database rates or favorites", err);
+        console.error("Error fetching rates or favorites", err);
+        if (!cancelled) setLoadError('No se pudieron cargar las cotizaciones. Volvé a intentar.');
       } finally {
         if (!cancelled) setLoading(false);
       }
     }
+
     load();
-    return () => { cancelled = true; };
+    // Refresca las cotizaciones en vivo cada 15 segundos
+    timer = setInterval(load, 15000);
+
+    return () => {
+      cancelled = true;
+      if (timer) clearInterval(timer);
+    };
   }, [token, retryCount]);
 
   const lastUpdated = rates.reduce((latest, rate) => {
@@ -129,7 +139,7 @@ export default function Divisas() {
   return (
     <div className="divisas-container page-enter">
 
-      {toast && <div className="toast" style={{ position: 'fixed', top: '24px', right: '24px', zIndex: 9999 }}>{toast}</div>}
+      {toast && <div className="toast">{toast}</div>}
 
       {/* Encabezado */}
       <header className="page-header">
@@ -246,7 +256,9 @@ export default function Divisas() {
 
                 <div className="dc-bottom">
                   <span className="dc-change">
-                    {d.fecha ? `Fecha: ${new Date(d.fecha).toLocaleDateString('es-AR')}` : 'Variación no disponible'}
+                    {d.updated_at || d.fecha
+                      ? `Actualizado ${new Date(d.updated_at || d.fecha).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })} hrs`
+                      : 'En vivo'}
                   </span>
                 </div>
               </div>
