@@ -19,138 +19,157 @@
 ## 1. Introducción
 
 ### ¿Qué es Dolarito?
-Dolarito (en la interfaz se muestra como `divise.`) es una aplicación web gratuita que junta en un solo lugar las cotizaciones del dólar, las monedas del mundo y las criptomonedas, con valores en tiempo real. Permite ver cómo viene el día (dólar oficial, blue, MEP, tarjeta, etc.), convertir montos con una calculadora, seguir gráficos históricos, armar una lista de favoritos, recibir alertas de precio por correo, leer noticias del mercado y guardar el historial de lo que uno consulta.
+**Dolarito** (en la interfaz se muestra como `divise.`) es una aplicación web gratuita que reúne en un solo lugar las cotizaciones del mercado cambiario argentino e internacional, con valores en tiempo real. Se puede usar desde la computadora o el celular, sin instalar nada, y agrupa tres mundos de monedas:
+
+- **Dólar y sus variantes:** Oficial, Blue (informal), MEP/Bolsa, CCL/Contado con Liqui, Tarjeta, Mayorista y Solidario.
+- **Monedas del mundo:** Euro, Real Brasileño, Peso Uruguayo, Peso Chileno, Libra Esterlina, Yen Japonés, Peso Mexicano, Franco Suizo y Yuan Chino.
+- **Criptomonedas:** Bitcoin, Ethereum, Tether, Binance Coin y Dogecoin.
+
+Además de ver los precios, la app permite **convertir montos** con una calculadora, seguir la **evolución histórica** con gráficos, armar una lista de **favoritos**, recibir **alertas por correo** cuando un precio cruza un valor que te importa, leer **noticias** del mercado y consultar el **historial** de lo que buscaste.
 
 ### ¿A quién está dirigida?
-- **Particulares y ahorristas:** gente que quiere saber cuánto está el dólar para proteger sus ahorros o planificar gastos.
-- **Comerciantes y freelancers:** quienes facturan o cobran en moneda extranjera y necesitan presupuestar en pesos.
-- **Curiosos del mercado:** gente que quiere mirar la brecha cambiaria o seguir la tendencia de una moneda a lo largo del tiempo.
+- **Ahorristas particulares:** gente que quiere saber cuánto está el dólar para cuidar sus ahorros o planificar gastos. Es el usuario más frecuente.
+- **Comerciantes, autónomos y freelancers:** quienes fijan presupuestos, compran insumos o cobran servicios en moneda extranjera y necesitan pasar todo a pesos en el momento.
+- **Analistas y curiosos del mercado:** usuarios que siguen la brecha cambiaria, comparan monedas y miran tendencias históricas (hasta 5 años o la serie completa).
 
-### ¿Qué problema resuelve?
-La información del mercado suele estar fragmentada y desactualizada, y muchas páginas cargan de publicidad. Dolarito centraliza todo en una sola pantalla limpia: valores reales y al instante, conversión de monedas, alertas automáticas y un historial para no perder de vista lo que uno consultó. No hace falta ser experto para usarla.
+### ¿Qué problema resuelve y qué beneficio ofrece?
+En una economía con muchos tipos de cambio y alta volatilidad, la información suele estar dispersa, desactualizada o llena de publicidad. Dolarito la junta en una pantalla limpia, con datos reales y al instante. El beneficio principal es simple: **saber cuánto está el dólar y convertir en segundos**, sin ser experto ni saltar de página en página.
+
+- Conversiones exactas con el tipo de cambio del momento.
+- Alertas automáticas por correo ante oscilaciones importantes.
+- Gráficos con datos históricos reales para decidir con contexto.
+- Historial propio para no perder de vista lo que uno consulta.
 
 ---
 
 ## 2. Requisitos del sistema
 
-Dolarito corre en el navegador: no se instala nada en la computadora.
+Dolarito es una aplicación web moderna (React + Vite con una API en Node.js/Express y base de datos PostgreSQL). **No requiere instalar programas** ni tener una máquina potente: alcanza con un navegador actualizado.
 
 | Componente | Requisito |
 | :--- | :--- |
-| Sistemas operativos | Windows 10/11, macOS 11+, Linux, Android 9+, iOS 14+. |
-| Navegadores | Chrome, Edge, Firefox, Safari (versiones actuales). |
-| Conexión a internet | Sí, para recibir los precios en vivo. Se recomienda una conexión estable. |
-| Cuenta de usuario | Se necesita para entrar al panel, guardar favoritos, crear alertas y ver el historial. |
-| Permisos especiales | Ninguno. No pide cámara, micrófono ni ubicación. Las alertas y los códigos llegan por correo. |
+| Sistemas operativos | Windows 10/11, macOS 11+, Linux (Ubuntu, Debian, Fedora), Android 9+ e iOS 14+. |
+| Navegadores | Chrome (v90+), Edge (v90+), Firefox (v88+), Safari (v14+) o cualquier navegador basado en Chromium actualizado. |
+| Instalación como app (PWA) | Opcional. Desde el menú del navegador se puede "Instalar aplicación" / "Agregar a la pantalla principal". Queda con icono propio y se abre en pantalla completa, igual que una app nativa. |
+| Conexión a internet | Sí, para recibir los precios en vivo. Se sugiere una conexión estable (mínimo 1 Mbps). |
+| Cuenta de usuario | Se necesita para entrar al panel y usar favoritos, alertas, historial y perfil. |
+| Permisos especiales | Ninguno. No pide cámara, micrófono ni ubicación. Los códigos y avisos llegan por correo. |
 
-> Tip: en el celular podés instalarla como una app (PWA). Desde el menú del navegador buscá *"Instalar aplicación"* o *"Agregar a la pantalla principal"* y se abre en pantalla completa, con navegación táctil.
+> Tip: si vas a usarla seguido en el celular, instalala como PWA — queda más cómoda, con navegación táctil en la parte inferior.
 
 ---
 
 ## 3. Primeros pasos
 
-### 3.1 Acceso
+### 3.1 Acceso a la plataforma e instalación como PWA
 1. Abrí el navegador y entrá a **https://dolarito.onrender.com**.
-2. Comprobá que el navegador muestre el candado de conexión segura (HTTPS).
+2. Verificá que aparezca el **candado de conexión segura** (HTTPS) en la barra de direcciones.
+3. **Opcional:** para instalarla como app, tocá el menú del navegador y elegí *"Instalar aplicación"* o *"Agregar a la pantalla principal"*.
 
 ![Pantalla de inicio de sesión](img/Captura_login.png)
 
 ### 3.2 Registro y creación de cuenta
 1. En la pantalla de inicio tocá **"Crear cuenta"**.
-2. Cargá tu nombre, un correo válido y una contraseña (mínimo 8 caracteres).
-3. Aceptá los términos y confirmá. El sistema te manda un **código de 6 dígitos** al correo.
-4. Ingresá el código para activar la cuenta y entrás directo.
+2. Completá los campos: **nombre completo**, **correo electrónico** válido, **contraseña** de mínimo 8 caracteres y su **confirmación**.
+3. Aceptá los términos de uso y tocá **"Registrarse"**.
+4. El sistema envía un **código de verificación de 6 dígitos** al correo. Ingresalo en la pantalla de validación para activar la cuenta — y entrás directo.
 
 > Si el correo no llega en unos segundos, revisá la carpeta de Spam o tocá "Reenviar código".
 
-### 3.3 Inicio de sesión y recuperación de contraseña
-1. Escribí tu correo y tu contraseña, y tocá **"Iniciar sesión"**.
-2. **Verificación:** si tenés activado el segundo paso (2FA), te llega un código de 6 dígitos al correo. Ingresalo y listo.
-3. **¿Olvidaste la contraseña?** Tocá el enlace, poné tu correo y vas a recibir un código de recuperación de 6 dígitos (válido 30 minutos). Con ese código y una contraseña nueva recuperás el acceso.
+### 3.3 Inicio de sesión, verificación y recuperación de contraseña
+1. Escribí tu **correo** y tu **contraseña**, y tocá **"Iniciar sesión"**.
+2. **Verificación:** si tenés activada la verificación en dos pasos (2FA), te llega un código de 6 dígitos al correo. Ingresalo para completar el acceso.
+3. **¿Olvidaste la contraseña?** Tocá el enlace, poné tu correo y vas a recibir un **código de recuperación de 6 dígitos** (válido 30 minutos). Ingresalo en la pantalla de restablecimiento, junto con una contraseña nueva (mínimo 8 caracteres), y recuperás el acceso al instante.
 
 ### 3.4 Recorrido inicial
-Al entrar, te encontrás con el panel de **Inicio**. En la parte de arriba está el menú con todos los módulos: Inicio, Cotizaciones, Gráficos, Calculadora, Noticias, Alertas, Favoritos, Historial y Perfil. En el celular, el menú principal está abajo para manejarlo con el pulgar.
+Al entrar, la interfaz se adapta al tamaño de la pantalla:
+- **En computadora:** la barra superior tiene el logo `divise.`, el menú completo (Inicio, Cotizaciones, Gráficos, Calculadora, Noticias, Alertas, Favoritos, Historial), el avatar de Perfil y el botón de Cierre de Sesión.
+- **En celular:** la navegación principal está abajo, al alcance del pulgar: Inicio, Cotizaciones, Gráficos y Alertas, más un botón **"Más"** que desliza una hoja con el resto (Calculadora, Noticias, Favoritos, Historial y Perfil).
+
+La primera pantalla que se ve después de entrar es el panel de **Inicio**, con los precios del día.
 
 ---
 
 ## 4. Funcionalidades principales
 
-### 4.1 Inicio (panel principal)
-**¿Qué hace?** Muestra las 4 cotizaciones más consultadas — Dólar Blue, Dólar Oficial, Euro y Bitcoin — en tarjetas con el precio actualizado, la variación del día y una mini-gráfica de tendencia. También tiene atajos a las cotizaciones completas y a la calculadora.
+### 4.1 Inicio (panel principal) — `/dashboard`
+**¿Qué hace?** Es el resumen del día. Muestra las 4 cotizaciones más consultadas — **Dólar Blue, Dólar Oficial, Euro y Bitcoin** — en tarjetas con el precio de venta en vivo, el porcentaje de variación diaria y una mini-gráfica de tendencia. Además, en la parte inferior hay atajos a las cotizaciones completas y a la calculadora.
 
-**¿Cómo se usa?** Entrá y mirá. Las tarjetas se actualizan solas; tocá "Ver todas" para ver el resto de las monedas.
+**¿Cómo se usa?** Entrá y mirá. Las tarjetas se actualizan solas; tocá "Ver todas" para ver el resto de las monedas o "Calcular" para ir directo a la conversión.
 
 ![Panel de inicio](img/Captura_inicio.png)
 
-### 4.2 Cotizaciones
-**¿Qué hace?** Es el catálogo completo: dólares, monedas del mundo (euro, real, libra, yen, peso uruguayo, etc.) y criptomonedas (BTC, ETH, USDT, BNB, DOGE), con precio de compra y venta y la variación.
+### 4.2 Cotizaciones — `/dashboard/divisas`
+**¿Qué hace?** Es el catálogo completo del mercado. Para cada moneda muestra el precio de **compra** y de **venta**, el tipo de mercado (Oficial, Informal o Cripto) y la variación. Incluye dólares (todas las variantes), monedas del mundo y criptomonedas (BTC, ETH, USDT, BNB, DOGE).
 
 **¿Cómo se usa?**
-1. Entrá a **Cotizaciones**.
-2. Filtrá por *Todas*, *Divisas* o *Cripto*, o buscá por nombre o código (ej. "Real", "BRL", "BTC").
-3. Tocá la estrella (★) para guardarla en Favoritos.
-4. Tocá una tarjeta para registrar esa consulta en tu historial.
+1. Entrá a **Cotizaciones** desde el menú.
+2. Filtrá por categoría: *Todas*, *Divisas* o *Cripto*.
+3. Buscá por nombre o código (ej. "Real", "BRL", "Libra", "BTC"). El filtrado es instantáneo.
+4. Tocá la estrella (★) de una tarjeta para guardarla en Favoritos.
+5. Tocá cualquier tarjeta para registrar esa consulta en tu Historial.
 
 ![Catalogo de cotizaciones](img/Captura_cotizaciones.png)
 
-### 4.3 Calculadora
-**¿Qué hace?** Convierte un monto de una moneda a otra usando el tipo de cambio del momento, incluso cripto a pesos (hace el cruce vía dólar).
+### 4.3 Calculadora — `/dashboard/calculadora`
+**¿Qué hace?** Convierte un monto de una moneda a otra usando el tipo de cambio del momento. Resuelve también el cruce de **cripto a pesos** (primero pasa la cripto a dólares y después a pesos usando como referencia el dólar Blue), de forma transparente.
 
 **¿Cómo se usa?**
-1. Escribí el monto (ej. 1000).
-2. Elegí la moneda de origen y la de destino.
-3. Usá el botón ⇄ para invertir el sentido, si hace falta.
-4. El resultado aparece al instante con el tipo de cambio aplicado.
+1. Escribí el **monto** a convertir (ej. 1000).
+2. Elegí la **moneda de origen** en el desplegable izquierdo y la **moneda de destino** en el derecho.
+3. Usá el botón circular **⇄ (Swap)** para invertir el sentido de la conversión, si hace falta.
+4. El resultado aparece al instante, con el tipo de cambio unitario aplicado.
 
 ![Calculadora](img/Captura_calculadora.png)
 
-### 4.4 Gráficos
-**¿Qué hace?** Muestra la evolución real de una moneda en distintos períodos (7 días, 30 días, 1 año, 5 años o toda la serie) y permite comparar dos monedas en el mismo gráfico.
+### 4.4 Gráficos — `/dashboard/graficos`
+**¿Qué hace?** Grafica la **evolución real** de una moneda con datos históricos, con distintos horizontes temporales: 7 días, 30 días, 90 días, 1 año, 5 años o la serie completa. Permite también **comparar dos monedas** en un mismo plano.
 
-**¿Cómo se usa?** Elegí la divisa, el período y el estilo (línea o área). Si querés, activá "Comparar divisas" para superponer una segunda. Pasá el cursor por el gráfico para ver la fecha y el precio exacto.
+**¿Cómo se usa?** Elegí la divisa (ej. Dólar Blue, Euro, Real, Tether), el período, y alterná entre estilo de **línea** o **área**. Si querés, activá "Comparar divisas" para superponer una segunda. Pasá el cursor por el gráfico para ver la fecha y el precio exacto de cada punto.
 
 ![Gráficos históricos](img/Captura_graficos.png)
 
-### 4.5 Favoritos
-**¿Qué hace?** Guarda en tu cuenta las monedas que querés tener siempre a la vista.
+### 4.5 Favoritos — `/dashboard/favoritos`
+**¿Qué hace?** Arma una lista personal con las monedas que querés tener siempre a la vista. La lista queda guardada en tu cuenta y se sincroniza entre dispositivos.
 
-**¿Cómo se usa?** Tocá la estrella en cualquier cotización para sumarla o sacarla. En Favoritos podés filtrar por tipo y, con el botón de conversión rápida, mandarla directo a la calculadora.
+**¿Cómo se usa?** Tocá la estrella (★) en cualquier cotización para sumarla o sacarla. En Favoritos podés filtrar por tipo (Todas/Divisas/Cripto), ordenarlas como prefieras y, con el botón de **conversión rápida**, mandar la moneda directo a la calculadora.
 
 ![Favoritos](img/Captura_favoritos.png)
 
-### 4.6 Alertas
-**¿Qué hace?** Vigila una moneda por vos y te avisa por correo cuando supera un precio o cae por debajo de uno que le configuraste.
+### 4.6 Alertas — `/dashboard/alertas`
+**¿Qué hace?** Vigila una moneda por vos y te **avisa por correo** cuando supera un precio que definiste o cae por debajo de él. Aplica a dólares, monedas del mundo y cripto.
 
 **¿Cómo se usa?**
 1. Entrá a **Alertas** y tocá **"+ Nueva Alerta"**.
-2. Elegí la divisa, la condición (*Supera el valor* o *Cae por debajo de*) y el precio límite.
-3. Tocá **Guardar Alerta**. No hace falta poner el correo: usa el de tu cuenta. Podés eliminarla cuando quieras.
+2. Elegí la divisa a vigilar (ej. Dólar Blue, Euro, Real, Bitcoin).
+3. Definí la regla: *"Supera el valor"* o *"Cae por debajo de"*, y el precio límite.
+4. Tocá **Guardar Alerta**. No hace falta poner el correo: se usa el de tu cuenta. Podés eliminarla cuando quieras.
 
 ![Alertas](img/Captura_alertas.png)
 
-### 4.7 Noticias
-**¿Qué hace?** Reúne titulares de economía y finanzas separados por región (Argentina, Mundo, Cripto) para estar al día sin saltar de página.
+### 4.7 Noticias — `/dashboard/noticias`
+**¿Qué hace?** Reúne titulares de economía y finanzas en tarjetas fáciles de leer, separados por región: **Argentina, Mundo y Cripto**. Incluye la fecha relativa ("Hace 15 min") y la fuente.
 
-**¿Cómo se usa?** Entrá a **Noticias**, filtrá por región y tocá una tarjeta para leer el artículo completo en la fuente original (se abre en una pestaña nueva).
+**¿Cómo se usa?** Entrá a **Noticias**, filtrá por región (*Todas / Argentina / Mundo / Cripto*), ordená por relevancia o por más recientes, y tocá una tarjeta para leer el artículo completo en la fuente original (se abre en una pestaña nueva).
 
 ![Noticias](img/Captura_noticias.png)
 
-### 4.8 Historial
-**¿Qué hace?** Guarda un registro con fecha, hora, moneda y precio de cada cotización que consultaste.
+### 4.8 Historial — `/dashboard/historial`
+**¿Qué hace?** Guarda un registro con **fecha, hora, moneda y precio** de cada cotización que consultaste, para auditoría y trazabilidad.
 
-**¿Cómo se usa?** Entrá a **Historial** y filtrá por fechas, por tipo (Fiat/Cripto), por moneda o por palabra. Podés ordenarlo del más reciente al más antiguo y limpiar los filtros cuando quieras.
+**¿Cómo se usa?** Entrá a **Historial** y usá los filtros: rango de fechas (Fecha Desde / Fecha Hasta), tipo (Todas/Fiat/Cripto), una moneda específica o una palabra. Podés ordenar del más reciente al más antiguo y tocá "Limpiar filtros" para volver a la vista completa.
 
 ![Historial](img/Captura_historial.png)
 
-### 4.9 Perfil
+### 4.9 Perfil — `/dashboard/perfil`
 **¿Qué hace?** Te deja manejar tu cuenta: datos personales, apariencia, contraseña, verificación en dos pasos y baja de la cuenta.
 
 **¿Cómo se usa?**
-- **Editar perfil:** corregir nombre o correo.
-- **Apariencia:** tema oscuro o claro, y elegir la divisa principal que se muestra por defecto.
-- **Cambiar contraseña:** poné la actual y la nueva (mínimo 8 caracteres).
-- **2FA:** al activarlo, cada inicio de sesión pide un código de 6 dígitos que llega a tu correo.
-- **Eliminar cuenta:** escribí **ELIMINAR** en el diálogo de confirmación. Borra todos tus datos de forma permanente.
+- **Editar perfil:** corregir nombre o correo registrado.
+- **Apariencia:** elegir el tema *oscuro* o *claro*, y la divisa principal que se muestra por defecto en los tableros.
+- **Cambiar contraseña:** ingresar la actual y la nueva (mínimo 8 caracteres).
+- **Verificación en dos pasos (2FA):** al activarla, cada inicio de sesión pide un código de 6 dígitos que llega al correo. Suma una capa extra de seguridad.
+- **Eliminar cuenta:** escribí **ELIMINAR** en el diálogo de confirmación. Borra de forma permanente el perfil, favoritos, alertas e historial.
 
 ![Perfil](img/Captura_perfil.png)
 
@@ -158,11 +177,12 @@ Al entrar, te encontrás con el panel de **Inicio**. En la parte de arriba está
 
 ## 5. Casos de uso comunes
 
-- **"Quiero saber cuánto está el dólar blue hoy"** → Entrá y mirá la primera tarjeta del Inicio.
+- **"Quiero saber cuánto está el dólar blue hoy"** → Entrá y mirá la primera tarjeta del Inicio. Si querés, compará con el Oficial para ver la brecha.
 - **"Tengo que cobrar 750 dólares y quiero saber cuánto es en pesos"** → Calculadora: monto 750, origen USD, destino ARS.
-- **"Quiero comprar dólar solo si baja de cierto precio"** → Creá una alerta con condición "Cae por debajo de" y el valor que te sirva; te avisa por correo.
-- **"Quiero ver cómo estuvo el euro este año"** → Gráficos: elegí Euro y período 1 año.
-- **"No quiero estar mirando toda la lista, solo 3 monedas"** → Marcalas con la estrella y trabajá desde Favoritos.
+- **"Quiero comprar dólar solo si baja de cierto precio"** → Creá una alerta con la condición *"Cae por debajo de"* y el valor que te sirva: te avisa por correo sin tener la página abierta.
+- **"Quiero ver cómo estuvo el euro este año"** → Gráficos: elegí Euro y el período 1 año, y pasá el cursor por los puntos para ver los valores.
+- **"No quiero mirar toda la lista, solo 3 monedas"** → Marcalas con la estrella y trabajá desde Favoritos.
+- **"Quiero que mi cuenta sea más segura"** → Perfil → "Activar 2FA". Desde ese momento, cada inicio de sesión pide además un código que llega a tu correo.
 
 ---
 
@@ -170,25 +190,40 @@ Al entrar, te encontrás con el panel de **Inicio**. En la parte de arriba está
 
 | Pregunta | Respuesta |
 | :--- | :--- |
-| ¿La aplicación es paga? | No. Es gratuita, solo hay que registrarse para guardar favoritos, alertas e historial. |
-| ¿Cada cuánto se actualizan los precios? | Se sincronizan en tiempo real con los proveedores. Al lado de las cotizaciones hay una hora de última actualización. |
-| ¿Guarda mis operaciones o datos bancarios? | No. Es solo información de cotizaciones. No pedimos datos de tarjeta ni cuentas, y no hacemos ninguna operación real. |
-| ¿Cómo convierte Bitcoin a pesos? | Primero pasa el cripto a dólares y después a pesos usando como referencia el tipo de cambio del mercado. |
-| ¿Puedo usarla en el celular? | Sí, desde el navegador; y además se puede instalar como app (PWA) tocando "Instalar aplicación" en el menú. |
-| ¿Qué pasa con mis datos personales? | Las contraseñas se guardan con hash, el acceso por usuario está aislado en la base y se respeta la Ley 25.326 de Protección de Datos Personales. |
+| ¿La aplicación es paga? | No. Es gratuita. El registro solo es necesario para guardar favoritos, alertas, historial y preferencias. |
+| ¿Cada cuánto se actualizan los precios? | Se sincronizan en tiempo real con los proveedores. Al lado de las cotizaciones hay un reloj que indica la última lectura. |
+| ¿Guarda mis operaciones o datos bancarios? | No. Es una herramienta informativa: no es una billetera virtual, no procesa dinero ni pide datos de tarjeta o cuentas. |
+| ¿Cómo convierte Bitcoin a pesos? | Primero pasa la cripto a dólares y después a pesos argentinos, usando como referencia el tipo de cambio del mercado (dólar Blue). |
+| ¿Puedo usarla en el celular? | Sí, desde el navegador. Además se puede instalar como app (PWA) desde el menú del navegador, con icono propio y pantalla completa. |
+| ¿Qué pasa con mis datos personales? | Las contraseñas se guardan con hash, el acceso está aislado por usuario en la base y se respeta la Ley 25.326 de Protección de Datos Personales. |
 
 ---
 
 ## 7. Solución de problemas
 
+Si algo no funciona como esperabas, primero probá con esta tabla de verificación rápida (mismos casos que el Excel de testing):
+
+| ID | Módulo | Qué probar | Resultado esperado |
+| :--- | :--- | :--- | :--- |
+| TC-01 | Registro | Crear una cuenta nueva con un correo válido. | Llega código de 6 dígitos y la cuenta queda activa. |
+| TC-02 | Login | Iniciar sesión con las credenciales correctas. | Redirige al panel de Inicio. |
+| TC-03 | Contraseña | Usar "¿Olvidaste tu contraseña?" y el código recibido. | Permite definir una contraseña nueva (mínimo 8 caracteres). |
+| TC-04 | Cotizaciones | Filtrar por Divisas y buscar "Real" / "BRL". | La lista se filtra al instante. |
+| TC-05 | Calculadora | Convertir 100 USD a ARS. | Muestra el equivalente con el tipo de cambio del momento. |
+| TC-06 | Alertas | Crear una alerta con condición "Supera el valor". | La alerta queda activa y visible en el tablero. |
+| TC-07 | Favoritos | Marcar una moneda con la estrella y abrir Favoritos. | La moneda aparece en la lista guardada. |
+| TC-08 | Historial | Consultar una cotización y abrir Historial. | La consulta queda registrada con fecha y precio. |
+
+Y si el problema es de uso cotidiano, esta tabla te orienta:
+
 | Problema | Posible causa | Solución |
 | :--- | :--- | :--- |
-| No puedo iniciar sesión | Contraseña mal escrita, o cuenta sin verificar. | Revisá que no esté activado Bloq Mayús. Si olvidaste la clave, usá "¿Olvidaste tu contraseña?". Si la cuenta no está verificada, chequeá el correo. |
-| Rechaza el código de verificación / 2FA | Código vencido o mal tipeado. | Usá el código del correo más reciente y toca "Reenviar código" si venció. |
+| No puedo iniciar sesión | Contraseña mal escrita o cuenta sin verificar. | Revisá que no esté activado Bloq Mayús. Si olvidaste la clave, usá "¿Olvidaste tu contraseña?". Si la cuenta no está verificada, chequeá el correo. |
+| Rechaza el código de verificación / 2FA | Código vencido o mal tipeado. | Usá el código del correo más reciente y tocá "Reenviar código" si venció. |
 | Las cotizaciones quedan en 0 o no cambian | Sin internet o la fuente de datos está de mantenimiento. | Comprobá la conexión y recargá (F5). Si la fuente falla, la app muestra el último valor guardado. |
-| El gráfico no muestra datos | Par sin historial para ese rango. | Probá otro período o un par más común (USD/ARS, EUR/ARS, BTC). |
-| No me llegan las alertas | El precio todavía no llegó al límite, o el correo cayó en Spam. | Verificá que la alerta figure como activa y revisá la carpeta de no deseado. |
-| No me deja eliminar la cuenta | La palabra de confirmación mal escrita. | Escribí EXACTAMENTE **ELIMINAR** en mayúsculas. |
+| El gráfico no muestra datos | Par sin historial en ese rango de tiempo. | Probá otro período o un par con más datos (USD/ARS, EUR/ARS, BTC). |
+| No me llegan las alertas | El precio no llegó al límite todavía, o el correo cayó en Spam. | Verificá que la alerta figure como activa y revisá la carpeta de no deseado. |
+| No me deja eliminar la cuenta | La palabra de confirmación mal escrita. | Escribí EXACTAMENTE **ELIMINAR**, en mayúsculas. |
 
 ---
 
@@ -197,7 +232,7 @@ Al entrar, te encontrás con el panel de **Inicio**. En la parte de arriba está
 - **Correo de soporte:** divise.grupo6@gmail.com
 - **Plataforma y documentación:** https://dolarito.onrender.com
 - **Horario de atención:** lunes a viernes, de 09:00 a 18:00 (GMT-3).
-- **Respuesta:** en general, dentro de las 24 horas hábiles.
+- **Respuesta estimada:** en general, dentro de las 24 horas hábiles.
 
 > Al escribir, contá qué estabas haciendo, a qué hora y qué mensaje viste en pantalla. Así resolvemos más rápido.
 
