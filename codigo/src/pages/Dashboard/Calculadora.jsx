@@ -348,7 +348,7 @@ export default function Calculadora() {
                   separator="."
                   decimal=","
                 />
-                <span>{toCurrency}</span>
+                {' '}<span className="calc-modal-result-cur">{toCurrency}</span>
               </div>
 
               <div className="calc-modal-rate">

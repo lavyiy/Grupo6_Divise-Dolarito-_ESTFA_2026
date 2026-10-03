@@ -76,10 +76,17 @@
   font-variant-numeric: tabular-nums;
 }
 .sc-price span {
-  font-size: 13px;
-  color: var(--text-muted);
-  font-weight: 600;
-}
+    font-size: 13px;
+    color: var(--text-muted);
+      letter-spacing: 0.8px;
+    }
+  .sc-price .sc-currency {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--brand-gold);
+    letter-spacing: 0;
+    margin-right: 4px;
+  }
 
 .sc-bottom {
   display: flex;

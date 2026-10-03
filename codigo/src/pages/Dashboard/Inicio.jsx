@@ -15,6 +15,7 @@ const KPI_CARDS = [
     market: 'Informal',
     title: 'Dólar Blue',
     icon: 'dollar',
+    prefix: '$',
     seed: 'blue',
   },
   {
@@ -22,6 +23,7 @@ const KPI_CARDS = [
     market: 'Oficial',
     title: 'Dólar Oficial',
     icon: 'wallet',
+    prefix: '$',
     seed: 'oficial',
   },
   {
@@ -29,6 +31,7 @@ const KPI_CARDS = [
     market: 'Oficial',
     title: 'Euro Oficial',
     icon: 'spark',
+    prefix: '$',
     seed: 'euro',
   },
   {
@@ -36,7 +39,7 @@ const KPI_CARDS = [
     market: null,
     title: 'Bitcoin',
     icon: 'bitcoin',
-    suffix: 'USD',
+    prefix: 'US$',
     seed: 'btc',
   },
 ];
@@ -122,6 +125,7 @@ export default function Inicio() {
                 <div className="sc-icon"><Icon name={kpi.icon} size={19} /></div>
               </div>
               <div className="sc-price">
+                {kpi.prefix && <span className="sc-currency">{kpi.prefix}</span>}
                 <CountUp
                   end={price}
                   decimals={2}
@@ -129,7 +133,6 @@ export default function Inicio() {
                   separator="."
                   decimal=","
                 />
-                {kpi.suffix && <span> {kpi.suffix}</span>}
               </div>
               <div className="sc-bottom">
                 <span className={`sc-change ${isUp ? 'up' : 'down'}`}>
