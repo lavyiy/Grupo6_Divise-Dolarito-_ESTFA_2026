@@ -1,7 +1,4 @@
-# Manual de Usuario — Dolarito (divise.)
-**Versión del manual:** 2.0  
-**Última actualización:** 03/10/2026  
-**Versión de la aplicación cubierta:** v1.0.0
+﻿# Manual de Usuario — divise.
 
 ## Tabla de Contenidos
 
@@ -18,8 +15,8 @@
 
 ## 1. Introducción
 
-### ¿Qué es Dolarito?
-**Dolarito** (en la interfaz se muestra como `divise.`) es una aplicación web gratuita que reúne en un solo lugar las cotizaciones del mercado cambiario argentino e internacional, con valores en tiempo real. Se puede usar desde la computadora o el celular, sin instalar nada, y agrupa tres mundos de monedas:
+### ¿Qué es divise.?
+**divise.** es una aplicación web gratuita que reúne en un solo lugar las cotizaciones del mercado cambiario argentino e internacional, con valores en tiempo real. Se puede usar desde la computadora o el celular, sin instalar nada, y agrupa tres mundos de monedas:
 
 - **Dólar y sus variantes:** Oficial, Blue (informal), MEP/Bolsa, CCL/Contado con Liqui, Tarjeta, Mayorista y Solidario.
 - **Monedas del mundo:** Euro, Real Brasileño, Peso Uruguayo, Peso Chileno, Libra Esterlina, Yen Japonés, Peso Mexicano, Franco Suizo y Yuan Chino.
@@ -33,7 +30,7 @@ Además de ver los precios, la app permite **convertir montos** con una calculad
 - **Analistas y curiosos del mercado:** usuarios que siguen la brecha cambiaria, comparan monedas y miran tendencias históricas (hasta 5 años o la serie completa).
 
 ### ¿Qué problema resuelve y qué beneficio ofrece?
-En una economía con muchos tipos de cambio y alta volatilidad, la información suele estar dispersa, desactualizada o llena de publicidad. Dolarito la junta en una pantalla limpia, con datos reales y al instante. El beneficio principal es simple: **saber cuánto está el dólar y convertir en segundos**, sin ser experto ni saltar de página en página.
+En una economía con muchos tipos de cambio y alta volatilidad, la información suele estar dispersa, desactualizada o llena de publicidad. divise. la junta en una pantalla limpia, con datos reales y al instante. El beneficio principal es simple: **saber cuánto está el dólar y convertir en segundos**, sin ser experto ni saltar de página en página.
 
 - Conversiones exactas con el tipo de cambio del momento.
 - Alertas automáticas por correo ante oscilaciones importantes.
@@ -44,7 +41,7 @@ En una economía con muchos tipos de cambio y alta volatilidad, la información 
 
 ## 2. Requisitos del sistema
 
-Dolarito es una aplicación web moderna (React + Vite con una API en Node.js/Express y base de datos PostgreSQL). **No requiere instalar programas** ni tener una máquina potente: alcanza con un navegador actualizado.
+divise. es una aplicación web moderna (React + Vite con una API en Node.js/Express y base de datos PostgreSQL). **No requiere instalar programas** ni tener una máquina potente: alcanza con un navegador actualizado.
 
 | Componente | Requisito |
 | :--- | :--- |
@@ -83,7 +80,7 @@ Dolarito es una aplicación web moderna (React + Vite con una API en Node.js/Exp
 
 ### 3.4 Recorrido inicial
 Al entrar, la interfaz se adapta al tamaño de la pantalla:
-- **En computadora:** la barra superior tiene el logo `divise.`, el menú completo (Inicio, Cotizaciones, Gráficos, Calculadora, Noticias, Alertas, Favoritos, Historial), el avatar de Perfil y el botón de Cierre de Sesión.
+- **En computadora:** la barra superior tiene el logo **divise.**, el menú completo (Inicio, Cotizaciones, Gráficos, Calculadora, Noticias, Alertas, Favoritos, Historial), el avatar de Perfil y el botón de Cierre de Sesión.
 - **En celular:** la navegación principal está abajo, al alcance del pulgar: Inicio, Cotizaciones, Gráficos y Alertas, más un botón **"Más"** que desliza una hoja con el resto (Calculadora, Noticias, Favoritos, Historial y Perfil).
 
 La primera pantalla que se ve después de entrar es el panel de **Inicio**, con los precios del día.
@@ -229,13 +226,13 @@ Y si el problema es de uso cotidiano, esta tabla te orienta:
 
 ## 8. Contacto y soporte
 
-- **Correo de soporte:** divise.grupo6@gmail.com
+- **Correo de soporte:** deviseproyect@gmail.com
 - **Plataforma y documentación:** https://dolarito.onrender.com
-- **Horario de atención:** lunes a viernes, de 09:00 a 18:00 (GMT-3).
+- **Horario de atención:** lunes a viernes, de 18:00 a 22:00 (GMT-3).
 - **Respuesta estimada:** en general, dentro de las 24 horas hábiles.
 
 > Al escribir, contá qué estabas haciendo, a qué hora y qué mensaje viste en pantalla. Así resolvemos más rápido.
 
 ---
 
-*Dolarito (divise.) — Grupo 6 · ESTFA 2026 · Manual de usuario v2.0*
+*divise. — Grupo 6 · ESTFA 2026 · Manual de usuario*
