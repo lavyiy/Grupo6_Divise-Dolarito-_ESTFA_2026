@@ -1,4 +1,4 @@
-# divise — Dolarito v1.0
+# Divise — v1.0
 
 Plataforma web de cotizaciones multidivisa: seguimiento de tipos de cambio en tiempo real
 (dólares oficial/blue/MEP/CCL, monedas regionales e internacionales y criptoactivos),
