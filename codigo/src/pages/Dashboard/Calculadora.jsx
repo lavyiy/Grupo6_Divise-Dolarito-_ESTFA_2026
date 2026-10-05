@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, Link } from 'react-router-dom';
-import { fetchRates, getFavorites, toggleFavorite } from '../../services/api';
+import { fetchRates, getFavorites, toggleFavorite, recordHistorial } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import CountUp from 'react-countup';
 import { Icon } from '../../components/ui/Icon';
@@ -19,14 +19,44 @@ export default function Calculadora() {
   const [amount, setAmount] = useState('1000');
   const [fromCurrency, setFromCurrency] = useState(location.state?.currency || 'USD');
   const [toCurrency, setToCurrency] = useState('ARS');
-  
-  // Fake history for demo matching mockup
-  const history = [
-    { from: 'USD', to: 'ARS', in: '1000', out: '1298750', time: 'Hace 1 min' },
-    { from: 'EUR', to: 'USD', in: '500', out: '537.85', time: 'Hace 1 hora' },
-    { from: 'ARS', to: 'BRL', in: '10000', out: '55.28', time: 'Ayer' },
-    { from: 'USD', to: 'EUR', in: '100', out: '92.35', time: 'Ayer' }
-  ];
+
+  // Historial visual de conversiones de la sesión (sin datos mock).
+  const [history, setHistory] = useState([]);
+
+  // ── Validación del monto ingresado ────────────────────────────────────────
+  const parseAmountInput = (raw) => {
+    const value = String(raw == null ? '' : raw).trim();
+    if (value === '') {
+      return { ok: false, error: 'Ingresá un monto para convertir.' };
+    }
+    if (!/^[0-9.,]+$/.test(value)) {
+      return { ok: false, error: 'El monto debe ser un número válido.' };
+    }
+
+    let normalized;
+    if (value.includes(',') && value.includes('.')) {
+      // Formato argentino "1.000,50" → 1000.50
+      if (value.lastIndexOf('.') < value.lastIndexOf(',')) {
+        normalized = value.replace(/\./g, '').replace(',', '.');
+      } else {
+        normalized = value.replace(/,/g, '');
+      }
+    } else {
+      normalized = value.replace(',', '.');
+    }
+
+    const num = Number(normalized);
+    if (!Number.isFinite(num)) {
+      return { ok: false, error: 'El monto debe ser un número válido.' };
+    }
+    if (num < 0) {
+      return { ok: false, error: 'El monto no puede ser negativo.' };
+    }
+    return { ok: true, value: num };
+  };
+
+  const amountParse = parseAmountInput(amount);
+  const montoError = amountParse.ok ? '' : amountParse.error;
 
   useEffect(() => {
     if (location.state?.currency) {
@@ -85,7 +115,36 @@ export default function Calculadora() {
   };
 
   const handleConvertClick = () => {
+    if (montoError) {
+      showToast(montoError);
+      return;
+    }
+    if (fromRate === 0 || toRate === 0) {
+      showToast(`La cotización de ${fromRate === 0 ? fromCurrency : toCurrency} no está disponible por el momento.`);
+      return;
+    }
+
     setShowResult(true);
+
+    // Registra la conversión en el historial real (solo con sesión activa).
+    if (token) {
+      recordHistorial({
+        par_consultado: `Conversión ${fromCurrency} → ${toCurrency}`,
+        valor_momento: result || amountParse.value || 0,
+      }, token).catch(() => {});
+    }
+
+    // Acumula la conversión en el panel visual "Últimas conversiones".
+    setHistory(prev => [
+      {
+        from: fromCurrency,
+        to: toCurrency,
+        in: String(amountParse.value),
+        out: String(result || 0),
+        time: 'Ahora',
+      },
+      ...prev,
+    ].slice(0, 5));
   };
 
   const handleSwap = () => {
@@ -111,20 +170,22 @@ export default function Calculadora() {
     return rate.venta;
   };
 
-  const calculateResult = () => {
-    const fromVal = getARSValue(fromCurrency);
-    const toVal = getARSValue(toCurrency);
-    const numAmount = parseFloat(amount.replace(',', '.')) || 0;
+  const fromRate = getARSValue(fromCurrency);
+  const toRate = getARSValue(toCurrency);
+  const rateError = fromRate === 0 || toRate === 0
+    ? `La cotización de ${fromRate === 0 ? fromCurrency : toCurrency} no está disponible por el momento.`
+    : '';
+  const hasError = Boolean(montoError) || Boolean(rateError);
 
-    if (fromVal === 0 || toVal === 0) return 0;
-    
-    const inARS = numAmount * fromVal;
-    const finalResult = inARS / toVal;
-    return finalResult;
+  const calculateResult = () => {
+    if (!amountParse.ok) return 0;
+    if (fromRate === 0 || toRate === 0) return 0;
+    const inARS = amountParse.value * fromRate;
+    return inARS / toRate;
   };
 
   const result = calculateResult();
-  const conversionRate = getARSValue(fromCurrency) / getARSValue(toCurrency);
+  const conversionRate = fromRate > 0 && toRate > 0 ? fromRate / toRate : 0;
 
   return (
     <div className="calc-container page-enter">
@@ -176,10 +237,12 @@ export default function Calculadora() {
               <span className="calc-label">Ingresá el monto</span>
               <input 
                 type="text" 
-                className="calc-amount" 
+                className={`calc-amount ${montoError ? 'calc-amount-error' : ''}`} 
                 value={amount} 
                 onChange={(e) => setAmount(e.target.value)} 
+                aria-invalid={Boolean(montoError)}
               />
+              {montoError && <span className="calc-error" role="alert">{montoError}</span>}
             </div>
 
             <button className="calc-swap-btn" onClick={handleSwap} title="Invertir monedas">⇄</button>
@@ -218,14 +281,20 @@ export default function Calculadora() {
               <input 
                 type="text" 
                 className="calc-amount calc-result-display" 
-                value={result ? result.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: ['BTC', 'ETH', 'USDT', 'BNB', 'DOGE'].includes(toCurrency) ? 6 : 4}) : 'Cargando...'} 
+                value={hasError ? '' : (result || 0).toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: ['BTC', 'ETH', 'USDT', 'BNB', 'DOGE'].includes(toCurrency) ? 6 : 4})} 
                 disabled 
               />
+              {rateError && <span className="calc-error" role="alert">{rateError}</span>}
             </div>
 
           </div>
 
-          {conversionRate > 0 && (
+          {hasError ? (
+            <div className="calc-rate-info">
+              <span>{montoError || rateError}</span>
+              <span className="calc-rate-live">Revisá el monto ingresado</span>
+            </div>
+          ) : conversionRate > 0 && (
             <div className="calc-rate-info">
               <span>1 {fromCurrency} = {conversionRate.toLocaleString('es-AR', {maximumFractionDigits: 4})} {toCurrency}</span>
               <span className="calc-rate-live">Al día de hoy</span>
@@ -266,7 +335,13 @@ export default function Calculadora() {
             </div>
             
             <div className="calc-big-result">
-              <CountUp end={result} decimals={['BTC', 'ETH', 'USDT', 'BNB', 'DOGE'].includes(toCurrency) ? 6 : 2} duration={1} separator="." decimal="," /> <span>{toCurrency}</span>
+              {hasError ? (
+                <span className="calc-error-big">{montoError || rateError}</span>
+              ) : (
+                <>
+                  <CountUp end={result} decimals={['BTC', 'ETH', 'USDT', 'BNB', 'DOGE'].includes(toCurrency) ? 6 : 2} duration={1} separator="." decimal="," /> <span>{toCurrency}</span>
+                </>
+              )}
             </div>
 
             <div className="calc-used-rate" style={{marginTop: '32px'}}>
@@ -284,6 +359,9 @@ export default function Calculadora() {
             </div>
             
             <div className="history-list">
+              {history.length === 0 && (
+                <div className="calc-history-empty">Todavía no hiciste conversiones en esta sesión.</div>
+              )}
               {history.map((h, i) => (
                 <div className="calc-history-item" key={i}>
                   <div className="chi-left">
@@ -335,7 +413,7 @@ export default function Calculadora() {
               </div>
 
               <div className="calc-modal-amount">
-                {Number(amount.replace(',', '.')) || 0} <span>{fromCurrency}</span>
+                {amountParse.value} <span>{fromCurrency}</span>
               </div>
 
               <div className="calc-modal-equals">=</div>

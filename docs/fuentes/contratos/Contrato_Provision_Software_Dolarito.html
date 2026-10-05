@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Contrato de Provisión de Software y Servicios Profesionales — divise.</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',-apple-system,'Inter',Roboto,sans-serif;background:#eef2f7;color:#1e293b;line-height:1.6}
+  .page{max-width:800px;margin:20px auto;background:#fff;padding:38px 46px;box-shadow:0 2px 12px rgba(15,23,42,.08)}
+  h1{font-size:22px;color:#0b1224;text-align:center;margin:8px 0}
+  h2{font-size:16px;color:#1e3a8a;margin:22px 0 8px;border-bottom:2px solid #c9a84c;padding-bottom:4px;page-break-after:avoid}
+  h3{font-size:14px;color:#0b1224;margin:14px 0 4px}
+  p{font-size:13px;color:#334155;margin:6px 0;text-align:justify}
+  li{font-size:13px;color:#334155;margin:3px 0}
+  ul,ol{margin:6px 0 6px 22px}
+  b{color:#0b1224}
+  table{width:100%;border-collapse:collapse;margin:10px 0;font-size:12px}
+  th{background:#0b1224;color:#fff;text-align:left;padding:7px 9px;font-weight:600}
+  td{border:1px solid #e2e8f0;padding:7px 9px;vertical-align:top;color:#334155}
+  tr:nth-child(even) td{background:#f8fafc}
+  .cover{text-align:center;padding:34px 14px 22px;background:linear-gradient(135deg,#0b1224 0%,#16213e 100%);border-radius:10px;margin-bottom:20px}
+  .cover .logo{font-size:28px;font-weight:800;color:#fff;letter-spacing:2px}
+  .cover .logo b{color:#c9a84c}
+  .cover .doc-t{font-size:15px;color:#cbd5e1;margin-top:6px}
+  .cover .meta{margin-top:16px;color:#94a3b8;font-size:12px;line-height:1.7}
+  .sign{width:100%;margin-top:40px}
+  .sign td{border:none;padding:6px 10px;font-size:13px}
+  .sign .line{border-bottom:1.5px solid #0f172a;height:44px}
+  .note{background:#eef2f7;border:1px solid #cbd5e1;border-radius:8px;padding:10px 12px;font-size:12px;color:#334155;margin:10px 0}
+  .clause{font-size:13px;color:#334155;margin:7px 0;text-align:justify}
+  .clause b.tit{color:#1e3a8a}
+  .foot{text-align:center;color:#94a3b8;font-size:11px;margin-top:26px;border-top:1px solid #e2e8f0;padding-top:12px}
+  @media print{ body{background:#fff} .page{box-shadow:none;margin:0;padding:28px 38px} h2{page-break-after:avoid} }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="cover">
+    <div class="logo">divise<b>.</b></div>
+    <div class="doc-t">Contrato de Provisión de Software y Servicios Profesionales</div>
+    <div class="meta">Sistema divise. — Cotizaciones &amp; mercado en tiempo real<br>Entregable 02 · Grupo 6 · ESTFA 2026<br>Berazategui, Provincia de Buenos Aires, Argentina — Fecha: 01/10/2026</div>
+  </div>
+
+  <h1>CONTRATO DE PROVISIÓN DE SOFTWARE Y SERVICIOS PROFESIONALES</h1>
+
+  <h2>PARTES</h2>
+  <p><b>El Cliente</b>, con domicilio en [A COMPLETAR] y CUIT [A COMPLETAR] — en adelante "el Cliente".</p>
+  <p><b>El Desarrollador</b>: el micro-emprendimiento <b>divise.</b>, Grupo 6 de la ESTFA 2026, integrado por <b>Valentín López</b> (Project Manager), <b>Santino Tacconi</b> (Developer), <b>Lorenzo Sánchez</b> (Base de datos), <b>Bruno Cabrera</b> (Diseño UX) y <b>Santiago Centurión</b> (Developer), con domicilio en Calle 138 N° 1827, e/18 y 19, C. 138 1865, B1884LHK, Berazategui, Provincia de Buenos Aires, Argentina, y CUIT [A COMPLETAR], representado por <b>Valentín López</b> en su carácter de Project Manager.</p>
+  <p>Ambas partes celebran el presente contrato conforme a las cláusulas que se detallan a continuación.</p>
+
+  <h2>CONSIDERANDO</h2>
+  <p>Que las partes manifiestan su voluntad de contratar libremente y de determinar el contenido del presente contrato, conforme al principio de libertad de contratación (art. 958 del Código Civil y Comercial de la Nación); que, una vez celebrado, el contrato resulta obligatorio y tiene efecto vinculante entre quienes lo suscriben (art. 959 CCCN); y que ambas partes se comprometen a celebrarlo, interpretarlo y ejecutarlo de buena fe (art. 961 CCCN).</p>
+
+  <h2>1. OBJETO DEL CONTRATO</h2>
+  <p class="clause"><b class="tit">Objeto.</b> El presente contrato tiene por objeto la provisión, por parte del Desarrollador, de servicios profesionales de desarrollo de software para la creación de <b>divise. v1.0</b>, una aplicación web de consulta de cotizaciones de moneda fiat y criptomonedas en tiempo real, con módulo de favoritos, alertas por correo electrónico, calculadora de conversión, gráficos históricos, noticias e historial de consultas.</p>
+  <p class="clause"><b class="tit">Descripción del sistema.</b> divise. es una aplicación web (SPA en React/Vite, compatible con PWA) estructurada en tres capas: una capa de presentación (frontend responsive), una capa de servicios (backend en Node.js/Express con autenticación JWT e integraciones a APIs públicas de cotización) y una capa de datos (PostgreSQL en Supabase).</p>
+  <p class="clause"><b class="tit">Alcance — funcionalidades incluidas.</b></p>
+  <ul>
+    <li>Registro e inicio de sesión con verificación de correo y recuperación de contraseña por código de 6 dígitos.</li>
+    <li>Cotizaciones en vivo: dólar (Oficial, Blue, MEP, CCL, Tarjeta, Mayorista, Solidario), monedas del mundo y criptomonedas (BTC, ETH, USDT, BNB, DOGE).</li>
+    <li>Calculadora de conversión entre monedas, con cruce cripto a pesos.</li>
+    <li>Gráficos históricos con comparación entre divisas y horizontes de 7 días a la serie completa.</li>
+    <li>Favoritos, alertas de precio por correo, noticias por región e historial de consultas.</li>
+    <li>Perfil de usuario con verificación en dos pasos (2FA).</li>
+  </ul>
+  <p class="clause"><b class="tit">Plazos y entregas.</b> El plazo estimado de entrega es de 6 meses corridos (20 semanas) desde la firma del contrato, con hitos: arquitectura y entorno definidos, primera demo funcional, funcionalidades completas y, finalmente, entrega de la documentación y presentación del sistema. La versión 1.0.0 queda etiquetada y publicada en el ambiente de producción.</p>
+
+  <h2>2. PRECIO Y MONEDA</h2>
+  <p class="clause"><b class="tit">Precio.</b> El precio total del desarrollo es de <b>USD 5.941,10</b> (dólares estadounidenses), IVA (21%) incluido, conforme a la Boleta de Presupuesto elaborada por el Desarrollador. El monto representa el 100% del valor del contrato e incluye los honorarios del equipo (análisis y diseño UX, diseño de base de datos, desarrollo backend y frontend, testing y QA, documentación, gestión de proyecto e infraestructura/deploy) y el IVA.</p>
+  <p class="clause"><b class="tit">Moneda de referencia.</b> Dólares estadounidenses (USD). Los montos en pesos argentinos se consignan a título de referencia, calculados al tipo de cambio vigente a la fecha efectiva de cada pago, dado el contexto de inflación y variación cambiaria propio de la economía argentina.</p>
+  <p class="clause"><b class="tit">Forma de pago.</b> Anticipo del <b>30%</b> a la firma del contrato, como condición de inicio de los trabajos. Saldo del <b>70%</b> contra la aprobación del Test de Aceptación (cláusula 4) y en forma previa a la entrega final del sistema.</p>
+
+  <h2>3. TITULARIDAD DEL SOFTWARE</h2>
+  <p class="clause">Las partes dejan constancia de haber evaluado los modelos posibles de titularidad y provisión: (a) licenciamiento máquina a máquina (M2M), (b) modalidad on premise y (c) modalidad en la nube (cloud / As a Service). divise. se provee bajo <b>modalidad en la nube (SaaS)</b>: el backend y la base de datos se alojan en Render y Supabase, administrados y configurados por el Desarrollador; la aplicación web se distribuye a los usuarios a través de internet. No resultan aplicables las modalidades M2M ni on premise.</p>
+  <p class="clause">El <b>código fuente, la documentación técnica y los diseños</b> (UX/UI, base de datos, arquitectura) desarrollados en el marco del presente contrato serán propiedad exclusiva del Desarrollador (Grupo 6 · divise.). El Cliente recibe una <b>licencia de uso</b> no exclusiva y no transferible del software bajo la modalidad SaaS, sin derecho a modificar, descompilar, copiar o reutilizar el código fuente en otros proyectos sin autorización escrita del Desarrollador.</p>
+
+  <h2>4. TEST DE ACEPTACIÓN</h2>
+  <p class="clause">Una vez entregado el sistema, el Cliente dispondrá de un período de prueba de <b>10 días hábiles</b> para verificar que las funcionalidades del alcance (cláusula 1) operan correctamente, tomando como referencia los casos de prueba del Excel de testing incluido en la carpeta funcional, con los criterios de aceptación definidos por hito.</p>
+  <p class="clause">Si el sistema cumple los criterios, las partes suscribirán un <b>acta de conformidad</b>, momento a partir del cual comienza el período de garantía (cláusula 6). Si se detectan desvíos respecto del alcance acordado, el Desarrollador dispondrá de 10 días hábiles para corregirlos sin costo adicional, tras lo cual el sistema corregido se someterá nuevamente al Test de Aceptación.</p>
+
+  <h2>5. CLÁUSULAS PENALES</h2>
+  <p class="clause"><b class="tit">Incumplimiento del Desarrollador.</b> Ante el atraso en la entrega de un hito imputable al Desarrollador, se aplicará una penalidad del <b>2%</b> del precio total por cada semana completa de atraso, con un tope máximo acumulado del <b>10%</b>. Superado el tope, el Cliente podrá optar por continuar el contrato o rescindirlo (cláusula 9).</p>
+  <p class="clause"><b class="tit">Incumplimiento del Cliente.</b> Ante la falta de pago de una cuota en el plazo establecido, se aplicará un recargo del <b>5%</b> sobre el saldo adeudado, por única vez. Transcurridos 15 días corridos desde el vencimiento sin regularizar el pago, el Desarrollador podrá suspender la ejecución de los trabajos hasta la normalización, sin responsabilidad por los plazos no cumplidos durante esa suspensión.</p>
+
+  <h2>6. SOPORTE Y GARANTÍA</h2>
+  <p class="clause"><b class="tit">Procedimiento de soporte (SOP).</b></p>
+  <ul>
+    <li><b>Canal de reporte:</b> deviseproyect@gmail.com, con descripción del problema, severidad y pasos para reproducirlo.</li>
+    <li><b>Registro:</b> cada incidencia recibe un número de ticket con fecha y hora de ingreso.</li>
+    <li><b>Clasificación:</b> por severidad (crítica, alta, media, baja) según los tiempos del SLA (cláusula 7).</li>
+    <li><b>Escalamiento:</b> las incidencias no resueltas en plazo se escalan al Project Manager, quien informa el nuevo plazo estimado.</li>
+  </ul>
+  <p class="clause"><b class="tit">Período de garantía.</b> 90 días corridos desde la firma del acta de conformidad. Cubre la corrección sin costo de errores (bugs) en las funcionalidades del alcance original (cláusula 1).</p>
+  <p class="clause"><b class="tit">No cubiertos.</b> Fallas originadas por cambios o interrupciones en las APIs externas utilizadas (dolarapi, open.er-api, Binance, CoinGecko, Coinbase, Supabase), ajenas al control del Desarrollador; uso indebido de la aplicación; ni solicitudes de nuevas funcionalidades, que se tramitan por change request (cláusula 8).</p>
+  <p class="clause"><b class="tit">Post-garantía.</b> Vencido el período, el soporte y mantenimiento correctivo o evolutivo se brinda bajo la modalidad de <b>bolsa de horas</b> o <b>contrato de mantenimiento mensual</b>, a convenir con el Cliente, facturado según las tarifas vigentes del equipo.</p>
+
+  <h2>7. SLA (ACUERDO DE NIVEL DE SERVICIO)</h2>
+  <p class="clause">El servicio comprendido es la disponibilidad del backend y la base de datos alojados en Render y Supabase, y la correcta operación de las funciones online provistas por las APIs externas.</p>
+  <table>
+    <tr><th>Tipo de incidencia</th><th>Tiempo de respuesta</th></tr>
+    <tr><td>Crítica (aplicación inutilizable)</td><td>24 horas hábiles</td></tr>
+    <tr><td>Alta (funcionalidad clave afectada)</td><td>48 horas hábiles</td></tr>
+    <tr><td>Media o baja</td><td>5 días hábiles</td></tr>
+  </table>
+  <p class="clause">Disponibilidad objetivo: <b>99% mensual</b> del backend, en línea con el proveedor de infraestructura. Soporte en días hábiles, de 18:00 a 22:00 (GMT-3). El Desarrollador emite un reporte mensual de cumplimiento del SLA durante la garantía. El incumplimiento reiterado habilita al Cliente a reclamar conforme la cláusula 5.</p>
+
+  <h2>8. CAMBIOS DE ALCANCE (CHANGE REQUEST)</h2>
+  <p class="clause">Toda funcionalidad adicional o modificación del alcance original deberá tramitarse así:</p>
+  <ol>
+    <li><b>Solicitud:</b> el Cliente presenta por escrito la funcionalidad solicitada y el motivo.</li>
+    <li><b>Evaluación:</b> el Desarrollador analiza el impacto técnico, el tiempo adicional, el riesgo para el sistema ya desarrollado y el costo.</li>
+    <li><b>Propuesta:</b> se presenta al Cliente una propuesta formal por escrito con nuevo plazo, costo e impacto sobre los hitos.</li>
+    <li><b>Aceptación:</b> el Cliente aprueba por escrito y firmando.</li>
+    <li><b>Ejecución:</b> el cambio se incorpora recién a partir de la aprobación escrita. Ningún cambio de alcance se ejecuta sin esa aprobación previa.</li>
+  </ol>
+
+  <h2>9. TERMINACIÓN DEL CONTRATO</h2>
+  <p class="clause"><b class="tit">Mutuo acuerdo.</b> Las partes pueden rescindir de común acuerdo en cualquier momento, suscribiendo un acta que liquide el trabajo efectivamente realizado.</p>
+  <p class="clause"><b class="tit">Incumplimiento.</b> Ante el incumplimiento de una obligación esencial, la parte cumplidora notifica por escrito a la incumplidora, otorgando 10 días hábiles de subsanación. Transcurrido el plazo sin subsanación, el contrato queda resuelto de pleno derecho, sin perjuicio del derecho a reclamar los daños y perjuicios.</p>
+  <p class="clause"><b class="tit">Sin causa.</b> Cualquiera de las partes puede rescindir sin expresión de causa con un preaviso por escrito de 15 días corridos.</p>
+  <p class="clause"><b class="tit">Consecuencias.</b> Se entrega el avance del software y la documentación generada hasta la fecha, en la medida que corresponda según los hitos y pagos efectivamente realizados. Las obligaciones de soporte, garantía y confidencialidad subsisten respecto de lo ya entregado y aceptado.</p>
+
+  <h2>10. CONFIDENCIALIDAD</h2>
+  <p class="clause">Ambas partes se comprometen a mantener la confidencialidad de toda la información a la que accedan durante el desarrollo del proyecto, incluyendo datos de usuarios, credenciales de acceso, información técnica, de diseño y cualquier otra información sensible vinculada al Cliente o al Desarrollador, conforme a la Ley 25.326 de Protección de Datos Personales.</p>
+
+  <h2>11. RESPONSABILIDADES DE LAS PARTES</h2>
+  <p class="clause">El Desarrollador se compromete a ejecutar los trabajos con la debida diligencia y profesionalismo, dentro de los plazos y el presupuesto acordados, cumpliendo con la Ley 25.326. El Cliente se compromete a brindar la información necesaria y a efectuar los pagos en los plazos establecidos. Ninguna de las partes será responsable por daños indirectos o lucro cesante.</p>
+
+  <h2>12. RESOLUCIÓN DE CONFLICTOS</h2>
+  <p class="clause">Ante cualquier conflicto derivado de la interpretación o ejecución del presente contrato, las partes intentarán resolverlo de manera amistosa. De no alcanzarse un acuerdo, se someterán a la jurisdicción de los Tribunales Ordinarios competentes del domicilio del Desarrollador.</p>
+  <p class="clause">En prueba de conformidad, se firman dos ejemplares de un mismo tenor y a un solo efecto, en el lugar y fecha indicados en la portada.</p>
+
+  <h2>FIRMA</h2>
+  <table class="sign">
+    <tr><td class="line"></td><td class="line"></td></tr>
+    <tr><td>Valentín López<br>Representante del Desarrollador<br>(divise. · Grupo 6 · ESTFA 2026)</td><td>Cliente<br>(institución / organismo)</td></tr>
+  </table>
+  <p style="text-align:center" class="note">Fecha: ____ / ____ / 2026 · Ejemplar 1 de 2</p>
+
+  <h2>ANEXO A — DATOS PERSONALES</h2>
+  <p class="clause">El tratamiento de los datos se realiza conforme a la Ley 25.326. Las contraseñas se almacenan con hash (bcrypt), las comunicaciones son cifradas (HTTPS/TLS) y el acceso a los datos propios de cada usuario está aislado en la base (Row Level Security). divise. no opera como billetera virtual, no procesa dinero real ni solicita datos bancarios.</p>
+
+  <h2>ANEXO B — PLIEGO DE LICITACIÓN Y CRITERIOS DE ADJUDICACIÓN</h2>
+  <table>
+    <tr><th>Condición</th><th>Contenido</th></tr>
+    <tr><td>Objeto de la contratación</td><td>Licencia de uso de la plataforma web divise. v1.0 (cotizaciones en tiempo real, favoritos, alertas, calculadora, noticias, historial y perfil).</td></tr>
+    <tr><td>Requisitos del pliego</td><td>Idoneidad técnica demostrada (demo funcional), manual de usuario, documentación, garantía de soporte por 90 días y adecuación a la normativa de protección de datos personales.</td></tr>
+    <tr><td>Criterios de adjudicación</td><td>Menor precio + mayores funcionalidades y calidad documental, según la propuesta presentada.</td></tr>
+    <tr><td>Entregables de la oferta</td><td>Acceso a la demo (dolarito.onrender.com), presupuesto, manual, metodología, soporte, testing y pantallas (carpeta funcional).</td></tr>
+    <tr><td>Plazo de entrega</td><td>Conforme cronograma del proyecto (10/03 – 01/10); versión 1.0.0 etiquetada y publicada.</td></tr>
+  </table>
+
+  <h2>ANEXO C — MODELO DE NEGOCIO Y ARGUMENTACIÓN</h2>
+  <h3>Modelo de negocio elegido</h3>
+  <p class="clause">Se adoptó el modelo de <b>licencia de uso con soporte (SaaS)</b> y no la venta directa del código fuente. La justificación:</p>
+  <ul>
+    <li><b>Ingresos y sustentabilidad:</b> la cuota de licencia o suscripción genera flujo recurrente, acorde a un micro-emprendimiento con costo fijo bajo (infraestructura free tier durante el proyecto).</li>
+    <li><b>El valor está en el servicio:</b> los datos de cotización en vivo, la actualización constante y el soporte son el diferencial; vender solo el fuente lo haría inservible sin la integración y el mantenimiento.</li>
+    <li><b>Protección del trabajo del equipo:</b> la licencia de uso, los derechos de autor y el historial de Git protegen el esfuerzo invertido y evitan la copia directa.</li>
+    <li><b>Adaptado a la licitación académica:</b> el pliego de un organismo educativo requiere funcionalidad verificable y documentación, no la apropiación del código — ambas cosas se entregaron.</li>
+  </ul>
+  <h3>Argumentación del fuente y derechos de autor</h3>
+  <ul>
+    <li><b>Autoría:</b> obra colaborativa creada por los integrantes del Grupo 6 durante el ciclo lectivo 2026; la autoría se acredita con el <b>historial de commits</b> del repositorio Git, las fechas de las migraciones y el tag v1.0.0.</li>
+    <li><b>Protección legal:</b> el Convenio de Berna y la Ley argentina 11.723 protegen el software como obra literaria desde su creación, sin registro previo. Se extinguen los derechos patrimoniales a los 50 años del fallecimiento del último autor, con reconocimiento de la autoría moral en todo caso.</li>
+    <li><b>Objeto protegido:</b> código fuente (React/Node/Express), diseño e identidad visual «divise.», base de datos/estructura y documentación técnica.</li>
+    <li><b>Respeto a licencias de terceros:</b> el proyecto utiliza tecnologías de código abierto (React, Vite, Express, Supabase, etc.) respetando sus licencias MIT/IS/BSD, con los correspondientes avisos incluidos en sus dependencias.</li>
+    <li><b>Fuentes de datos públicas:</b> las cotizaciones provienen de APIs públicas de cotización y mercado (dolarapi, open.er-api, Binance/CoinGecko/Coinbase, entre otras) utilizadas conforme a sus términos de uso, con atribución interna.</li>
+  </ul>
+
+  <div class="foot">divise. — Grupo 6 · ESTFA 2026 · Contrato de provisión de software y servicios profesionales</div>
+</div>
+</body>
+</html>

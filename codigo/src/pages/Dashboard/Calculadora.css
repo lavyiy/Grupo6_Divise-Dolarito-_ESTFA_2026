@@ -114,6 +114,29 @@
   border-color: var(--brand-gold);
   box-shadow: 0 0 10px rgba(240, 185, 11, 0.2);
 }
+.calc-amount.calc-amount-error {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 1px var(--danger);
+}
+.calc-error {
+  display: block;
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--danger);
+  font-weight: 500;
+}
+.calc-error-big {
+  color: var(--danger);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.calc-history-empty {
+  padding: 20px 12px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+}
 
 .calc-swap-btn {
   width: 48px;

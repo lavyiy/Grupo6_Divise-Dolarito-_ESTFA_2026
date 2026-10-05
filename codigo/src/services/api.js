@@ -370,7 +370,7 @@ export async function fetchRates() {
 
     // Monedas del mundo que no están en DolarApi (Libra, Yen, Peso Mexicano,
     // Franco, Yuan) → cruce en ARS vía open.er-api (CORS abierto).
-    const worldMissing = ['GBP', 'JPY', 'MXN', 'CHF', 'CNY', 'BRL', 'CLP', 'UYU'].filter(
+    const worldMissing = ['GBP', 'JPY', 'MXN', 'CHF', 'CNY', 'CAD', 'AUD', 'BRL', 'CLP', 'UYU'].filter(
       code => !formattedRates.some(r => r.codigo === code)
     );
     if (worldMissing.length > 0) {
@@ -378,7 +378,7 @@ export async function fetchRates() {
         const fxRes = await fetch('https://open.er-api.com/v6/latest/USD').then(r => r.json());
         const fxRates = fxRes.rates || {};
         const arsRef = Number(fxRates.ARS);
-        const names = { BRL: 'Real Brasileño', CLP: 'Peso Chileno', UYU: 'Peso Uruguayo', GBP: 'Libra Esterlina', JPY: 'Yen Japonés', MXN: 'Peso Mexicano', CHF: 'Franco Suizo', CNY: 'Yuan Chino' };
+        const names = { BRL: 'Real Brasileño', CLP: 'Peso Chileno', UYU: 'Peso Uruguayo', GBP: 'Libra Esterlina', JPY: 'Yen Japonés', MXN: 'Peso Mexicano', CHF: 'Franco Suizo', CNY: 'Yuan Chino', CAD: 'Dólar Canadiense', AUD: 'Dólar Australiano' };
         if (Number.isFinite(arsRef) && arsRef > 0) {
           worldMissing.forEach(code => {
             const cur = Number(fxRates[code]);
@@ -449,6 +449,8 @@ export async function fetchRates() {
       { codigo: 'GBP', nombre: 'Libra Esterlina', tipo_mercado: 'Oficial', tipo: 'Oficial', compra: 2000, venta: 2018 },
       { codigo: 'JPY', nombre: 'Yen Japonés', tipo_mercado: 'Oficial', tipo: 'Oficial', compra: 9.6, venta: 9.7 },
       { codigo: 'MXN', nombre: 'Peso Mexicano', tipo_mercado: 'Oficial', tipo: 'Oficial', compra: 87, venta: 88 },
+      { codigo: 'CAD', nombre: 'Dólar Canadiense', tipo_mercado: 'Oficial', tipo: 'Oficial', compra: 1130, venta: 1135 },
+      { codigo: 'AUD', nombre: 'Dólar Australiano', tipo_mercado: 'Oficial', tipo: 'Oficial', compra: 1015, venta: 1020 },
       { codigo: 'CHF', nombre: 'Franco Suizo', tipo_mercado: 'Oficial', tipo: 'Oficial', compra: 1825, venta: 1831 },
       { codigo: 'CNY', nombre: 'Yuan Chino', tipo_mercado: 'Oficial', tipo: 'Oficial', compra: 224, venta: 225 },
       { codigo: 'BTC', nombre: 'Bitcoin', tipo_mercado: 'Cripto', tipo: 'Cripto', compra: 81100, venta: 81200 },

@@ -30,6 +30,9 @@ async function registerUser(nombre, email, password) {
   if (!nombre || !email || !password) {
     throw Object.assign(new Error('Todos los campos son obligatorios'), { status: 400 });
   }
+  if (String(password).length < 8) {
+    throw Object.assign(new Error('La contraseña debe tener como mínimo 8 caracteres'), { status: 400 });
+  }
 
   const cleanEmail = email.trim().toLowerCase();
   const existing = await userModel.getUserByEmail(cleanEmail);
@@ -210,6 +213,9 @@ async function forgotPassword(email) {
 async function resetPassword(token, newPassword) {
   if (!token || !newPassword) {
     throw Object.assign(new Error('Token y contraseña son obligatorios'), { status: 400 });
+  }
+  if (String(newPassword).length < 8) {
+    throw Object.assign(new Error('La contraseña debe tener como mínimo 8 caracteres'), { status: 400 });
   }
 
   const user = await userModel.getUserByResetToken(token);
