@@ -197,7 +197,7 @@ async function sendVerificationEmail(toEmail, nombre, codigo, verifyUrl) {
 // ── Recuperación de contraseña ────────────────────────────────────────────────
 
 async function sendResetPasswordEmail(toEmail, codigo, nombre) {
-  const resetUrl = `${FRONTEND_URL}/reset-password?token=${codigo}`;
+  const resetUrl = `${FRONTEND_URL}/reset-password?token=${codigo}&email=${encodeURIComponent(toEmail)}`;
   console.log(`\n======================================================`);
   console.log(`🔑 [CÓDIGO DE RECUPERACIÓN GMAIL]`);
   console.log(`👤 Para: ${toEmail} (${nombre || 'Usuario'})`);
