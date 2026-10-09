@@ -37,7 +37,7 @@ async function syncRates() {
 
     // 2b. Monedas del mundo en ARS (open.er-api como referencia, USD base oficial)
     const worldCurrencies = [
-      'BRL', 'CLP', 'UYU', 'GBP', 'JPY', 'MXN', 'CHF', 'CNY',
+      'BRL', 'CLP', 'UYU', 'GBP', 'JPY', 'MXN', 'CHF', 'CNY', 'CAD', 'AUD',
     ];
     try {
       const fxRes = await fetch('https://open.er-api.com/v6/latest/USD');

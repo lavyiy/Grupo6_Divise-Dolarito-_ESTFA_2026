@@ -1,0 +1,71 @@
+25. CONTRATO DE VENTA, LICITACIÓN DE SOFTWARE
+CONTRATO DE PROVISIÓN Y VENTA DE SOFTWARE
+
+Entre "Divise S.R.L." (en adelante "El Desarrollador"), con domicilio en Calle 138 N° 1827, Berazategui, Provincia de Buenos Aires, representada por su gerente Valentin Lopez, DNI 40578219, por una parte; y por la otra parte:
+
+De una parte, el Cliente, representado por Julieta García Da Rosa y Matías Tixeira, en su carácter de patrocinadores del proyecto (en adelante, "el Cliente"), con domicilio en Berazategui, Provincia de Buenos Aires.
+
+Y de otra parte, el Equipo de Desarrollo "Divise" (en adelante, "el Desarrollador"), integrado por Valentin Lopez (Project Manager), Santino Tacconi (Developer), Santiago Centurion (Developer), Bruno Cabrera (Diseñador UX/UI) y Lorenzo Sanchez (BDA), con domicilio en Calle 138 N° 1827, Berazategui, Provincia de Buenos Aires.
+
+En la Provincia de Buenos Aires, a los [A COMPLETAR] días del mes de [A COMPLETAR] del año [A COMPLETAR], se celebra el presente Contrato de Provisión y Venta de Software, que se regirá por las siguientes cláusulas:
+
+PRIMERA - OBJETO
+El Desarrollador se obliga a diseñar, desarrollar, implementar, poner en producción y entregar al Cliente la plataforma web de consulta de cotizaciones financieras "Divise" (en adelante "el Software"). El Software comprende: panel de cotizaciones en tiempo real de divisas, dólar oficial, dólar informal, dólar tarjeta y criptoactivos; calculadora de conversión con desglose de impuestos y retenciones vigentes en la Argentina; módulos de alertas de precio, favoritos, historial de consultas y gráficos interactivos de evolución; gestión de usuarios con registro, autenticación segura y verificación en dos pasos; módulo de noticias financieras; tema claro y oscuro; y diseño adaptable a dispositivos móviles y de escritorio. El Software es de carácter estrictamente informativo: no constituye un broker, ni una agencia, ni una plataforma de negociación, compraventa o intercambio de divisas, criptoactivos o valores.
+
+SEGUNDA - ALCANCE Y ENTREGA
+El alcance comprende el análisis, el diseño, la maquetación, el desarrollo de frontend y backend, la integración con APIs de cotizaciones, la base de datos, la documentación técnica, los casos de prueba, el manual de usuario, el despliegue en ambiente de producción y la capacitación inicial al usuario responsable. La infraestructura de producción se aloja en la nube: frontend y backend en Render y base de datos PostgreSQL en Supabase, con dominio propio y certificados SSL. El Software se entrega acompañado de la documentación técnica, el manual de usuario y el reporte de casos de prueba ejecutados.
+
+TERCERA - PLAZO DE DESARROLLO
+El proyecto se ejecuta en un plazo de dieciséis (16) semanas contadas desde la fecha de firma del presente contrato. El cronograma se organiza en los siguientes hitos: semana 4 (cierre del análisis funcional y de la maquetación), semana 8 (entrega de la versión funcional en ambiente de pruebas), semana 11 (cierre de la integración de APIs y de los módulos), semana 14 (entrega del candidato a versión final) y semana 16 (puesta en producción y cierre del proyecto). Los plazos quedan sujetos a la entrega oportuna de los insumos y de las aprobaciones que dependan del Cliente.
+
+CUARTA - PRECIO
+El precio total del Software asciende a la suma de CUATRO MIL NOVECIENTOS DIEZ DÓLARES ESTADOUNIDENSES (USD 4.910,00) en concepto de mano de obra, equivalente a 290 (doscientas noventa) horas de trabajo, más el Impuesto al Valor Agregado del 21% por la suma de UN MIL TREINTA Y UNO CON 10/100 DÓLARES ESTADOUNIDENSES (USD 1.031,10), lo que totaliza la suma de CINCO MIL NOVECIENTOS CUARENTA Y UNO CON 10/100 DÓLARES ESTADOUNIDENSES (USD 5.941,10). Todos los importes se expresan en dólares estadounidenses (USD). El tipo de cambio aplicable a cada pago será el pactado entre las Partes en la fecha de emisión de la factura respectiva. Las tarifas por hora se desglosan así: análisis y diseño UX, USD 15,00; diseño de base de datos, USD 15,00; desarrollo backend, USD 20,00; desarrollo frontend, USD 20,00; testing y quality assurance, USD 12,00; documentación técnica, USD 10,00; presupuesto y gestión, USD 10,00; infraestructura y despliegue, USD 15,00.
+
+QUINTA - FORMA DE PAGO
+El Cliente abonará el precio total conforme al siguiente cronograma: 40% (USD 2.376,44) contra la firma del contrato, en concepto de adelanto; 30% (USD 1.782,33) contra la entrega de la versión funcional en ambiente de pruebas; y 30% (USD 1.782,33) contra la entrega final y la puesta en producción. Los pagos se efectúan mediante transferencia bancaria a la cuenta indicada por el Desarrollador, contra presentación de factura y con un plazo de hasta diez (10) días hábiles desde su emisión.
+
+SEXTA - PRUEBA DE ACEPTACIÓN
+El Desarrollador entrega el Software para su prueba de aceptación. El Cliente dispone de diez (10) días hábiles contados desde la entrega para registrar por escrito las observaciones o los defectos detectados. Vencido ese plazo sin observaciones, la entrega se tendrá por aceptada. Si se registraran observaciones, el Desarrollador dispondrá de cinco (5) días hábiles para corregirlas y volver a poner el Software a prueba. Superada la segunda ronda de prueba sin observaciones, o vencido el nuevo plazo sin ellas, la recepción queda definitiva. La aceptación formal se documenta mediante el acta de recepción suscripta por ambas Partes.
+
+SÉPTIMA - GARANTÍA
+El Desarrollador garantiza el correcto funcionamiento del Software durante treinta (30) días corridos contados desde la recepción definitiva. Durante ese plazo se corregirán sin cargo los errores detectados que sean imputables al desarrollo. Quedan excluidos de la garantía las incidencias provocadas por uso indebido, modificaciones no autorizadas, cambios en las APIs de terceros, baja o suspensión de los servicios de alojamiento, pérdida de conectividad del Cliente o uso de navegadores y sistemas operativos no soportados.
+
+OCTAVA - SOPORTE Y MANTENIMIENTO
+El Desarrollador presta soporte técnico para la resolución de errores y consultas de uso durante la vigencia de la garantía, en el horario de 18 a 22 horas de lunes a viernes, y con los niveles de respuesta indicados en la cláusula novena. El Cliente cuenta con las guías de resolución de errores comunes y de configuraciones contenidas en el capítulo 28 (Soporte) del presente documento. Finalizada la garantía, el Cliente podrá contratar un plan de mantenimiento y soporte con las siguientes tarifas por hora: Project Manager, USD 10,00; Developments, USD 20,00; Base de Datos y Analítica, USD 15,00; Diseño UX/UI, USD 15,00; Quality Assurance, USD 12,00.
+
+NOVENA - NIVELES DE SERVICIO (SLA)
+Durante la vigencia de la garantía, el Desarrollador garantiza un nivel objetivo de disponibilidad mensual del 99% del servicio. El Cliente clasifica sus reportes de incidente en tres niveles. Incidente crítico: caída total del servicio o error de cálculo que impide el uso principal; respuesta dentro de las veinticuatro (24) horas hábiles. Incidente de prioridad alta: funcionalidad principal afectada o error con impacto sobre los datos; respuesta dentro de las cuarenta y ocho (48) horas hábiles. Incidente de prioridad media o baja: consultas, errores de interfaz o de contenido; respuesta dentro de los cinco (5) días hábiles. El nivel objetivo de disponibilidad no incluye el tiempo de suspensión por inactividad de los servicios gratuitos de alojamiento, ni las interrupciones atribuibles a los proveedores de infraestructura o de APIs de cotizaciones.
+
+DÉCIMA - SOLICITUDES DE CAMBIO (CHANGE REQUEST)
+Toda modificación del alcance, de los requisitos técnicos, del diseño de la interfaz, de las integraciones o del cronograma deberá ser presentada por escrito por el Cliente. El Desarrollador evaluará la solicitud y presentará una propuesta de impacto con el detalle del esfuerzo en horas, el costo en dólares, los plazos y los efectos sobre el cronograma. El trabajo adicional solo se ejecutará y se facturará una vez aprobada la propuesta por el Cliente. Mientras no exista aprobación escrita, se mantiene vigente el alcance pactado en la cláusula primera.
+
+UNDÉCIMA - PROPIEDAD INTELECTUAL Y LICENCIA
+El Desarrollador mantiene la titularidad íntegra de los derechos de propiedad intelectual sobre el código fuente, la arquitectura, los modelos de base de datos, los componentes y la documentación del Software. La entrega al Cliente implica una licencia de uso no exclusiva, intransferible, incesible y limitada al uso operativo interno de la plataforma por el Cliente y su personal autorizado. La cesión total o parcial de la titularidad del código fuente, así como la sublicencia a terceros, solo podrán celebrarse mediante contrato adicional firmado por ambas Partes, con definición de su precio y de su alcance. El Cliente conserva la titularidad de los datos que cargue en el sistema y de los resultados generados a partir de ellos.
+
+DUODÉCIMA - CONFIDENCIALIDAD
+Las Partes se obligan a mantener bajo estricta confidencialidad toda la información técnica, comercial, financiera y estratégica a la que accedan con motivo de este contrato, incluyendo el código fuente, las credenciales de acceso a bases de datos y APIs, la documentación interna, las condiciones comerciales y cualquier información del negocio de la otra Parte. Esta obligación regirá durante la vigencia del contrato y por dos (2) años contados desde su finalización. La información que deba revelarse por requerimiento de autoridad competente se informará previamente a la otra Parte, limitando la revelación al alcance mínimo exigido.
+
+DECIMOTERCERA - USO DE MARCA Y PUBLICIDAD
+El Cliente podrá citar el nombre, la marca y el logotipo "Divise" exclusivamente en comunicaciones internas, en informes de proyecto y en materiales de presentación institucional, en los términos autorizados por el Desarrollador. Queda prohibido, sin autorización previa y escrita del Desarrollador, cualquier uso comercial, promoción, difusión pública, creación de contenido en redes sociales, publicidad, prensa o materiales de terceros que representen el nombre, la marca o el logotipo de Divise S.R.L. o del Software.
+
+DECIMOCUARTA - TERMINACIÓN
+Cualquiera de las Partes podrá dar por terminado el contrato, en forma total o parcial, mediante aviso fehaciente con quince (15) días de anticipación. El Desarrollador podrá resolver el contrato de pleno derecho ante el incumplimiento de las obligaciones de pago o de uso del Software. Extinguida la vigencia del contrato, el Cliente deberá cesar el uso del Software en un plazo de cinco (5) días y devolver o destruir los accesos y las copias de la documentación, conservando las copias legales que la normativa exija. Las obligaciones de confidencialidad, de propiedad intelectual y de límites de uso de licencia sobreviven a la terminación.
+
+DECIMOQUINTA - RESPONSABILIDAD Y LÍMITES
+El Desarrollador responde por el incumplimiento de sus obligaciones y por los defectos imputables a su trabajo durante el período de garantía. Ninguna de las Partes responderá por daños indirectos, lucro cesante ni pérdida de chances. Queda establecido que el Software es una herramienta de consulta informativa y no constituye asesoramiento financiero ni recomendación de inversión. El Cliente es responsable de sus decisiones sobre la negociación de activos financieros y del uso que haga de la información mostrada en pantalla.
+
+DECIMOSEXTA - RESOLUCIÓN DE CONFLICTOS Y JURISDICCIÓN
+Toda controversia que surja entre las Partes con motivo de la celebración, ejecución o interpretación del presente contrato será sometida a negociación directa entre los representantes de ambas Partes durante un plazo de quince (15) días corridos. Si la controversia no fuera resuelta en dicho plazo, las Partes se someten a la jurisdicción de los tribunales ordinarios competentes del Departamento Judicial de Berazategui, provincia de Buenos Aires, renunciando expresamente a todo otro fuero que pudiera corresponder por razón de sus domicilios o de la materia. Para todas las notificaciones se designan como domicilio especial los indicados en el encabezamiento del contrato y el correo electrónico valen29lopez@gmail.com.
+
+DECIMOSÉPTIMA - DISPOSICIONES GENERALES
+El presente contrato constituye el acuerdo íntegro entre las Partes y deja sin efecto cualquier acuerdo, propuesta o comunicación anterior sobre la misma materia. Ninguna modificación del contrato será válida si no consta por escrito y firmada por los representantes de ambas Partes. La Invalidación de alguna cláusula no afecta la validez de las restantes. El Cliente declara haber evaluado la capacidad técnica y operativa del Software para sus fines y haber aceptado el alcance y los límites establecidos en el presente contrato.
+
+DECIMOCTAVO - ENTREGA Y FIRMA
+En la Provincia de Buenos Aires, a los [A COMPLETAR] días del mes de [A COMPLETAR] del año [A COMPLETAR], se firman dos (2) ejemplares de un mismo tenor y a un solo efecto, recibiendo cada Parte el suyo. En prueba de conformidad, las Partes firman el presente contrato a la misma fecha y en el mismo lugar.
+
+Por El Desarrollador: Divise S.R.L.
+Valentin Lopez - DNI 40578219
+
+Por El Cliente:
+Julieta García Da Rosa
+Matías Tixeira

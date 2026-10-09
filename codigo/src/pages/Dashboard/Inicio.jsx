@@ -6,7 +6,7 @@ import { Icon } from '../../components/ui/Icon';
 import CurrencyBadge from '../../components/ui/CurrencyBadge';
 import Sparkline from '../../components/ui/Sparkline';
 import { useAuth } from '../../context/AuthContext';
-import { stableVariation, formatARS, hashSeed } from '../../utils';
+import { stableVariation, formatARS, hashSeed, precioEnARS } from '../../utils';
 import './Inicio.css';
 
 const KPI_CARDS = [
@@ -39,7 +39,7 @@ const KPI_CARDS = [
     market: null,
     title: 'Bitcoin',
     icon: 'bitcoin',
-    prefix: 'US$',
+    prefix: '$',
     seed: 'btc',
   },
 ];
@@ -82,7 +82,8 @@ export default function Inicio() {
   const dolarBlue = getRate('USD', 'Informal') || 1540.0;
   const dolarOficial = getRate('USD', 'Oficial') || 1515.0;
   const euroOficial = getRate('EUR', 'Oficial') || 1722.0;
-  const btc = getRate('BTC') || 81200.0;
+  const btcUsd = getRate('BTC') || 81200.0;
+  const btc = precioEnARS({ codigo: 'BTC', venta: btcUsd }, dolarBlue);
 
   const kpiValues = {
     blue: dolarBlue,
@@ -167,12 +168,13 @@ export default function Inicio() {
             {rates.slice(0, 4).map((item, i) => {
               const variation = stableVariation(hashSeed(item.codigo, item.tipo_mercado || item.tipo || 'x'));
               const isUp = variation >= 0;
+              const precioArs = precioEnARS(item, dolarBlue);
               return (
                 <div
                   className="featured-row"
                   key={`${item.codigo}-${item.tipo_mercado}-${i}`}
                   style={{ cursor: 'pointer' }}
-                  onClick={() => openCurrencyChart(item.codigo, item.tipo_mercado || item.tipo, item.nombre, item.venta)}
+                  onClick={() => openCurrencyChart(item.codigo, item.tipo_mercado || item.tipo, item.nombre, precioArs)}
                   title={`Ver gráfico de ${item.nombre}`}
                 >
                   <div className="fr-main">
@@ -184,7 +186,7 @@ export default function Inicio() {
                   </div>
                   <div className="fr-right">
                     <div className="fr-meta">
-                      <span className="fr-price">{['BTC', 'ETH'].includes(item.codigo) ? 'US$ ' : '$ '}{formatARS(item.venta)}</span>
+                      <span className="fr-price">$ {formatARS(precioArs)}</span>
                       <span className={`fr-change ${isUp ? 'up' : 'down'}`}>
                         {isUp ? '+' : ''}
                         {variation.toFixed(2)}%

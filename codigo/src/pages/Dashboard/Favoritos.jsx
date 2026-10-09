@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Icon } from '../../components/ui/Icon';
 import CurrencyBadge from '../../components/ui/CurrencyBadge';
 import Sparkline from '../../components/ui/Sparkline';
-import { stableVariation, hashSeed } from '../../utils';
+import { stableVariation, hashSeed, precioEnARS } from '../../utils';
 import { useAuth } from '../../context/AuthContext';
 import { getFavorites, toggleFavorite, fetchRates, recordHistorial } from '../../services/api';
 import './Favoritos.css';
@@ -39,7 +39,7 @@ export default function Favoritos() {
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('todas');            // 'todas' | 'divisas' | 'cripto'
   const [viewTab, setViewTab] = useState('todas');                  // 'todas' | 'mis-favoritas'
-  const [sortOrder, setSortOrder] = useState('favoritas-primero');
+  const [sortOrder, setSortOrder] = useState('codigo');
   const [currentPage, setCurrentPage] = useState(1);
   const [notification, setNotification] = useState('');
   const [togglingCode, setTogglingCode] = useState(null);
@@ -68,10 +68,13 @@ export default function Favoritos() {
       }
 
       if (liveRates.status === 'fulfilled' && Array.isArray(liveRates.value)) {
+        const usdRef = liveRates.value.find(r => r.codigo === 'USD' && r.tipo_mercado === 'Informal')?.venta
+          || liveRates.value.find(r => r.codigo === 'USD' && r.tipo_mercado === 'Oficial')?.venta
+          || 0;
         const rateMap = {};
         liveRates.value.forEach(r => {
           if (!rateMap[r.codigo] || r.tipo_mercado === 'Oficial') {
-            rateMap[r.codigo] = r.venta || r.compra || 0;
+            rateMap[r.codigo] = precioEnARS(r, usdRef);
           }
         });
         setRates(rateMap);
@@ -147,11 +150,13 @@ export default function Favoritos() {
 
   // Ordenamiento
   const sortedList = [...filteredList].sort((a, b) => {
+    const cmp = (x, y, field) => x[field].localeCompare(y[field], 'es', { sensitivity: 'base', numeric: true });
     if (sortOrder === 'favoritas-primero') {
       if (a.isFav !== b.isFav) return a.isFav ? -1 : 1;
-      return a.codigo.localeCompare(b.codigo);
+      return cmp(a, b, 'nombre');
     }
-    if (sortOrder === 'codigo') return a.codigo.localeCompare(b.codigo);
+    if (sortOrder === 'codigo') return cmp(a, b, 'codigo');
+    if (sortOrder === 'nombre') return cmp(a, b, 'nombre');
     if (sortOrder === 'precio-mayor') return b.precio - a.precio;
     if (sortOrder === 'precio-menor') return a.precio - b.precio;
     return 0;
@@ -181,7 +186,7 @@ export default function Favoritos() {
           <button 
             type="button"
             className={`fav-tab-btn ${viewTab === 'mis-favoritas' ? 'active' : ''}`}
-            onClick={() => { setViewTab('mis-favoritas'); setCurrentPage(1); }}
+            onClick={() => { setViewTab('mis-favoritas'); setSortOrder(prev => prev === 'favoritas-primero' ? 'codigo' : prev); setCurrentPage(1); }}
           >
             <Icon name="star" size={14} style={{ fill: viewTab === 'mis-favoritas' ? 'var(--brand-gold)' : 'none' }} />
             Mis favoritas <span className="badge-count">{favoritesCodes.size}</span>
@@ -239,8 +244,11 @@ export default function Favoritos() {
           <div className="favoritos-card-sort">
             <label>Ordenar por</label>
             <select value={sortOrder} onChange={(e) => { setSortOrder(e.target.value); setCurrentPage(1); }}>
-              <option value="favoritas-primero">Favoritas primero</option>
+              {viewTab === 'todas' && (
+                <option value="favoritas-primero">Favoritas primero</option>
+              )}
               <option value="codigo">Código (A-Z)</option>
+              <option value="nombre">Nombre (A-Z)</option>
               <option value="precio-mayor">Precio Mayor</option>
               <option value="precio-menor">Precio Menor</option>
             </select>

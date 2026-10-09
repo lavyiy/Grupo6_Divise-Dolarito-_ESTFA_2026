@@ -1,6 +1,40 @@
 // ── src/utils.js ─────────────────────────────────────────────────────────────
 // Utilidades compartidas: formateo y variaciones determinísticas.
 
+import { isCrypto } from './services/rateTypes.mjs';
+
+// Divisas fiat que pueden llegar almacenadas en paridad USD (~1.00) en vez de
+// en pesos argentinos (el sync las cargó contra la moneda base del dólar).
+const USD_PRICE_CODES = new Set(['CAD', 'AUD']);
+
+/**
+ * Indica si el precio de una cotización está expresado en USD y debe
+ * convertirse a ARS para mostrarlo en la card. Las cripto siempre vienen en
+ * USD; CAD, AUD y el dólar cripto solo se convierten si el valor es
+ * sospechosamente bajo (paridad ~1.00), porque ya pueden llegar en ARS.
+ */
+export function esPrecioEnUSD(rate) {
+  const codigo = String(rate?.codigo || '').toUpperCase();
+  const valor = Number(rate?.venta ?? rate?.compra ?? 0);
+  if (isCrypto(rate)) return true;
+  const esParidad = Number.isFinite(valor) && valor <= 20;
+  if (USD_PRICE_CODES.has(codigo)) return esParidad;
+  if (codigo === 'USD' && String(rate?.tipo_mercado || rate?.tipo || '').toLowerCase() === 'cripto') return esParidad;
+  return false;
+}
+
+/**
+ * Devuelve el precio de una cotización expresado en ARS, convirtiendo desde
+ * USD con la referencia del dólar (Blue preferido, si no Oficial). Si no hay
+ * referencia o la cotización ya viene en ARS, devuelve el valor tal cual.
+ */
+export function precioEnARS(rate, usdRef = 0) {
+  const valor = Number(rate?.venta ?? rate?.compra ?? 0);
+  if (!Number.isFinite(valor)) return 0;
+  if (!esPrecioEnUSD(rate) || !usdRef) return valor;
+  return Number((valor * usdRef).toFixed(4));
+}
+
 function mulberry32(seed) {
   let a = seed >>> 0;
   return function () {

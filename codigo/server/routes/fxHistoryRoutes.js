@@ -4,7 +4,7 @@ const router = express.Router();
 
 // Monedas del mundo soportadas para histórico (cruce USD→ARS contra currency-api).
 // Incluye USDT (tether), cotizado en su paridad USD → valor en pesos argentinos.
-const WORLD_CODES = new Set(['GBP', 'JPY', 'MXN', 'CHF', 'CNY', 'USDT']);
+const WORLD_CODES = new Set(['GBP', 'JPY', 'MXN', 'CHF', 'CNY', 'CAD', 'AUD', 'USDT']);
 
 // Caché en memoria: code -> { expira, points }
 const cache = new Map();

@@ -10,13 +10,14 @@ const BINANCE_SYMBOL = { BTC: 'BTCUSDT', ETH: 'ETHUSDT', BNB: 'BNBUSDT', DOGE: '
 
 // Monedas del mundo cuyo histórico se sirve desde el backend (evita CORS).
 // USDT se cruza contra currency-api como las demás: valor en pesos argentinos.
-const WORLD_EXTRA_CODES = new Set(['GBP', 'JPY', 'MXN', 'CHF', 'CNY', 'USDT']);
+const WORLD_EXTRA_CODES = new Set(['GBP', 'JPY', 'MXN', 'CHF', 'CNY', 'CAD', 'AUD', 'USDT']);
 const API_BASE = import.meta.env.VITE_API_URL || '';
 
 // Catálogo completo que se ofrece en el gráfico (canónico).
 export const CHART_CURRENCIES = [
   { codigo: 'USD', mercado: 'Blue', nombre: 'Dólar Blue' },
   { codigo: 'USD', mercado: 'Oficial', nombre: 'Dólar Oficial' },
+  { codigo: 'USD', mercado: 'Cripto', nombre: 'Dólar Cripto' },
   { codigo: 'USD', mercado: 'Bolsa', nombre: 'Dólar MEP (Bolsa)' },
   { codigo: 'USD', mercado: 'Financiero', nombre: 'Dólar CCL (Contado con Liqui)' },
   { codigo: 'USD', mercado: 'Tarjeta', nombre: 'Dólar Tarjeta' },
@@ -31,6 +32,8 @@ export const CHART_CURRENCIES = [
   { codigo: 'MXN', mercado: 'Oficial', nombre: 'Peso Mexicano' },
   { codigo: 'CHF', mercado: 'Oficial', nombre: 'Franco Suizo' },
   { codigo: 'CNY', mercado: 'Oficial', nombre: 'Yuan Chino' },
+  { codigo: 'CAD', mercado: 'Oficial', nombre: 'Dólar Canadiense' },
+  { codigo: 'AUD', mercado: 'Oficial', nombre: 'Dólar Australiano' },
   { codigo: 'BTC', mercado: '', nombre: 'Bitcoin' },
   { codigo: 'ETH', mercado: '', nombre: 'Ethereum' },
   { codigo: 'USDT', mercado: '', nombre: 'Tether' },
@@ -70,6 +73,7 @@ export function normalizeMercado(codigo, mercado) {
   const code = String(codigo || '').toUpperCase();
   if (CRYPTO_CODES.has(code)) return '';
   const raw = String(mercado || '').trim().toLowerCase();
+  if (code === 'USD' && (raw === 'cripto' || raw === 'crypto')) return 'Cripto';
   const mapped = MERCADO_SYNONYMS[raw];
   if (mapped) return mapped;
   if (code === 'USD') return 'Blue';
@@ -178,6 +182,10 @@ export async function getCurrencyHistory(currency) {
   }
 
   if (codigo === 'USD') {
+    if (mercado === 'Cripto') {
+      // El dólar cripto cotiza 1:1 con USDT; usamos su histórico en ARS.
+      return { points: await fetchMonedaMundial('USDT'), source: 'currency-api · USDT' };
+    }
     const casa = CASA_BY_MERCADO[mercado] || 'blue';
     return { points: await fetchDolarCasa(casa), source: `ArgentinaDatos · ${casa}` };
   }

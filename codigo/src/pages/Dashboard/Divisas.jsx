@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { fetchRates, getFavorites, toggleFavorite, recordHistorial } from '../../services/api';
 import { isCrypto } from '../../services/rateTypes.mjs';
 import { useAuth } from '../../context/AuthContext';
 import { Icon } from '../../components/ui/Icon';
 import CurrencyBadge from '../../components/ui/CurrencyBadge';
-import { formatARS } from '../../utils';
+import { formatARS, precioEnARS } from '../../utils';
 import './Divisas.css';
 
 const CATEGORIES = [
@@ -77,6 +77,15 @@ export default function Divisas() {
     return Number.isFinite(timestamp) ? Math.max(latest, timestamp) : latest;
   }, 0);
 
+  // Referencia USD→ARS: Blue (Informal) preferido, si no Oficial.
+  const usdRef = useMemo(() => {
+    const prefer = (mercado) => {
+      const r = rates.find((x) => x.codigo === 'USD' && (x.tipo_mercado === mercado || x.mercado === mercado));
+      return r ? Number(r.venta ?? r.compra ?? 0) : 0;
+    };
+    return prefer('Informal') || prefer('Oficial') || 0;
+  }, [rates]);
+
   const handleToggleFavorite = async (codigo) => {
     if (!token) {
       showToast('Iniciá sesión para gestionar tus favoritos.');
@@ -118,7 +127,7 @@ export default function Divisas() {
     // Registra la consulta en el historial (solo con sesión activa)
     if (token) {
       const par = `${divisa.nombre} - ${divisa.codigo}`;
-      const valor = divisa.venta ?? divisa.compra ?? 0;
+      const valor = precioEnARS(divisa, usdRef);
       recordHistorial({ par_consultado: par, valor_momento: valor }, token)
         .catch(err => console.warn('[Historial] No se pudo registrar la consulta:', err.message));
     }
@@ -250,7 +259,8 @@ export default function Divisas() {
                 </div>
 
                 <div className="dc-price">
-                  {isCrypto(d) ? `US$ ${formatARS(d.venta)}` : `$ ${formatARS(d.venta)}`}
+                  <span className="dc-currency">$ </span>
+                  {formatARS(precioEnARS(d, usdRef))}
                 </div>
 
                 <div className="dc-bottom">

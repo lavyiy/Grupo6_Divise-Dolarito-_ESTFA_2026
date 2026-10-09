@@ -8,6 +8,48 @@
   margin: 0 auto;
 }
 
+/* Rango rápido (Todo / 7 días / 30 días / 3-6 meses / año) */
+.historial-period-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  padding: 12px 24px;
+  border-radius: var(--radius-md, 12px);
+}
+
+.historial-period-bar .period-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-right: 4px;
+}
+
+.period-btn {
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  border-radius: 999px;
+  padding: 6px 16px;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.period-btn:hover {
+  border-color: var(--brand-gold);
+  color: var(--brand-gold);
+}
+
+.period-btn.active {
+  background: var(--brand-gold);
+  border-color: var(--brand-gold);
+  color: #1a1a1a;
+  font-weight: 600;
+}
+
 /* Top filter bar */
 .historial-top-bar {
   display: flex;

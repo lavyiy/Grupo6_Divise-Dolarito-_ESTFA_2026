@@ -43,6 +43,7 @@ export default function Historial() {
 
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [period, setPeriod] = useState('todo');                   // 'todo'|'semana'|'mes'|'meses3'|'meses6'|'anio'|'custom'
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('todas');
   const [currencyFilter, setCurrencyFilter] = useState('todas');
@@ -77,6 +78,7 @@ export default function Historial() {
   const handleStartDateChange = (value) => {
     const v = clampDate(value);
     setStartDate(v);
+    setPeriod('custom');
     // No permitir que el inicio quede después del fin
     if (v && endDate && v > endDate) setEndDate(v);
     setCurrentPage(1);
@@ -85,9 +87,32 @@ export default function Historial() {
   const handleEndDateChange = (value) => {
     const v = clampDate(value);
     setEndDate(v);
+    setPeriod('custom');
     // No permitir que el fin quede antes del inicio
     if (v && startDate && v < startDate) setStartDate(v);
     setCurrentPage(1);
+  };
+
+  // Aplica un rango rápido. Siempre respeta el mínimo = fecha de creación de
+  // la cuenta y el máximo = hoy (no se pueden elegir fechas donde la cuenta
+  // aún no existía).
+  const applyPeriod = (p) => {
+    setPeriod(p);
+    setCurrentPage(1);
+    if (p === 'todo') {
+      setStartDate('');
+      setEndDate('');
+      return;
+    }
+    const days = { semana: 7, mes: 30, meses3: 90, meses6: 180, anio: 365 }[p] || 30;
+    const start = new Date();
+    start.setDate(start.getDate() - days);
+    let s = toInputDate(start);
+    let e = todayStr;
+    if (minDateStr && s < minDateStr) s = minDateStr;
+    if (e < s) e = s;
+    setStartDate(s);
+    setEndDate(e);
   };
 
   // Cargar historial real desde el backend (o mock si no hay sesión)
@@ -154,6 +179,7 @@ export default function Historial() {
   const handleClearFilters = () => {
     setStartDate('');
     setEndDate('');
+    setPeriod('todo');
     setSearchTerm('');
     setTypeFilter('todas');
     setCurrencyFilter('todas');
@@ -246,6 +272,28 @@ export default function Historial() {
           </span>
         </div>
       )}
+
+      {/* Rango rápido */}
+      <div className="historial-period-bar">
+        <span className="period-label">Rango rápido:</span>
+        {[
+          ['todo', 'Todo'],
+          ['semana', 'Últimos 7 días'],
+          ['mes', 'Últimos 30 días'],
+          ['meses3', 'Últimos 3 meses'],
+          ['meses6', 'Últimos 6 meses'],
+          ['anio', 'Último año'],
+        ].map(([key, label]) => (
+          <button
+            key={key}
+            type="button"
+            className={`period-btn ${period === key ? 'active' : ''}`}
+            onClick={() => applyPeriod(key)}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
 
       {/* Top Filter Bar */}
       <div className="historial-top-bar">
