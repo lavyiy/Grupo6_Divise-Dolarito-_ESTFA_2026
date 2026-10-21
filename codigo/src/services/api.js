@@ -461,3 +461,61 @@ export async function fetchRates() {
     ];
   }
 }
+
+// ── Admin Endpoints ──────────────────────────────────────────────────────────
+
+export function getAdminEmails(token) {
+  return request('/api/admin/emails', {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export function getAdminUsers(token) {
+  return request('/api/admin/users', {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export function updateUserRole(userId, rol, token) {
+  return request(`/api/admin/users/${userId}/role`, {
+    method: 'PUT',
+    headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ rol }),
+  });
+}
+
+export function getAdminStats(token) {
+  return request('/api/admin/stats', {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export function getAdminMessages(token) {
+  return request('/api/admin/messages', {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export function markAdminMessageRead(messageId, leido, token) {
+  return request(`/api/admin/messages/${messageId}/read`, {
+    method: 'PUT',
+    headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ leido }),
+  });
+}
+
+export function deleteAdminMessage(messageId, token) {
+  return request(`/api/admin/messages/${messageId}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+// ── Contacto con Administradores ─────────────────────────────────────────────
+
+export function sendContactMessage({ nombre, email, asunto, mensaje }) {
+  return request('/api/contact', {
+    method: 'POST',
+    body: JSON.stringify({ nombre, email, asunto, mensaje }),
+  });
+}

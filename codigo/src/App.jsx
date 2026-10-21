@@ -24,6 +24,7 @@ import Alertas from './pages/Dashboard/Alertas';
 import Favoritos from './pages/Dashboard/Favoritos';
 import Historial from './pages/Dashboard/Historial';
 import Perfil from './pages/Dashboard/Perfil';
+import AdminPanel from './pages/Dashboard/AdminPanel';
 
 // ── App raíz con el router ────────────────────────────────────────────────────
 export default function App() {
@@ -55,6 +56,7 @@ export default function App() {
         <Route path="favoritos" element={<Favoritos />} />
         <Route path="historial" element={<Historial />} />
         <Route path="perfil" element={<Perfil />} />
+        <Route path="admin" element={<AdminPanel />} />
       </Route>
 
       {/* Redirige la raíz al dashboard */}

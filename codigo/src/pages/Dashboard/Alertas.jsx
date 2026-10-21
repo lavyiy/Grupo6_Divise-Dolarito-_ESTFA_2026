@@ -155,7 +155,7 @@ export default function Alertas() {
                 <div className="ac-body">
                   <div className="ac-condition">
                     <span className="ac-label">{condicion}</span>
-                    <span className="ac-val"><span>$</span> {valor}</span>
+                    <span className="ac-val"><span>$</span> {Number(valor || 0).toLocaleString('es-AR')}</span>
                   </div>
                 </div>
 

@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { Icon } from '../../components/ui/Icon';
+import AvatarModal from '../../components/Profile/AvatarModal';
+import ContactModal from '../../components/Contact/ContactModal';
 import {
   getMyProfile,
   updateProfile,
@@ -19,6 +21,10 @@ export default function Perfil() {
     setGlobalToast({ msg, type });
     setTimeout(() => setGlobalToast(null), 5000);
   };
+
+  // ── Modales de Foto y Contacto ──────────────────────────────────────────
+  const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
+  const [isContactModalOpen, setIsContactModalOpen] = useState(false);
 
   // ── Modal Editar Perfil ──────────────────────────────────────────────────
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -56,6 +62,18 @@ export default function Perfil() {
       setEditError(err.message || 'Error al actualizar el perfil.');
     } finally {
       setEditLoading(false);
+    }
+  };
+
+  // ── Guardar Foto de Perfil ───────────────────────────────────────────────
+  const handleSaveAvatar = async (photoUrl) => {
+    try {
+      await updateProfile({ foto_perfil: photoUrl }, token);
+      updateUser({ foto_perfil: photoUrl });
+      setIsAvatarModalOpen(false);
+      showToast(photoUrl ? '¡Foto de perfil actualizada con éxito!' : 'Foto de perfil restablecida a la inicial.');
+    } catch (err) {
+      showToast(err.message || 'Error al actualizar la foto de perfil.', 'error');
     }
   };
 
@@ -191,7 +209,7 @@ export default function Perfil() {
       <header className="page-header">
         <div>
           <h1 className="page-title">Mi Perfil</h1>
-          <p className="page-sub">Gestioná tu información personal, seguridad y preferencias sin salir de la pantalla.</p>
+          <p className="page-sub">Gestioná tu información personal, foto de perfil, seguridad y preferencias.</p>
         </div>
       </header>
 
@@ -207,18 +225,47 @@ export default function Perfil() {
         
         {/* Info Card */}
         <div className="perfil-card fade-in delay-100">
-          <div className="pc-avatar">
-            {user?.nombre?.charAt(0)?.toUpperCase() || 'U'}
+          <div
+            className="pc-avatar"
+            onClick={() => setIsAvatarModalOpen(true)}
+            title="Hacé clic para cambiar tu foto de perfil"
+          >
+            {user?.foto_perfil ? (
+              <img src={user.foto_perfil} alt={user?.nombre || 'Foto'} className="pc-avatar-img" />
+            ) : (
+              user?.nombre?.charAt(0)?.toUpperCase() || 'U'
+            )}
+            <div className="pc-avatar-overlay">
+              <Icon name="camera" size={20} />
+            </div>
           </div>
+
+          <button
+            type="button"
+            className="btn btn-outline btn-xs"
+            onClick={() => setIsAvatarModalOpen(true)}
+            style={{ marginBottom: '16px' }}
+          >
+            <Icon name="camera" size={13} /> Cambiar Foto
+          </button>
+
           <h2 className="pc-name">{user?.nombre || 'Usuario Registrado'}</h2>
           <p className="pc-email">{user?.email || 'usuario@email.com'}</p>
           
           <div className="pc-divider"></div>
           
           <div className="pc-info-row">
+            <span className="pc-label">Rol en la plataforma</span>
+            <span className={`badge ${user?.es_admin || user?.rol === 'admin' ? 'badge-primary' : 'badge-success'}`}>
+              {user?.es_admin || user?.rol === 'admin' ? '🛡️ Administrador' : 'Usuario'}
+            </span>
+          </div>
+
+          <div className="pc-info-row">
             <span className="pc-label">Estado de la cuenta</span>
             <span className="badge badge-success">Activa</span>
           </div>
+
           <div className="pc-info-row">
             <span className="pc-label">Seguridad 2FA</span>
             <span className={`badge-2fa ${twoFactorActive ? 'active' : 'inactive'}`}>
@@ -229,7 +276,7 @@ export default function Perfil() {
           <button
             type="button"
             className="btn btn-outline btn-block"
-            style={{ marginTop: '24px' }}
+            style={{ marginTop: '20px' }}
             onClick={openEditModal}
           >
             <Icon name="edit" size={15} /> Editar Perfil
@@ -252,14 +299,15 @@ export default function Perfil() {
                 value={theme}
                 onChange={handleThemeChange}
               >
-                <option value="dark">Oscuro (Divise Pro)</option>
-                <option value="light">Claro (Light Gold)</option>
+                <option value="dark">🌙 Modo Oscuro (Predeterminado)</option>
+                <option value="light">☀️ Modo Claro</option>
               </select>
             </div>
+
             <div className="setting-row">
               <div>
-                <h4>Divisa Principal</h4>
-                <p>La cotización que se prioriza por defecto en tus tableros.</p>
+                <h4>Divisa Principal / Favorita</h4>
+                <p>Moneda de referencia para las conversiones y KPIs.</p>
               </div>
               <select
                 className="setting-select"
@@ -269,11 +317,8 @@ export default function Perfil() {
                 <option value="USD - Dólar Blue">USD - Dólar Blue</option>
                 <option value="USD - Dólar Oficial">USD - Dólar Oficial</option>
                 <option value="EUR - Euro">EUR - Euro</option>
+                <option value="BRL - Real">BRL - Real Brasileño</option>
                 <option value="BTC - Bitcoin">BTC - Bitcoin</option>
-                <option value="ETH - Ethereum">ETH - Ethereum</option>
-                <option value="USDT - Tether">USDT - Tether</option>
-                <option value="BNB - Binance Coin">BNB - Binance Coin</option>
-                <option value="DOGE - Dogecoin">DOGE - Dogecoin</option>
               </select>
             </div>
           </div>
@@ -284,8 +329,8 @@ export default function Perfil() {
             
             <div className="setting-row">
               <div>
-                <h4>Contraseña</h4>
-                <p>Cambiá tu clave de acceso de forma segura sin salir de la app.</p>
+                <h4>Contraseña de Acceso</h4>
+                <p>Se recomienda cambiarla periódicamente para proteger tu cuenta.</p>
               </div>
               <button
                 type="button"
@@ -298,17 +343,8 @@ export default function Perfil() {
 
             <div className="setting-row">
               <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <h4>Autenticación en dos pasos (2FA)</h4>
-                  <span className={`badge-2fa ${twoFactorActive ? 'active' : 'inactive'}`}>
-                    {twoFactorActive ? 'Activada' : 'Inactiva'}
-                  </span>
-                </div>
-                <p>
-                  {twoFactorActive
-                    ? 'Activada: Se solicitará un código de 6 dígitos enviado a tu correo en cada inicio de sesión.'
-                    : 'Agregá una capa extra de protección: requerí código de verificación por correo al iniciar sesión.'}
-                </p>
+                <h4>Verificación en dos pasos (2FA)</h4>
+                <p>Se enviará un código numérico a tu correo cada vez que inicies sesión.</p>
               </div>
               <button
                 type="button"
@@ -319,10 +355,28 @@ export default function Perfil() {
                 {twoFactorLoading ? (
                   <div className="spinner"></div>
                 ) : twoFactorActive ? (
-                  'Desactivar'
+                  'Desactivar 2FA'
                 ) : (
                   'Activar 2FA'
                 )}
+              </button>
+            </div>
+          </div>
+
+          {/* Contacto y Soporte */}
+          <div className="settings-section fade-in delay-350">
+            <h3><Icon name="mail" size={16} /> Soporte y Contacto con Administradores</h3>
+            <div className="setting-row">
+              <div>
+                <h4>¿Necesitás comunicarte con nosotros?</h4>
+                <p>Escribinos por Gmail (deviseproyect@gmail.com), WhatsApp o envianos un mensaje directo.</p>
+              </div>
+              <button
+                type="button"
+                className="btn btn-outline"
+                onClick={() => setIsContactModalOpen(true)}
+              >
+                <Icon name="mail" size={14} /> Contactar
               </button>
             </div>
           </div>
@@ -349,10 +403,25 @@ export default function Perfil() {
 
       </div>
 
-      {/* ── Modal Editar Perfil (In-Place) ─────────────────────────────────── */}
+      {/* ── Modal Foto de Perfil ───────────────────────────────────────────── */}
+      {isAvatarModalOpen && (
+        <AvatarModal
+          currentPhoto={user?.foto_perfil}
+          userName={user?.nombre}
+          onClose={() => setIsAvatarModalOpen(false)}
+          onSave={handleSaveAvatar}
+        />
+      )}
+
+      {/* ── Modal Contactar Administradores ─────────────────────────────────── */}
+      {isContactModalOpen && (
+        <ContactModal onClose={() => setIsContactModalOpen(false)} />
+      )}
+
+      {/* ── Modal Editar Perfil (In-Place Scoped) ────────────────────────────── */}
       {isEditModalOpen && (
-        <div className="modal-overlay" onClick={() => setIsEditModalOpen(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <div className="perfil-modal-overlay" onClick={() => setIsEditModalOpen(false)}>
+          <div className="perfil-modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <div>
                 <h3 className="modal-title">
@@ -425,10 +494,10 @@ export default function Perfil() {
         </div>
       )}
 
-      {/* ── Modal Cambiar Contraseña (In-Place) ──────────────────────────────── */}
+      {/* ── Modal Cambiar Contraseña (In-Place Scoped) ───────────────────────── */}
       {isPasswordModalOpen && (
-        <div className="modal-overlay" onClick={() => setIsPasswordModalOpen(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <div className="perfil-modal-overlay" onClick={() => setIsPasswordModalOpen(false)}>
+          <div className="perfil-modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <div>
                 <h3 className="modal-title">
@@ -529,10 +598,10 @@ export default function Perfil() {
         </div>
       )}
 
-      {/* ── Modal Eliminar Cuenta (Confirmación) ───────────────────────────── */}
+      {/* ── Modal Eliminar Cuenta (Confirmación Scoped) ────────────────────── */}
       {isDeleteModalOpen && (
-        <div className="modal-overlay" onClick={() => setIsDeleteModalOpen(false)}>
-          <div className="modal-content modal-danger" onClick={(e) => e.stopPropagation()}>
+        <div className="perfil-modal-overlay" onClick={() => setIsDeleteModalOpen(false)}>
+          <div className="perfil-modal-content modal-danger" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <div>
                 <h3 className="modal-title" style={{ color: 'var(--danger)' }}>

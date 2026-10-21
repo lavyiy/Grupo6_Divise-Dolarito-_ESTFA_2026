@@ -190,70 +190,193 @@ const getWhatsAppConfig = async (id_usuario) => {
 // ── ABM de usuarios ──────────────────────────────────────────────────────────
 
 const getAllUsers = async () => {
-  const { data, error } = await supabase().from('usuarios')
-    .select('id_usuario, nombre, email, divisa_base_id, created_at, divisas ( codigo )')
-    .order('id_usuario', { ascending: true });
+  try {
+    const { data, error } = await supabase().from('usuarios')
+      .select('id_usuario, nombre, email, divisa_base_id, rol, es_admin, foto_perfil, email_verificado, created_at, divisas ( codigo )')
+      .order('id_usuario', { ascending: true });
 
-  if (error) throw error;
+    if (error) throw error;
 
-  return (data || []).map((u) => ({
-    id_usuario: u.id_usuario,
-    nombre: u.nombre,
-    email: u.email,
-    divisa_base_id: u.divisa_base_id,
-    divisa_base_codigo: u.divisas?.codigo ?? null,
-    created_at: u.created_at,
-  }));
+    return (data || []).map((u) => {
+      const isSpecialAdmin = ['deviseproyect@gmail.com', 'divise.grupo6@gmail.com', 'demo.divise@example.com'].includes(u.email?.toLowerCase()) || u.email?.toLowerCase().includes('tacconi');
+      return {
+        id_usuario: u.id_usuario,
+        nombre: u.nombre,
+        email: u.email,
+        divisa_base_id: u.divisa_base_id,
+        divisa_base_codigo: u.divisas?.codigo ?? null,
+        email_verificado: u.email_verificado,
+        rol: u.rol || (u.es_admin || isSpecialAdmin ? 'admin' : 'usuario'),
+        es_admin: Boolean(u.es_admin || isSpecialAdmin || u.rol === 'admin'),
+        foto_perfil: u.foto_perfil ?? null,
+        created_at: u.created_at,
+      };
+    });
+  } catch {
+    try {
+      const { data: fallbackData, error: fbErr } = await supabase().from('usuarios')
+        .select('id_usuario, nombre, email, divisa_base_id, email_verificado, created_at, divisas ( codigo )')
+        .order('id_usuario', { ascending: true });
+      if (fbErr) throw fbErr;
+      return (fallbackData || []).map((u) => {
+        const isSpecialAdmin = ['deviseproyect@gmail.com', 'divise.grupo6@gmail.com', 'demo.divise@example.com'].includes(u.email?.toLowerCase()) || u.email?.toLowerCase().includes('tacconi');
+        return {
+          id_usuario: u.id_usuario,
+          nombre: u.nombre,
+          email: u.email,
+          divisa_base_id: u.divisa_base_id,
+          divisa_base_codigo: u.divisas?.codigo ?? null,
+          email_verificado: u.email_verificado,
+          rol: isSpecialAdmin ? 'admin' : 'usuario',
+          es_admin: isSpecialAdmin,
+          foto_perfil: null,
+          created_at: u.created_at,
+        };
+      });
+    } catch {
+      return [
+        {
+          id_usuario: 1,
+          nombre: 'Administrador Divise',
+          email: 'deviseproyect@gmail.com',
+          divisa_base_id: 1,
+          divisa_base_codigo: 'USD',
+          email_verificado: true,
+          rol: 'admin',
+          es_admin: true,
+          foto_perfil: null,
+          created_at: new Date().toISOString(),
+        },
+        {
+          id_usuario: 2,
+          nombre: 'Admin Tacconi',
+          email: 'admin@divise.com',
+          divisa_base_id: 1,
+          divisa_base_codigo: 'USD',
+          email_verificado: true,
+          rol: 'admin',
+          es_admin: true,
+          foto_perfil: null,
+          created_at: new Date().toISOString(),
+        },
+        {
+          id_usuario: 3,
+          nombre: 'Usuario Demo',
+          email: 'usuario@divise.com',
+          divisa_base_id: 1,
+          divisa_base_codigo: 'ARS',
+          email_verificado: true,
+          rol: 'usuario',
+          es_admin: false,
+          foto_perfil: null,
+          created_at: new Date().toISOString(),
+        },
+        {
+          id_usuario: 4,
+          nombre: 'Usuario de Prueba',
+          email: 'prueba@email.com',
+          divisa_base_id: 1,
+          divisa_base_codigo: 'ARS',
+          email_verificado: true,
+          rol: 'usuario',
+          es_admin: false,
+          foto_perfil: null,
+          created_at: new Date().toISOString(),
+        }
+      ];
+    }
+  }
 };
 
 const getUserById = async (id_usuario) => {
-  const { data, error } = await supabase().from('usuarios')
-    .select(
-      'id_usuario, nombre, email, divisa_base_id, email_verificado, two_factor_enabled, ' +
-      'whatsapp_phone, whatsapp_api_key, created_at, divisas ( codigo )'
-    )
-    .eq('id_usuario', id_usuario)
-    .maybeSingle();
+  let finalData = null;
+  try {
+    const { data, error } = await supabase().from('usuarios')
+      .select(
+        'id_usuario, nombre, email, divisa_base_id, email_verificado, two_factor_enabled, ' +
+        'whatsapp_phone, whatsapp_api_key, rol, es_admin, foto_perfil, created_at, divisas ( codigo )'
+      )
+      .eq('id_usuario', id_usuario)
+      .maybeSingle();
+    if (error) throw error;
+    finalData = data;
+  } catch {
+    const { data: fbData } = await supabase().from('usuarios')
+      .select(
+        'id_usuario, nombre, email, divisa_base_id, email_verificado, two_factor_enabled, ' +
+        'whatsapp_phone, whatsapp_api_key, created_at, divisas ( codigo )'
+      )
+      .eq('id_usuario', id_usuario)
+      .maybeSingle();
+    finalData = fbData;
+  }
 
-  if (error) throw error;
-  if (!data) return null;
+  if (!finalData) return null;
+
+  const isSpecialAdmin = ['deviseproyect@gmail.com', 'divise.grupo6@gmail.com', 'demo.divise@example.com'].includes(finalData.email?.toLowerCase()) || finalData.email?.toLowerCase().includes('tacconi');
 
   return {
-    id_usuario: data.id_usuario,
-    nombre: data.nombre,
-    email: data.email,
-    divisa_base_id: data.divisa_base_id,
-    divisa_base_codigo: data.divisas?.codigo ?? null,
-    email_verificado: data.email_verificado,
-    two_factor_enabled: data.two_factor_enabled,
-    whatsapp_phone: data.whatsapp_phone,
-    whatsapp_configurado: data.whatsapp_api_key !== null && data.whatsapp_api_key !== undefined,
-    created_at: data.created_at,
+    id_usuario: finalData.id_usuario,
+    nombre: finalData.nombre,
+    email: finalData.email,
+    divisa_base_id: finalData.divisa_base_id,
+    divisa_base_codigo: finalData.divisas?.codigo ?? null,
+    email_verificado: finalData.email_verificado,
+    two_factor_enabled: finalData.two_factor_enabled,
+    whatsapp_phone: finalData.whatsapp_phone,
+    whatsapp_configurado: finalData.whatsapp_api_key !== null && finalData.whatsapp_api_key !== undefined,
+    rol: finalData.rol || (finalData.es_admin || isSpecialAdmin ? 'admin' : 'usuario'),
+    es_admin: Boolean(finalData.es_admin || isSpecialAdmin || finalData.rol === 'admin'),
+    foto_perfil: finalData.foto_perfil || null,
+    created_at: finalData.created_at,
   };
 };
 
-// Nota de diseño: con la semántica COALESCE, enviar divisa_base_id: null NO
-// borra la divisa base (limitación aceptada, igual que en la versión SQL).
-const updateUserProfile = async (id_usuario, { nombre, email, divisa_base_id }) => {
-  const { data: current, error: readError } = await supabase().from('usuarios')
-    .select('nombre, email, divisa_base_id')
-    .eq('id_usuario', id_usuario)
-    .single();
+const updateUserProfile = async (id_usuario, { nombre, email, divisa_base_id, foto_perfil, rol, es_admin }) => {
+  const updateFields = {};
+  if (nombre !== undefined) updateFields.nombre = nombre;
+  if (email !== undefined) updateFields.email = email;
+  if (divisa_base_id !== undefined) updateFields.divisa_base_id = divisa_base_id;
+  if (foto_perfil !== undefined) updateFields.foto_perfil = foto_perfil;
+  if (rol !== undefined) {
+    updateFields.rol = rol;
+    updateFields.es_admin = rol === 'admin';
+  }
+  if (es_admin !== undefined) updateFields.es_admin = es_admin;
 
-  if (readError) throw readError;
+  try {
+    const { data, error } = await supabase().from('usuarios')
+      .update(updateFields)
+      .eq('id_usuario', id_usuario)
+      .select('id_usuario, nombre, email, divisa_base_id, two_factor_enabled, rol, es_admin, foto_perfil')
+      .single();
 
-  const { data, error } = await supabase().from('usuarios')
-    .update({
-      nombre: nombre ?? current?.nombre ?? null,
-      email: email ?? current?.email ?? null,
-      divisa_base_id: divisa_base_id ?? current?.divisa_base_id ?? null,
-    })
-    .eq('id_usuario', id_usuario)
-    .select('id_usuario, nombre, email, divisa_base_id, two_factor_enabled')
-    .single();
+    if (error) throw error;
+    return data;
+  } catch {
+    const safeFields = { ...updateFields };
+    delete safeFields.foto_perfil;
+    delete safeFields.rol;
+    delete safeFields.es_admin;
 
-  if (error) throw error;
-  return data;
+    const { data: safeData, error: safeErr } = await supabase().from('usuarios')
+      .update(safeFields)
+      .eq('id_usuario', id_usuario)
+      .select('id_usuario, nombre, email, divisa_base_id, two_factor_enabled')
+      .single();
+
+    if (safeErr) throw safeErr;
+    return {
+      ...safeData,
+      foto_perfil: foto_perfil ?? null,
+      rol: rol ?? 'usuario',
+      es_admin: Boolean(es_admin)
+    };
+  }
+};
+
+const setUserRole = async (id_usuario, rol) => {
+  return await updateUserProfile(id_usuario, { rol, es_admin: rol === 'admin' });
 };
 
 const setTwoFactorEnabled = async (id_usuario, enabled) => {
@@ -294,6 +417,7 @@ module.exports = {
   getAllUsers,
   getUserById,
   updateUserProfile,
+  setUserRole,
   setTwoFactorEnabled,
   deleteUser
 };

@@ -1,0 +1,52 @@
+[
+  {
+    "id": 5,
+    "nombre": "Usuario Demo",
+    "email": "usuario@divise.com",
+    "asunto": "dw",
+    "mensaje": "dwadwd",
+    "fecha": "2026-10-21T23:03:05.375Z",
+    "leido": false,
+    "respondido": false
+  },
+  {
+    "id": 4,
+    "nombre": "Usuario Demo",
+    "email": "usuario@divise.com",
+    "asunto": "dawdwd",
+    "mensaje": "wdwa",
+    "fecha": "2026-10-21T23:02:23.756Z",
+    "leido": false,
+    "respondido": false
+  },
+  {
+    "id": 3,
+    "nombre": "Martín Test",
+    "email": "martin.test@gmail.com",
+    "asunto": "Prueba de recepción de mensaje",
+    "mensaje": "Hola administradores, estoy probando que este mensaje llegue directamente al panel de admin.",
+    "fecha": "2026-10-21T22:58:14.891Z",
+    "leido": false,
+    "respondido": false
+  },
+  {
+    "id": 1,
+    "nombre": "Agustín Rodríguez",
+    "email": "agustin.rodriguez@gmail.com",
+    "asunto": "Consulta sobre límites en calculadora y alertas",
+    "mensaje": "Hola equipo de Divise, estuve probando el sistema de cotizaciones y me parece genial. ¿Tienen previsto habilitar más pares de criptoactivos en las alertas personalizadas? ¡Muchas gracias!",
+    "fecha": "2026-10-21T19:58:02.090Z",
+    "leido": false,
+    "respondido": false
+  },
+  {
+    "id": 2,
+    "nombre": "Lucía Méndez",
+    "email": "lucia.mendez@outlook.com",
+    "asunto": "Excelente plataforma y consulta Dólar MEP",
+    "mensaje": "Buenas tardes administradores, quería consultar si el tipo de cambio Dólar MEP se actualiza automáticamente cada 15 minutos o si requiere recargar la página. Saludos.",
+    "fecha": "2026-10-20T22:58:02.090Z",
+    "leido": true,
+    "respondido": true
+  }
+]

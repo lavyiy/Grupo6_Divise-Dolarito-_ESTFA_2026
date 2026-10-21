@@ -357,4 +357,26 @@ Como equipo del proyecto, quiero contar con una presentación clara del trabajo 
 Como equipo de QA, quiero ejecutar pruebas de integración y end-to-end, para asegurar que el sistema funcione correctamente en su conjunto.
 
 ---
+
+## 🚀 Sprint de Actualizaciones — Rol Administrador, Normalización y UX
+
+**#111 – Soporte de formato numérico regional argentino y cifras grandes en Calculadora**
+Como usuario, quiero ingresar montos usando la notación argentina con puntos para miles (ej: 15.000 o 15.000.000) y coma para decimales, para que el sistema procese cifras grandes y no arroje errores ni cálculos truncados.
+
+**#112 – Canal oficial de contacto y asistencia con administradores**
+Como usuario o visitante, quiero acceder a un botón de contacto con email oficial (deviseproyect@gmail.com) y WhatsApp de soporte, para comunicarme de forma inmediata con los administradores de la plataforma.
+
+**#113 – Panel de Control y Auditoría de Gmails Enviados para el Rol Administrador**
+Como administrador, quiero contar con un panel exclusivo en `/dashboard/admin` donde auditar en tiempo real todos los correos Gmail enviados (destinatario, tipo, código de 6 dígitos, estado, fecha) y gestionar roles de usuarios, para supervisar el servicio y asistir a usuarios.
+
+**#114 – Personalización de cuenta con foto de perfil local y avatares prediseñados**
+Como usuario, quiero subir una foto desde mi equipo (comprimida a Base64) o seleccionar un avatar temático, para que se muestre en el Navbar y en mi Perfil.
+
+**#115 – Aislamiento visual de ventanas modales**
+Como usuario, quiero que al abrir cualquier ventana emergente (Alertas, Contacto, Foto de Perfil, Cambio de Clave) la interfaz no se desacomode ni sufra saltos visuales en pantallas de escritorio o móviles.
+
+**#116 – Cartel unificado de validación de correo electrónico**
+Como usuario, quiero ver una advertencia clara cuando el correo ingresado no sea válido o no exista en el sistema (*"El correo electrónico no es válido o no está registrado en la base de datos."*), para saber de inmediato cómo corregirlo.
+
+---
 *Documento generado para trazabilidad de historias de usuario — Grupo 6, Divise-Dolarito ESTFA 2026.*

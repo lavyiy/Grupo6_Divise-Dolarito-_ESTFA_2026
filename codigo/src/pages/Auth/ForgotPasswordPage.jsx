@@ -17,14 +17,21 @@ export default function ForgotPasswordPage() {
     e.preventDefault();
     setError('');
     setInfo('');
+
+    const cleanEmail = email.trim();
+    if (!cleanEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      setError('El correo electrónico no es válido o no está registrado en la base de datos.');
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const res = await authForgotPassword({ email });
-      setInfo(res?.message || 'Si la cuenta existe, te enviamos un código de 6 dígitos a tu email.');
-      setSentTo(email.trim().toLowerCase());
+      const res = await authForgotPassword({ email: cleanEmail });
+      setInfo(res?.message || 'Te enviamos un código de 6 dígitos a tu email.');
+      setSentTo(cleanEmail.toLowerCase());
     } catch (err) {
-      setError(err.message || 'Error al procesar la solicitud.');
+      setError(err.message || 'El correo electrónico no es válido o no está registrado en la base de datos.');
     } finally {
       setLoading(false);
     }

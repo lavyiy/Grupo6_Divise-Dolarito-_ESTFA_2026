@@ -7,8 +7,168 @@
 
 const nodemailer = require('nodemailer');
 const dns = require('dns');
+const path = require('path');
+const fs = require('fs');
 
 const FRONTEND_URL = process.env.FRONTEND_URL || process.env.APP_URL || 'http://localhost:5173';
+
+// ── Persistencia en disco (JSON) para que los mensajes y auditoría no se pierdan al reiniciar ──
+const DB_DIR = path.join(__dirname, '..', 'database');
+const EMAIL_LOGS_FILE = path.join(DB_DIR, 'email_logs.json');
+const CONTACT_MESSAGES_FILE = path.join(DB_DIR, 'contact_messages.json');
+
+if (!fs.existsSync(DB_DIR)) {
+  try { fs.mkdirSync(DB_DIR, { recursive: true }); } catch (e) {}
+}
+
+function loadJsonSafe(filePath, defaultValue) {
+  try {
+    if (fs.existsSync(filePath)) {
+      const raw = fs.readFileSync(filePath, 'utf-8');
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch (err) {
+    console.error(`[STORAGE] Error leyendo ${filePath}:`, err.message);
+  }
+  return defaultValue;
+}
+
+function saveJsonSafe(filePath, data) {
+  try {
+    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
+  } catch (err) {
+    console.error(`[STORAGE] Error guardando ${filePath}:`, err.message);
+  }
+}
+
+// Carga inicial de auditoría de emails
+const inMemoryEmailLogs = loadJsonSafe(EMAIL_LOGS_FILE, [
+  {
+    id_email: 1,
+    destinatario: 'deviseproyect@gmail.com',
+    remitente: 'agustin.rodriguez@gmail.com',
+    remitente_nombre: 'Agustín Rodríguez',
+    asunto: 'Contacto Soporte: Consulta sobre límites en calculadora y alertas (de agustin.rodriguez@gmail.com)',
+    tipo: 'Contacto a Administradores',
+    codigo: 'Hola equipo de Divise, estuve...',
+    estado: 'Recibido en Soporte',
+    mensaje: 'Hola equipo de Divise, estuve probando el sistema de cotizaciones y me parece genial. ¿Tienen previsto habilitar más pares de criptoactivos en las alertas personalizadas? ¡Muchas gracias!',
+    error_detalle: null,
+    fecha: new Date(Date.now() - 3600000 * 3).toISOString(),
+  },
+  {
+    id_email: 2,
+    destinatario: 'demo.divise@example.com',
+    remitente: 'deviseproyect@gmail.com',
+    remitente_nombre: 'Divise Soporte',
+    asunto: 'Tu código de verificación Divise: 489210',
+    tipo: 'Verificación de Cuenta',
+    codigo: '489210',
+    estado: 'Enviado con éxito',
+    mensaje: null,
+    error_detalle: null,
+    fecha: new Date(Date.now() - 3600000 * 6).toISOString(),
+  }
+]);
+
+// Carga inicial de mensajes de contacto de usuarios
+const inMemoryContactMessages = loadJsonSafe(CONTACT_MESSAGES_FILE, [
+  {
+    id: 1,
+    nombre: 'Agustín Rodríguez',
+    email: 'agustin.rodriguez@gmail.com',
+    asunto: 'Consulta sobre límites en calculadora y alertas',
+    mensaje: 'Hola equipo de Divise, estuve probando el sistema de cotizaciones y me parece genial. ¿Tienen previsto habilitar más pares de criptoactivos en las alertas personalizadas? ¡Muchas gracias!',
+    fecha: new Date(Date.now() - 3600000 * 3).toISOString(),
+    leido: false,
+    respondido: false,
+  },
+  {
+    id: 2,
+    nombre: 'Lucía Méndez',
+    email: 'lucia.mendez@outlook.com',
+    asunto: 'Excelente plataforma y consulta Dólar MEP',
+    mensaje: 'Buenas tardes administradores, quería consultar si el tipo de cambio Dólar MEP se actualiza automáticamente cada 15 minutos o si requiere recargar la página. Saludos.',
+    fecha: new Date(Date.now() - 3600000 * 24).toISOString(),
+    leido: true,
+    respondido: true,
+  }
+]);
+
+// Guardar archivos si acaban de inicializarse por primera vez
+if (!fs.existsSync(EMAIL_LOGS_FILE)) saveJsonSafe(EMAIL_LOGS_FILE, inMemoryEmailLogs);
+if (!fs.existsSync(CONTACT_MESSAGES_FILE)) saveJsonSafe(CONTACT_MESSAGES_FILE, inMemoryContactMessages);
+
+/**
+ * Registra un correo enviado en la base de datos y en el buffer persistente.
+ */
+async function logSentEmail({
+  destinatario,
+  asunto,
+  tipo,
+  codigo = null,
+  estado = 'enviado',
+  error_detalle = null,
+  remitente = null,
+  remitente_nombre = null,
+  mensaje = null
+}) {
+  const newId = inMemoryEmailLogs.length > 0
+    ? Math.max(...inMemoryEmailLogs.map(e => Number(e.id_email) || 0)) + 1
+    : 1;
+
+  const entry = {
+    id_email: newId,
+    destinatario,
+    remitente,
+    remitente_nombre,
+    mensaje,
+    asunto,
+    tipo,
+    codigo,
+    estado,
+    error_detalle,
+    fecha: new Date().toISOString(),
+  };
+
+  inMemoryEmailLogs.unshift(entry);
+  if (inMemoryEmailLogs.length > 300) inMemoryEmailLogs.pop();
+  saveJsonSafe(EMAIL_LOGS_FILE, inMemoryEmailLogs);
+
+  try {
+    const pool = require('../config/db');
+    await pool.query(
+      `INSERT INTO emails_enviados (destinatario, asunto, tipo, codigo, estado, error_detalle, fecha)
+       VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
+      [destinatario, asunto, tipo, codigo, estado, error_detalle]
+    );
+  } catch (err) {
+    // Si la tabla no está creada aún o falla la conexión, la copia persistente en JSON ya está guardada
+  }
+  return entry;
+}
+
+/**
+ * Devuelve el listado de correos enviados para la vista de administrador.
+ */
+async function getEmailLogs() {
+  try {
+    const pool = require('../config/db');
+    const res = await pool.query(
+      `SELECT id_email, destinatario, asunto, tipo, codigo, estado, error_detalle, fecha
+       FROM emails_enviados
+       ORDER BY fecha DESC, id_email DESC
+       LIMIT 100`
+    );
+    if (res && res.rows && res.rows.length > 0) {
+      return res.rows;
+    }
+  } catch (err) {
+    // Fallback a logs persistentes en memoria/JSON
+  }
+  return inMemoryEmailLogs;
+}
 
 /**
  * Construye transportadores SMTP de Gmail con reintentos.
@@ -152,7 +312,7 @@ async function sendVerificationEmail(toEmail, nombre, codigo, verifyUrl) {
   console.log(`🔗 Enlace directo: ${url}`);
   console.log(`======================================================\n`);
 
-  return await sendEmail({
+  const res = await sendEmail({
     to: toEmail,
     subject: `Tu código de verificación Divise: ${codigo}`,
     html: `
@@ -192,6 +352,17 @@ async function sendVerificationEmail(toEmail, nombre, codigo, verifyUrl) {
       </div>
     `,
   });
+
+  await logSentEmail({
+    destinatario: toEmail,
+    asunto: `Tu código de verificación Divise: ${codigo}`,
+    tipo: 'Verificación de Cuenta',
+    codigo,
+    estado: res.success ? (res.simulated ? 'Simulado (Consola)' : 'Enviado con éxito') : 'Error de envío',
+    error_detalle: res.error || null,
+  });
+
+  return res;
 }
 
 // ── Recuperación de contraseña ────────────────────────────────────────────────
@@ -205,7 +376,7 @@ async function sendResetPasswordEmail(toEmail, codigo, nombre) {
   console.log(`🔗 Enlace directo: ${resetUrl}`);
   console.log(`======================================================\n`);
 
-  return await sendEmail({
+  const res = await sendEmail({
     to: toEmail,
     subject: `Tu código de recuperación Divise: ${codigo}`,
     html: `
@@ -245,12 +416,23 @@ async function sendResetPasswordEmail(toEmail, codigo, nombre) {
       </div>
     `,
   });
+
+  await logSentEmail({
+    destinatario: toEmail,
+    asunto: `Tu código de recuperación Divise: ${codigo}`,
+    tipo: 'Recuperación de Clave',
+    codigo,
+    estado: res.success ? (res.simulated ? 'Simulado (Consola)' : 'Enviado con éxito') : 'Error de envío',
+    error_detalle: res.error || null,
+  });
+
+  return res;
 }
 
 // ── Alerta de cotización ──────────────────────────────────────────────────────
 
 async function sendAlertEmail(toEmail, divisa, condicion, valor, actual) {
-  return await sendEmail({
+  const res = await sendEmail({
     to: toEmail,
     subject: `🔔 Alerta Divise: ${divisa} alcanzó tu límite`,
     html: `
@@ -275,6 +457,170 @@ async function sendAlertEmail(toEmail, divisa, condicion, valor, actual) {
       </div>
     `,
   });
+
+  await logSentEmail({
+    destinatario: toEmail,
+    asunto: `🔔 Alerta Divise: ${divisa} alcanzó tu límite`,
+    tipo: 'Alerta de Cotización',
+    codigo: `${condicion} $${valor}`,
+    estado: res.success ? (res.simulated ? 'Simulado (Consola)' : 'Enviado con éxito') : 'Error de envío',
+    error_detalle: res.error || null,
+  });
+
+  return res;
+}
+
+// ── Contacto con administradores y gestión de mensajes de usuarios ───────────
+
+/**
+ * Guarda un mensaje enviado por un usuario en el registro de administración.
+ */
+async function saveContactMessage({ nombre, email, asunto, mensaje }) {
+  const newId = inMemoryContactMessages.length > 0
+    ? Math.max(...inMemoryContactMessages.map(m => Number(m.id) || 0)) + 1
+    : 1;
+
+  const msgEntry = {
+    id: newId,
+    nombre: nombre ? String(nombre).trim() : 'Usuario Divise',
+    email: String(email).trim(),
+    asunto: asunto ? String(asunto).trim() : 'Consulta de soporte',
+    mensaje: String(mensaje).trim(),
+    fecha: new Date().toISOString(),
+    leido: false,
+    respondido: false,
+  };
+
+  inMemoryContactMessages.unshift(msgEntry);
+  if (inMemoryContactMessages.length > 500) inMemoryContactMessages.pop();
+  saveJsonSafe(CONTACT_MESSAGES_FILE, inMemoryContactMessages);
+
+  try {
+    const pool = require('../config/db');
+    await pool.query(
+      `INSERT INTO mensajes_contacto (nombre, email, asunto, mensaje, leido, fecha)
+       VALUES ($1, $2, $3, $4, FALSE, NOW())`,
+      [msgEntry.nombre, msgEntry.email, msgEntry.asunto, msgEntry.mensaje]
+    );
+  } catch (err) {
+    // Fallback a almacenamiento persistente en JSON
+  }
+
+  return msgEntry;
+}
+
+/**
+ * Devuelve la lista de mensajes de contacto recibidos de los usuarios.
+ */
+async function getContactMessages() {
+  try {
+    const pool = require('../config/db');
+    const res = await pool.query(
+      `SELECT id_mensaje as id, nombre, email, asunto, mensaje, leido, respondido, fecha
+       FROM mensajes_contacto
+       ORDER BY fecha DESC, id_mensaje DESC
+       LIMIT 200`
+    );
+    if (res && res.rows && res.rows.length > 0) {
+      return res.rows;
+    }
+  } catch (err) {}
+  return inMemoryContactMessages;
+}
+
+/**
+ * Marca un mensaje como leído o no leído.
+ */
+async function markContactMessageRead(id, leido = true) {
+  const targetId = Number(id);
+  const msg = inMemoryContactMessages.find(m => Number(m.id) === targetId);
+  if (msg) {
+    msg.leido = Boolean(leido);
+    saveJsonSafe(CONTACT_MESSAGES_FILE, inMemoryContactMessages);
+  }
+  try {
+    const pool = require('../config/db');
+    await pool.query('UPDATE mensajes_contacto SET leido = $1 WHERE id_mensaje = $2', [Boolean(leido), targetId]);
+  } catch (err) {}
+  return msg || { id: targetId, leido };
+}
+
+/**
+ * Elimina un mensaje de contacto.
+ */
+async function deleteContactMessage(id) {
+  const targetId = Number(id);
+  const index = inMemoryContactMessages.findIndex(m => Number(m.id) === targetId);
+  if (index !== -1) {
+    inMemoryContactMessages.splice(index, 1);
+    saveJsonSafe(CONTACT_MESSAGES_FILE, inMemoryContactMessages);
+  }
+  try {
+    const pool = require('../config/db');
+    await pool.query('DELETE FROM mensajes_contacto WHERE id_mensaje = $1', [targetId]);
+  } catch (err) {}
+  return true;
+}
+
+async function sendContactEmail({ nombre, email, asunto, mensaje }) {
+  const adminEmail = process.env.EMAIL_USER || process.env.ADMIN_EMAIL || 'deviseproyect@gmail.com';
+  const cleanAsunto = asunto ? String(asunto).trim() : 'Consulta de usuario desde la plataforma';
+  const cleanNombre = nombre ? String(nombre).trim() : 'Usuario Divise';
+  const cleanEmail = String(email).trim();
+  const cleanMensaje = String(mensaje).trim();
+
+  // 1. Guardar de forma garantizada el mensaje para visualización en el Panel de Admin
+  const savedMessage = await saveContactMessage({
+    nombre: cleanNombre,
+    email: cleanEmail,
+    asunto: cleanAsunto,
+    mensaje: cleanMensaje,
+  });
+
+  // 2. Despachar correo electrónico a la casilla oficial de soporte (deviseproyect@gmail.com)
+  const res = await sendEmail({
+    to: adminEmail,
+    subject: `📩 Contacto Soporte Divise: ${cleanAsunto}`,
+    html: `
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #0b0f19; color: #f0f4ff; padding: 32px 20px; border-radius: 12px; max-width: 560px; margin: 0 auto; border: 1px solid rgba(255, 255, 255, 0.08);">
+        <div style="text-align: center; margin-bottom: 24px;">
+          <h1 style="color: #c9a84c; font-size: 24px; font-weight: 800; margin: 0;">DIVISE — MENSAJE DE SOPORTE</h1>
+        </div>
+
+        <div style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 20px;">
+          <p style="margin: 0 0 10px 0; color: #cbd5e1; font-size: 14px;">
+            <strong>De:</strong> ${cleanNombre} &lt;<a href="mailto:${cleanEmail}" style="color: #f0b90b;">${cleanEmail}</a>&gt;
+          </p>
+          <p style="margin: 0 0 16px 0; color: #cbd5e1; font-size: 14px;">
+            <strong>Asunto:</strong> ${cleanAsunto}
+          </p>
+          <div style="background: rgba(0, 0, 0, 0.35); border-left: 3px solid #c9a84c; padding: 14px 16px; border-radius: 6px;">
+            <p style="color: #f4f6fa; white-space: pre-wrap; font-size: 14px; line-height: 1.6; margin: 0;">${cleanMensaje}</p>
+          </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 20px; color: #64748b; font-size: 12px;">
+          <p>Podés responderle directamente haciendo clic en Responder en tu cliente de correo.</p>
+        </div>
+      </div>
+    `,
+  });
+
+  // 3. Registrar en la tabla de auditoría de correos enviados con todos los detalles
+  const snippet = cleanMensaje.length > 40 ? cleanMensaje.slice(0, 40) + '…' : cleanMensaje;
+  await logSentEmail({
+    destinatario: adminEmail,
+    remitente: cleanEmail,
+    remitente_nombre: cleanNombre,
+    mensaje: cleanMensaje,
+    asunto: `Contacto Soporte: ${cleanAsunto} (de ${cleanEmail})`,
+    tipo: 'Contacto a Administradores',
+    codigo: snippet,
+    estado: res.success ? (res.simulated ? 'Recibido en Panel (Simulado)' : 'Enviado con éxito') : 'Error de envío',
+    error_detalle: res.error || null,
+  });
+
+  return { ...res, savedMessage };
 }
 
 module.exports = {
@@ -282,4 +628,11 @@ module.exports = {
   sendVerificationEmail,
   sendResetPasswordEmail,
   sendAlertEmail,
+  sendContactEmail,
+  logSentEmail,
+  getEmailLogs,
+  saveContactMessage,
+  getContactMessages,
+  markContactMessageRead,
+  deleteContactMessage,
 };

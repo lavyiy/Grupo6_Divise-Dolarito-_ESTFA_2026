@@ -1,0 +1,67 @@
+[
+  {
+    "id_email": 5,
+    "destinatario": "deviseproyect@gmail.com",
+    "remitente": "usuario@divise.com",
+    "remitente_nombre": "Usuario Demo",
+    "mensaje": "dwadwd",
+    "asunto": "Contacto Soporte: dw (de usuario@divise.com)",
+    "tipo": "Contacto a Administradores",
+    "codigo": "dwadwd",
+    "estado": "Recibido en Panel (Simulado)",
+    "error_detalle": null,
+    "fecha": "2026-10-21T23:03:05.377Z"
+  },
+  {
+    "id_email": 4,
+    "destinatario": "deviseproyect@gmail.com",
+    "remitente": "usuario@divise.com",
+    "remitente_nombre": "Usuario Demo",
+    "mensaje": "wdwa",
+    "asunto": "Contacto Soporte: dawdwd (de usuario@divise.com)",
+    "tipo": "Contacto a Administradores",
+    "codigo": "wdwa",
+    "estado": "Recibido en Panel (Simulado)",
+    "error_detalle": null,
+    "fecha": "2026-10-21T23:02:23.758Z"
+  },
+  {
+    "id_email": 3,
+    "destinatario": "deviseproyect@gmail.com",
+    "remitente": "martin.test@gmail.com",
+    "remitente_nombre": "Mart�n Test",
+    "mensaje": "Hola administradores, estoy probando que este mensaje llegue directamente al panel de admin.",
+    "asunto": "Contacto Soporte: Prueba de recepci�n de mensaje (de martin.test@gmail.com)",
+    "tipo": "Contacto a Administradores",
+    "codigo": "Hola administradores, estoy probando que…",
+    "estado": "Recibido en Panel (Simulado)",
+    "error_detalle": null,
+    "fecha": "2026-10-21T22:58:14.895Z"
+  },
+  {
+    "id_email": 1,
+    "destinatario": "deviseproyect@gmail.com",
+    "remitente": "agustin.rodriguez@gmail.com",
+    "remitente_nombre": "Agustín Rodríguez",
+    "asunto": "Contacto Soporte: Consulta sobre límites en calculadora y alertas (de agustin.rodriguez@gmail.com)",
+    "tipo": "Contacto a Administradores",
+    "codigo": "Hola equipo de Divise, estuve...",
+    "estado": "Recibido en Soporte",
+    "mensaje": "Hola equipo de Divise, estuve probando el sistema de cotizaciones y me parece genial. ¿Tienen previsto habilitar más pares de criptoactivos en las alertas personalizadas? ¡Muchas gracias!",
+    "error_detalle": null,
+    "fecha": "2026-10-21T19:58:02.090Z"
+  },
+  {
+    "id_email": 2,
+    "destinatario": "demo.divise@example.com",
+    "remitente": "deviseproyect@gmail.com",
+    "remitente_nombre": "Divise Soporte",
+    "asunto": "Tu código de verificación Divise: 489210",
+    "tipo": "Verificación de Cuenta",
+    "codigo": "489210",
+    "estado": "Enviado con éxito",
+    "mensaje": null,
+    "error_detalle": null,
+    "fecha": "2026-10-21T16:58:02.090Z"
+  }
+]

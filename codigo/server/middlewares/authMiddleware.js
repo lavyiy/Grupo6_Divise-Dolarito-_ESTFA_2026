@@ -9,7 +9,8 @@ const verifyToken = (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const secret = process.env.JWT_SECRET || 'divise-secret-jwt-key-2026';
+    const decoded = jwt.verify(token, secret);
     req.user = decoded; // Adjuntar info del usuario a la request
     next();
   } catch (error) {

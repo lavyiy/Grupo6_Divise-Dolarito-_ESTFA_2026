@@ -26,6 +26,8 @@ const userRoutes = require('./routes/userRoutes');
 const historialRoutes = require('./routes/historialRoutes'); // Tarea 14
 const newsRoutes = require('./routes/newsRoutes');
 const fxHistoryRoutes = require('./routes/fxHistoryRoutes');
+const adminRoutes = require('./routes/adminRoutes');
+const contactRoutes = require('./routes/contactRoutes');
 app.use('/api/auth', authRoutes);
 app.use('/api/rates', ratesRoutes);
 app.use('/api/cotizaciones', ratesRoutes);
@@ -35,12 +37,14 @@ app.use('/api/users', userRoutes);
 app.use('/api/historial', historialRoutes); // Tarea 14
 app.use('/api/news', newsRoutes);
 app.use('/api/fx-history', fxHistoryRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/contact', contactRoutes);
 
 // Ruta raíz de la API para evitar "Cannot GET /api"
 app.get('/api', (req, res) => {
   res.json({
     message: 'Divise API',
-    endpoints: ['/api/auth', '/api/rates', '/api/cotizaciones', '/api/alerts', '/api/favorites', '/api/users', '/api/historial', '/api/news']
+    endpoints: ['/api/auth', '/api/rates', '/api/cotizaciones', '/api/alerts', '/api/favorites', '/api/users', '/api/historial', '/api/news', '/api/admin', '/api/contact']
   });
 });
 

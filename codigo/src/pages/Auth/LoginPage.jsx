@@ -28,10 +28,17 @@ export default function LoginPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    const cleanEmail = form.email.trim();
+    if (!cleanEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      setError('El correo electrónico no es válido o no está registrado en la base de datos.');
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const data = await authLogin({ email: form.email, password: form.password });
+      const data = await authLogin({ email: cleanEmail, password: form.password });
       const token = data?.token ?? data?.accessToken ?? data?.jwt ?? null;
       if (!token) throw new Error('Error de autenticación.');
       login({ token, user: data?.user ?? data?.data ?? null });

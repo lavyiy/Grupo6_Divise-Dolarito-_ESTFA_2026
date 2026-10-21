@@ -54,7 +54,7 @@ d:\Proyecto\codigo\
 ```
 DATABASE_URL=postgresql://...supabase...
 JWT_SECRET=...
-EMAIL_USER=divise.grupo6@gmail.com
+EMAIL_USER=deviseproyect@gmail.com
 EMAIL_PASS=xxxx xxxx xxxx xxxx    # contraseña de app de Google (16 chars)
 FRONTEND_URL=https://dolarito.onrender.com
 PORT=5000

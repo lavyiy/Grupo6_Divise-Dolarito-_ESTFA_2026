@@ -1,0 +1,255 @@
+/* ── src/components/Contact/ContactModal.css ───────────────────────── */
+
+.contact-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(6, 13, 31, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding: 20px;
+  overflow-y: auto;
+  animation: cmFadeIn 0.2s ease-out;
+}
+
+@keyframes cmFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes cmScaleIn {
+  from { opacity: 0; transform: translateY(14px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.contact-modal-content {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg, 20px);
+  width: 620px;
+  max-width: 100%;
+  max-height: min(90vh, 760px);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow-y: auto;
+  padding: 32px;
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.6), var(--shadow-gold);
+  animation: cmScaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+}
+
+.contact-modal-close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.contact-modal-close:hover {
+  color: var(--text-main);
+  background-color: var(--bg-input);
+}
+
+.cm-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--brand-gold);
+  background: rgba(240, 185, 11, 0.12);
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(240, 185, 11, 0.25);
+  margin-bottom: 12px;
+}
+
+.cm-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text-main);
+  margin: 0 0 6px 0;
+}
+
+.cm-sub {
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0 0 20px 0;
+}
+
+.contact-channels {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.contact-channel-card {
+  display: flex;
+  align-items: center;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md, 12px);
+  padding: 14px 16px;
+  gap: 14px;
+}
+
+.ccc-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.ccc-icon.gmail {
+  background: rgba(240, 185, 11, 0.15);
+  color: var(--brand-gold);
+}
+.ccc-icon.whatsapp {
+  background: rgba(46, 204, 138, 0.15);
+  color: #2ecc8a;
+}
+
+.ccc-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.ccc-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+.ccc-val {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ccc-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.btn-xs {
+  padding: 6px 12px;
+  font-size: 12px;
+  height: 32px;
+  border-radius: 6px;
+}
+
+.contact-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  border-top: 1px solid var(--border-color);
+  padding-top: 20px;
+}
+
+.cf-heading {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 2px;
+}
+
+.cf-alert {
+  padding: 10px 14px;
+  border-radius: var(--radius-sm, 8px);
+  font-size: 13px;
+  line-height: 1.4;
+}
+.cf-alert.error {
+  background: rgba(231, 76, 60, 0.15);
+  border: 1px solid rgba(231, 76, 60, 0.35);
+  color: #ff6b6b;
+}
+.cf-alert.success {
+  background: rgba(46, 204, 138, 0.15);
+  border: 1px solid rgba(46, 204, 138, 0.35);
+  color: #2ecc8a;
+}
+
+.cf-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+@media (max-width: 560px) {
+  .cf-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.cf-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.cf-field label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.cf-field input,
+.cf-field textarea {
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm, 8px);
+  padding: 10px 14px;
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.2s;
+  box-sizing: border-box;
+}
+.cf-field input:focus,
+.cf-field textarea:focus {
+  border-color: var(--brand-gold);
+  box-shadow: 0 0 0 2px var(--gold-soft);
+}
+.cf-field textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.contact-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 8px;
+}
+.contact-actions .btn {
+  height: 44px;
+  padding: 0 20px;
+  font-size: 14px;
+  font-weight: 600;
+}

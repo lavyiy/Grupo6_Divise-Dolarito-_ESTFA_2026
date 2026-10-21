@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import CountUp from 'react-countup';
 import { Icon } from '../../components/ui/Icon';
 import CurrencyBadge from '../../components/ui/CurrencyBadge';
-import { currencyName } from '../../utils';
+import { currencyName, parseArgentineNumber, formatARS } from '../../utils';
 import './Calculadora.css';
 
 export default function Calculadora() {
@@ -23,39 +23,8 @@ export default function Calculadora() {
   // Historial visual de conversiones de la sesión (sin datos mock).
   const [history, setHistory] = useState([]);
 
-  // ── Validación del monto ingresado ────────────────────────────────────────
-  const parseAmountInput = (raw) => {
-    const value = String(raw == null ? '' : raw).trim();
-    if (value === '') {
-      return { ok: false, error: 'Ingresá un monto para convertir.' };
-    }
-    if (!/^[0-9.,]+$/.test(value)) {
-      return { ok: false, error: 'El monto debe ser un número válido.' };
-    }
-
-    let normalized;
-    if (value.includes(',') && value.includes('.')) {
-      // Formato argentino "1.000,50" → 1000.50
-      if (value.lastIndexOf('.') < value.lastIndexOf(',')) {
-        normalized = value.replace(/\./g, '').replace(',', '.');
-      } else {
-        normalized = value.replace(/,/g, '');
-      }
-    } else {
-      normalized = value.replace(',', '.');
-    }
-
-    const num = Number(normalized);
-    if (!Number.isFinite(num)) {
-      return { ok: false, error: 'El monto debe ser un número válido.' };
-    }
-    if (num < 0) {
-      return { ok: false, error: 'El monto no puede ser negativo.' };
-    }
-    return { ok: true, value: num };
-  };
-
-  const amountParse = parseAmountInput(amount);
+  // ── Validación del monto ingresado con soporte de formato argentino y grandes números ──
+  const amountParse = parseArgentineNumber(amount);
   const montoError = amountParse.ok ? '' : amountParse.error;
 
   useEffect(() => {
@@ -139,8 +108,8 @@ export default function Calculadora() {
       {
         from: fromCurrency,
         to: toCurrency,
-        in: String(amountParse.value),
-        out: String(result || 0),
+        in: (amountParse.value || 0).toLocaleString('es-AR'),
+        out: (result || 0).toLocaleString('es-AR', { maximumFractionDigits: ['BTC', 'ETH', 'USDT', 'BNB', 'DOGE'].includes(toCurrency) ? 6 : 4 }),
         time: 'Ahora',
       },
       ...prev,
@@ -296,7 +265,7 @@ export default function Calculadora() {
             </div>
           ) : conversionRate > 0 && (
             <div className="calc-rate-info">
-              <span>1 {fromCurrency} = {conversionRate.toLocaleString('es-AR', {maximumFractionDigits: 4})} {toCurrency}</span>
+              <span>1 {fromCurrency} = {conversionRate.toLocaleString('es-AR', {maximumFractionDigits: ['BTC', 'ETH', 'USDT', 'BNB', 'DOGE'].includes(toCurrency) ? 8 : 4})} {toCurrency}</span>
               <span className="calc-rate-live">Al día de hoy</span>
             </div>
           )}
@@ -413,7 +382,7 @@ export default function Calculadora() {
               </div>
 
               <div className="calc-modal-amount">
-                {amountParse.value} <span>{fromCurrency}</span>
+                {(amountParse.value || 0).toLocaleString('es-AR')} <span>{fromCurrency}</span>
               </div>
 
               <div className="calc-modal-equals">=</div>

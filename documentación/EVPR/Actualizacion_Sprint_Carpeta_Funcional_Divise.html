@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Actualización de Carpeta Funcional — Proyecto Divise (ESTFA 2026)</title>
+  <style>
+    @page {
+      size: A4 portrait;
+      margin: 18mm 15mm 18mm 15mm;
+      @bottom-right {
+        content: counter(page);
+      }
+    }
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+      color: #1e293b;
+      background: #ffffff;
+      line-height: 1.55;
+      font-size: 13.5px;
+      margin: 0;
+      padding: 0;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .header-banner {
+      border-bottom: 3px solid #2563eb;
+      padding-bottom: 16px;
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .header-titles h1 {
+      font-size: 24px;
+      font-weight: 800;
+      color: #0f172a;
+      margin: 0 0 4px 0;
+      letter-spacing: -0.5px;
+    }
+    .header-titles .subtitle {
+      font-size: 13px;
+      font-weight: 600;
+      color: #2563eb;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin: 0 0 6px 0;
+    }
+    .header-titles .meta {
+      font-size: 12px;
+      color: #64748b;
+      margin: 0;
+    }
+    .badge-institutional {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #1e40af;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 11.5px;
+      font-weight: 700;
+      text-align: right;
+    }
+
+    h2 {
+      font-size: 17px;
+      font-weight: 700;
+      color: #0f172a;
+      border-left: 4px solid #2563eb;
+      padding-left: 10px;
+      margin-top: 26px;
+      margin-bottom: 12px;
+      page-break-after: avoid;
+    }
+    h3 {
+      font-size: 14.5px;
+      font-weight: 700;
+      color: #1e293b;
+      margin-top: 18px;
+      margin-bottom: 8px;
+      page-break-after: avoid;
+    }
+    p {
+      margin: 0 0 10px 0;
+      color: #334155;
+    }
+
+    .alert-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-left: 4px solid #3b82f6;
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin: 14px 0;
+      page-break-inside: avoid;
+    }
+    .alert-box.success {
+      border-left-color: #10b981;
+      background: #f0fdf4;
+      border-color: #bbf7d0;
+    }
+    .alert-box.warning {
+      border-left-color: #f59e0b;
+      background: #fffbeb;
+      border-color: #fde68a;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 14px 0;
+      page-break-inside: avoid;
+    }
+    .feature-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 12px;
+    }
+    .feature-card strong {
+      display: block;
+      color: #0f172a;
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+    .feature-card p {
+      font-size: 12px;
+      margin: 0;
+      color: #475569;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0;
+      font-size: 12px;
+      page-break-inside: avoid;
+    }
+    th, td {
+      border: 1px solid #cbd5e1;
+      padding: 8px 10px;
+      text-align: left;
+    }
+    th {
+      background: #f1f5f9;
+      color: #0f172a;
+      font-weight: 700;
+    }
+    tr:nth-child(even) td {
+      background: #f8fafc;
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 10.5px;
+      font-weight: 700;
+    }
+    .status-badge.ok {
+      background: #dcfce7;
+      color: #15803d;
+    }
+    .status-badge.admin {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    .hu-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin-bottom: 12px;
+      page-break-inside: avoid;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    }
+    .hu-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #1e40af;
+      margin-bottom: 6px;
+    }
+    .hu-body {
+      font-size: 12.5px;
+      margin-bottom: 6px;
+      color: #334155;
+    }
+    .hu-criteria {
+      font-size: 12px;
+      background: #f8fafc;
+      padding: 6px 10px;
+      border-radius: 4px;
+      border-left: 3px solid #94a3b8;
+    }
+    .hu-criteria ul {
+      margin: 4px 0 0 18px;
+      padding: 0;
+    }
+
+    code {
+      font-family: Consolas, 'Courier New', monospace;
+      font-size: 11.5px;
+      background: #f1f5f9;
+      padding: 1px 4px;
+      border-radius: 3px;
+      color: #0f172a;
+    }
+    pre {
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-size: 11px;
+      line-height: 1.45;
+      overflow-x: auto;
+      page-break-inside: avoid;
+    }
+
+    .footer-sign {
+      margin-top: 32px;
+      border-top: 1px solid #cbd5e1;
+      padding-top: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      color: #64748b;
+      page-break-inside: avoid;
+    }
+    .page-break {
+      page-break-before: always;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ENCABEZADO INSTITUCIONAL -->
+  <div class="header-banner">
+    <div class="header-titles">
+      <div class="subtitle">Documentación de Evaluación de Proyectos (EVPR)</div>
+      <h1>Actualización de Carpeta Funcional</h1>
+      <p class="meta"><strong>Proyecto:</strong> Divise / Dolarito &bull; <strong>Comisión:</strong> ESTFA 2026 &bull; <strong>Grupo:</strong> 6 &bull; <strong>Versión:</strong> 3.2.0</p>
+    </div>
+    <div class="badge-institutional">
+      <div>ESTFA 2026</div>
+      <div>Grupo 6 - Divise</div>
+      <div style="color: #64748b; font-weight: normal; margin-top: 2px;">Octubre 2026</div>
+    </div>
+  </div>
+
+  <!-- SECCIÓN 1: RESUMEN DEL SPRINT -->
+  <h2>1. Resumen Ejecutivo de la Actualización</h2>
+  <p>
+    El presente documento formaliza la incorporación de mejoras operativas, corrección de inconsistencias en la entrada de datos numéricos regionales, habilitación del rol administrativo con auditoría de mensajería Gmail y resolución de problemas de maquetación en ventanas modales.
+  </p>
+
+  <div class="features-grid">
+    <div class="feature-card">
+      <strong>1. Calculadora con Formato Argentino</strong>
+      <p>Soporte para múltiples puntos en millones (ej. <code>15.000.000</code>), punto en miles (<code>15.000</code>), coma decimal (<code>15.000,50</code>) y prevención de errores NaN.</p>
+    </div>
+    <div class="feature-card">
+      <strong>2. Rol Administrador y Auditoría Gmail</strong>
+      <p>Módulo protegido <code>/dashboard/admin</code> con visor histórico de todos los correos enviados, códigos de verificación de 6 dígitos y gestión de roles.</p>
+    </div>
+    <div class="feature-card">
+      <strong>3. Modal de Contacto Directo</strong>
+      <p>Acceso directo al correo institucional <code>deviseproyect@gmail.com</code> (con copiado en un clic), WhatsApp y formulario integrado.</p>
+    </div>
+    <div class="feature-card">
+      <strong>4. Aislamiento CSS de Ventanas Modales</strong>
+      <p>Resolución de colisiones CSS de selectores globales para evitar desacomodamientos al abrir la configuración de alertas o de perfil.</p>
+    </div>
+    <div class="feature-card">
+      <strong>5. Selector y Carga de Foto de Perfil</strong>
+      <p>Subida de imágenes locales comprimidas en cliente a Base64 más una galería de 8 avatares vectoriales prediseñados.</p>
+    </div>
+    <div class="feature-card">
+      <strong>6. Validación de Correo en Autenticación</strong>
+      <p>Mensaje unificado: <em>"El correo electrónico no es válido o no está registrado en la base de datos."</em> en Login y Recuperación.</p>
+    </div>
+  </div>
+
+  <!-- SECCIÓN 2: HISTORIAS DE USUARIO -->
+  <h2>2. Historias de Usuario Agregadas y Actualizadas</h2>
+
+  <div class="hu-card">
+    <div class="hu-title">HU #51 – Soporte de Formato Numérico Argentino y Grandes Cifras</div>
+    <div class="hu-body">
+      <strong>Como</strong> usuario de la plataforma Divise, <strong>quiero</strong> ingresar montos utilizando la convención argentina con puntos para separar miles y comas para decimales, <strong>para</strong> convertir divisas y configurar alertas sin que el sistema rechace montos grandes o genere cálculos erróneos.
+    </div>
+    <div class="hu-criteria">
+      <strong>Criterios de Aceptación:</strong>
+      <ul>
+        <li><code>15.000</code> es interpretado exactamente como 15 mil unidades monetarias.</li>
+        <li><code>15.000.000</code> es interpretado como 15 millones sin errores de <code>NaN</code> ni truncamiento.</li>
+        <li><code>15.000.000,50</code> respeta los decimales tras la coma.</li>
+        <li>Muestra mensaje de error en vivo ante caracteres no válidos.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="hu-card">
+    <div class="hu-title">HU #52 – Canal Directo de Contacto y Asistencia con Administradores</div>
+    <div class="hu-body">
+      <strong>Como</strong> usuario o visitante, <strong>quiero</strong> acceder de forma rápida a un canal de contacto directo con el equipo administrador, <strong>para</strong> solicitar asistencia, reportar incidencias técnicas o consultar sobre el servicio.
+    </div>
+    <div class="hu-criteria">
+      <strong>Criterios de Aceptación:</strong>
+      <ul>
+        <li>Botón visible de "Contacto" en barra de navegación, menú lateral y pantalla de perfil.</li>
+        <li>Muestra el correo <code>deviseproyect@gmail.com</code> con botón de copiado inmediato.</li>
+        <li>Enlace directo a WhatsApp oficial con mensaje preconfigurado.</li>
+        <li>Formulario de contacto para enviar mensaje directo al servidor.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="hu-card">
+    <div class="hu-title">HU #53 – Panel de Control del Administrador y Registro de Gmails Enviados</div>
+    <div class="hu-body">
+      <strong>Como</strong> administrador del sistema, <strong>quiero</strong> contar con una interfaz dedicada para auditar los correos enviados y gestionar usuarios, <strong>para</strong> asegurar la correcta entrega de códigos de seguridad y controlar privilegios.
+    </div>
+    <div class="hu-criteria">
+      <strong>Criterios de Aceptación:</strong>
+      <ul>
+        <li>Ruta protegida <code>/dashboard/admin</code> accesible únicamente para roles autorizados.</li>
+        <li>Tabla con historial de correos enviados: destinatario, asunto, código de 6 dígitos, estado y fecha/hora.</li>
+        <li>Filtro en tiempo real por correo electrónico o código.</li>
+        <li>Listado de usuarios con capacidad de ascender o remover el rol administrador.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="hu-card">
+    <div class="hu-title">HU #54 – Personalización y Foto de Perfil de Usuario</div>
+    <div class="hu-body">
+      <strong>Como</strong> usuario con sesión iniciada, <strong>quiero</strong> cargar una fotografía propia o seleccionar un avatar temático, <strong>para</strong> identificar mi cuenta dentro del sistema.
+    </div>
+    <div class="hu-criteria">
+      <strong>Criterios de Aceptación:</strong>
+      <ul>
+        <li>Carga de imágenes JPG, PNG o WEBP locales desde el dispositivo del usuario.</li>
+        <li>Compresión automática a 256x256 px en formato DataURL Base64 para minimizar consumo de ancho de banda.</li>
+        <li>Galería con 8 avatares vectoriales integrados.</li>
+        <li>Persistencia en base de datos y refresco instantáneo en Navbar y Perfil.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- SECCIÓN 3: ESPECIFICACIONES TÉCNICAS -->
+  <h2>3. Especificación Técnica y Arquitectura de Datos</h2>
+
+  <h3>3.1. Esquema de Base de Datos (Migración SQL <code>011_admin_and_email_logs.sql</code>)</h3>
+  <pre><code>-- Ampliación de la tabla de usuarios
+ALTER TABLE usuarios 
+  ADD COLUMN IF NOT EXISTS rol VARCHAR(30) DEFAULT 'usuario',
+  ADD COLUMN IF NOT EXISTS es_admin BOOLEAN DEFAULT false,
+  ADD COLUMN IF NOT EXISTS foto_perfil TEXT;
+
+-- Tabla de auditoría de correos enviados (Gmail / SMTP / Mock)
+CREATE TABLE IF NOT EXISTS emails_enviados (
+  id_log SERIAL PRIMARY KEY,
+  destinatario VARCHAR(255) NOT NULL,
+  asunto VARCHAR(255) NOT NULL,
+  tipo VARCHAR(50) NOT NULL,
+  codigo VARCHAR(20),
+  estado VARCHAR(20) DEFAULT 'enviado',
+  error_detalle TEXT,
+  metadata JSONB,
+  creado_en TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX idx_emails_enviados_dest ON emails_enviados(destinatario);
+CREATE INDEX idx_emails_enviados_fecha ON emails_enviados(creado_en DESC);</code></pre>
+
+  <h3>3.2. Normalización de Cifras Regionales (<code>src/utils.js</code>)</h3>
+  <p>
+    El motor matemático implementa la función <code>parseArgentineNumber(raw)</code>. El algoritmo evalúa la posición de puntos y comas: si un punto precede exactamente a 3 dígitos en un número sin comas o con coma posterior, lo interpreta como separador de miles. Asimismo, números con múltiples puntos (ej. <code>15.000.000</code>) son normalizados eliminando los puntos antes de la conversión a punto flotante IEEE 754, erradicando por completo los errores de tipo <code>NaN</code>.
+  </p>
+
+  <h3>3.3. Nuevos Endpoints de la API REST</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Método</th>
+        <th>Ruta</th>
+        <th>Permisos</th>
+        <th>Descripción Funcional</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>GET</code></td>
+        <td><code>/api/admin/emails</code></td>
+        <td><span class="status-badge admin">Admin</span></td>
+        <td>Historial de correos enviados, códigos de verificación y estados de entrega.</td>
+      </tr>
+      <tr>
+        <td><code>GET</code></td>
+        <td><code>/api/admin/users</code></td>
+        <td><span class="status-badge admin">Admin</span></td>
+        <td>Listado completo de usuarios registrados, estado de verificación y rol.</td>
+      </tr>
+      <tr>
+        <td><code>PUT</code></td>
+        <td><code>/api/admin/users/:id/role</code></td>
+        <td><span class="status-badge admin">Admin</span></td>
+        <td>Modificación del rol de un usuario (asignar o revocar privilegios admin).</td>
+      </tr>
+      <tr>
+        <td><code>GET</code></td>
+        <td><code>/api/admin/stats</code></td>
+        <td><span class="status-badge admin">Admin</span></td>
+        <td>Métricas ejecutivas de usuarios, correos enviados y alertas registradas.</td>
+      </tr>
+      <tr>
+        <td><code>POST</code></td>
+        <td><code>/api/contact</code></td>
+        <td>Público</td>
+        <td>Recepción de consultas y registro automático en auditoría de mensajes.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- SECCIÓN 4: CASOS DE PRUEBA -->
+  <h2>4. Matriz de Casos de Prueba (QA y Verificación)</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Módulo Evaluado</th>
+        <th>Dato de Entrada</th>
+        <th>Comportamiento Esperado</th>
+        <th>Resultado</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>CP-01</strong></td>
+        <td>Calculadora</td>
+        <td><code>15.000</code> USD &rarr; ARS</td>
+        <td>Calcula exactamente quince mil dólares al tipo de cambio seleccionado.</td>
+        <td><span class="status-badge ok">Aprobado</span></td>
+      </tr>
+      <tr>
+        <td><strong>CP-02</strong></td>
+        <td>Calculadora</td>
+        <td><code>15.000.000</code> ARS &rarr; USD</td>
+        <td>Reconoce los 15 millones sin error <code>NaN</code> y realiza la conversión.</td>
+        <td><span class="status-badge ok">Aprobado</span></td>
+      </tr>
+      <tr>
+        <td><strong>CP-03</strong></td>
+        <td>Calculadora</td>
+        <td><code>15.000.000,50</code> EUR</td>
+        <td>Parsea correctamente los separadores de miles y los 50 centavos decimales.</td>
+        <td><span class="status-badge ok">Aprobado</span></td>
+      </tr>
+      <tr>
+        <td><strong>CP-04</strong></td>
+        <td>Modal Alertas</td>
+        <td>Apertura de ventana modal</td>
+        <td>La ventana mantiene dimensiones estables (máx 740px) y no colisiona con el layout.</td>
+        <td><span class="status-badge ok">Aprobado</span></td>
+      </tr>
+      <tr>
+        <td><strong>CP-05</strong></td>
+        <td>Autenticación (Login)</td>
+        <td>Correo no registrado</td>
+        <td>Muestra cartel: <em>"El correo electrónico no es válido o no está registrado..."</em></td>
+        <td><span class="status-badge ok">Aprobado</span></td>
+      </tr>
+      <tr>
+        <td><strong>CP-06</strong></td>
+        <td>Recuperación Clave</td>
+        <td>Correo inexistente</td>
+        <td>Muestra cartel: <em>"El correo electrónico no es válido o no está registrado..."</em></td>
+        <td><span class="status-badge ok">Aprobado</span></td>
+      </tr>
+      <tr>
+        <td><strong>CP-07</strong></td>
+        <td>Canal de Contacto</td>
+        <td>Click en botón Contacto</td>
+        <td>Abre modal con <code>deviseproyect@gmail.com</code> y WhatsApp oficial.</td>
+        <td><span class="status-badge ok">Aprobado</span></td>
+      </tr>
+      <tr>
+        <td><strong>CP-08</strong></td>
+        <td>Foto de Perfil</td>
+        <td>Subida de foto local</td>
+        <td>Comprime en cliente a Base64 y actualiza avatar en Navbar y Perfil.</td>
+        <td><span class="status-badge ok">Aprobado</span></td>
+      </tr>
+      <tr>
+        <td><strong>CP-09</strong></td>
+        <td>Panel Admin</td>
+        <td>Ingreso con rol <code>admin</code></td>
+        <td>Muestra pestaña en menú y permite auditar los correos Gmail enviados.</td>
+        <td><span class="status-badge ok">Aprobado</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- PIE DE FIRMA -->
+  <div class="footer-sign">
+    <div>
+      <strong>Proyecto Divise / Dolarito</strong> &bull; Escuela de Educación Secundaria Técnica (ESTFA 2026)<br>
+      Grupo 6 &bull; Contacto: <code>deviseproyect@gmail.com</code>
+    </div>
+    <div style="text-align: right;">
+      <strong>Carpeta Funcional — Anexo Técnico</strong><br>
+      Aprobado para Entrega y Evaluación
+    </div>
+  </div>
+
+</body>
+</html>

@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { Outlet, NavLink, useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Icon } from '../ui/Icon';
+import ContactModal from '../Contact/ContactModal';
 import './DashboardLayout.css';
 
-const NAV_ITEMS = [
+const BASE_NAV_ITEMS = [
   { to: '/dashboard', end: true, label: 'Inicio', icon: 'home' },
   { to: '/dashboard/divisas', label: 'Cotizaciones', icon: 'dollar' },
   { to: '/dashboard/graficos', label: 'Gráficos', icon: 'chart' },
@@ -15,24 +16,38 @@ const NAV_ITEMS = [
   { to: '/dashboard/historial', label: 'Historial', icon: 'clock' },
 ];
 
-// Ítems fijos del menú inferior (app-like). El resto entra en la hoja "Más".
-const BOTTOM_MAIN = NAV_ITEMS.filter((n) =>
-  ['/dashboard', '/dashboard/divisas', '/dashboard/graficos', '/dashboard/alertas'].includes(n.to)
-);
-
-const MORE_ITEMS = NAV_ITEMS.filter(
-  (n) => !['/dashboard', '/dashboard/divisas', '/dashboard/graficos', '/dashboard/alertas'].includes(n.to)
-);
-
 export default function DashboardLayout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [contactOpen, setContactOpen] = useState(false);
+
+  const isAdmin = Boolean(
+    user?.es_admin ||
+    user?.rol === 'admin' ||
+    ['deviseproyect@gmail.com', 'divise.grupo6@gmail.com', 'demo.divise@example.com'].includes(String(user?.email || '').toLowerCase()) ||
+    String(user?.email || '').toLowerCase().includes('tacconi') ||
+    String(user?.email || '').toLowerCase().includes('admin')
+  );
+
+  const navItems = isAdmin
+    ? [...BASE_NAV_ITEMS, { to: '/dashboard/admin', label: 'Admin', icon: 'shield', admin: true }]
+    : BASE_NAV_ITEMS;
+
+  const bottomMain = navItems.filter((n) =>
+    ['/dashboard', '/dashboard/divisas', '/dashboard/graficos', '/dashboard/alertas'].includes(n.to)
+  );
+
+  const moreItems = navItems.filter(
+    (n) => !['/dashboard', '/dashboard/divisas', '/dashboard/graficos', '/dashboard/alertas'].includes(n.to)
+  );
 
   const moreActive =
-    MORE_ITEMS.some((m) => location.pathname === m.to) || location.pathname === '/dashboard/perfil';
+    moreItems.some((m) => location.pathname === m.to) ||
+    location.pathname === '/dashboard/perfil' ||
+    location.pathname === '/dashboard/admin';
 
   const handleLogout = () => {
     logout();
@@ -41,16 +56,14 @@ export default function DashboardLayout() {
 
   return (
     <div className="dashboard-layout">
-      {/* Navbar */}
+      {/* Navbar Superior */}
       <nav className="dashboard-nav">
         <div className="nav-left">
           <Link to="/dashboard" className="nav-logo" aria-label="Ir al inicio">
             <span className="nav-logo-icon">
               <Icon name="spark" size={17} />
             </span>
-            <span className="nav-logo-text">
-              divise
-            </span>
+            <span className="nav-logo-text">divise</span>
           </Link>
           <button
             className="nav-mobile-toggle"
@@ -62,12 +75,14 @@ export default function DashboardLayout() {
         </div>
 
         <div className={`nav-center ${mobileMenuOpen ? 'open' : ''}`}>
-          {NAV_ITEMS.map((item) => (
+          {navItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               end={item.end}
-              className={({ isActive }) => (isActive ? 'nav-link active' : 'nav-link')}
+              className={({ isActive }) =>
+                `nav-link ${isActive ? 'active' : ''} ${item.admin ? 'admin-nav-link' : ''}`
+              }
               onClick={() => setMobileMenuOpen(false)}
             >
               <Icon name={item.icon} size={16} />
@@ -77,11 +92,30 @@ export default function DashboardLayout() {
         </div>
 
         <div className="nav-right">
+          <button
+            type="button"
+            className="nav-contact-btn"
+            onClick={() => setContactOpen(true)}
+            title="Contactar Administradores y Soporte"
+          >
+            <Icon name="mail" size={15} />
+            <span className="contact-btn-text">Contacto</span>
+          </button>
+
           <Link to="/dashboard/perfil" className="profile-link" title="Ver perfil">
             <div className="avatar">
-              {user?.nombre?.charAt(0)?.toUpperCase() || 'U'}
+              {user?.foto_perfil ? (
+                <img
+                  src={user.foto_perfil}
+                  alt={user.nombre || 'Perfil'}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
+                />
+              ) : (
+                user?.nombre?.charAt(0)?.toUpperCase() || 'U'
+              )}
             </div>
           </Link>
+
           <button className="nav-icon-btn logout-btn" onClick={handleLogout} title="Cerrar sesión">
             <Icon name="logout" size={17} />
           </button>
@@ -93,9 +127,12 @@ export default function DashboardLayout() {
         <Outlet />
       </main>
 
+      {/* Modal de Contactar Administradores */}
+      {contactOpen && <ContactModal onClose={() => setContactOpen(false)} />}
+
       {/* Navegación inferior móvil (app-like) */}
       <nav className="bottom-nav" aria-label="Menú principal">
-        {BOTTOM_MAIN.map((item) => (
+        {bottomMain.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
@@ -123,18 +160,31 @@ export default function DashboardLayout() {
           <div className="bottom-sheet" onClick={(e) => e.stopPropagation()}>
             <div className="bottom-sheet-handle" />
             <div className="bottom-sheet-title">Secciones</div>
-            {MORE_ITEMS.map((item) => (
+            {moreItems.map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}
                 end={item.end}
-                className={({ isActive }) => (isActive ? 'bottom-sheet-link active' : 'bottom-sheet-link')}
+                className={({ isActive }) =>
+                  `bottom-sheet-link ${isActive ? 'active' : ''} ${item.admin ? 'admin-sheet-link' : ''}`
+                }
                 onClick={() => setMoreOpen(false)}
               >
                 <Icon name={item.icon} size={20} />
                 <span>{item.label}</span>
               </NavLink>
             ))}
+            <button
+              type="button"
+              className="bottom-sheet-link"
+              onClick={() => {
+                setMoreOpen(false);
+                setContactOpen(true);
+              }}
+            >
+              <Icon name="mail" size={20} />
+              <span>Contactar Soporte</span>
+            </button>
             <NavLink
               to="/dashboard/perfil"
               className={({ isActive }) => (isActive ? 'bottom-sheet-link active' : 'bottom-sheet-link')}
