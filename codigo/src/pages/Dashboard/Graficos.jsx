@@ -24,7 +24,7 @@ import {
   labelFor,
   describeFor,
 } from '../../services/history';
-import { currencyName, formatARS } from '../../utils';
+import { currencyName, formatARS, formatAmount } from '../../utils';
 import './Graficos.css';
 
 ChartJS.register(
@@ -303,7 +303,7 @@ export default function Graficos() {
 
   const changeUp = metrics ? metrics.pct >= 0 : true;
   const rangeCaption = rawPoints.length
-    ? `${rawPoints.length.toLocaleString('es-AR')} registros · ${new Date(rawPoints[0].t).toLocaleDateString('es-AR')} → ${new Date(rawPoints[rawPoints.length - 1].t).toLocaleDateString('es-AR')}`
+    ? `${formatAmount(rawPoints.length, { decimals: 0, minDecimals: 0 })} registros · ${new Date(rawPoints[0].t).toLocaleDateString('es-AR')} → ${new Date(rawPoints[rawPoints.length - 1].t).toLocaleDateString('es-AR')}`
     : '';
   const upRatio = metrics && (metrics.ups + metrics.downs)
     ? Math.round((metrics.ups / (metrics.ups + metrics.downs)) * 100)
@@ -445,7 +445,7 @@ export default function Graficos() {
                   borderColor: changeUp ? 'rgba(0,192,135,0.3)' : 'rgba(246,70,93,0.3)',
                 }}
               >
-                {changeUp ? '+' : ''}{formatARS(metrics.change)} ({changeUp ? '+' : ''}{metrics.pct.toFixed(2)}%) {changeUp ? '↗' : '↘'}
+                {changeUp ? '+' : ''}{formatARS(metrics.change)} ({changeUp ? '+' : ''}{formatAmount(metrics.pct, { decimals: 2, minDecimals: 2 })}%) {changeUp ? '↗' : '↘'}
               </span>
             )}
           </div>
@@ -470,7 +470,7 @@ export default function Graficos() {
           </div>
           <div className="metric-item">
             <span className="metric-label">Volatilidad</span>
-            <span className="metric-value">{metrics ? `${metrics.volatility.toFixed(2)}%` : '—'}</span>
+            <span className="metric-value">{metrics ? `${formatAmount(metrics.volatility, { decimals: 2, minDecimals: 2 })}%` : '—'}</span>
           </div>
           <div className="metric-item">
             <span className="metric-label">Rango ({selectedPeriod})</span>
@@ -486,14 +486,14 @@ export default function Graficos() {
         <div className="ssc-item">
           <span className="ssc-label">Variación en el período ({selectedPeriod})</span>
           <span className="ssc-value" style={{ color: changeUp ? 'var(--success)' : 'var(--danger)' }}>
-            {metrics ? `${changeUp ? '+' : ''}${formatARS(metrics.change)} (${metrics.pct.toFixed(2)}%)` : '—'}
+            {metrics ? `${changeUp ? '+' : ''}${formatARS(metrics.change)} (${formatAmount(metrics.pct, { decimals: 2, minDecimals: 2 })}%)` : '—'}
           </span>
         </div>
 
         <div className="ssc-item">
           <span className="ssc-label">Rendimiento promedio diario</span>
           <span className="ssc-value" style={{ color: (metrics?.avgDaily ?? 0) >= 0 ? 'var(--success)' : 'var(--danger)' }}>
-            {metrics ? `${metrics.avgDaily.toFixed(2)}%` : '—'}
+            {metrics ? `${formatAmount(metrics.avgDaily, { decimals: 2, minDecimals: 2 })}%` : '—'}
           </span>
         </div>
 

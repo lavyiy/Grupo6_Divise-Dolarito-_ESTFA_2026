@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { fetchRates } from '../services/api';
-import { stableVariation, hashSeed } from '../utils';
+import { stableVariation, hashSeed, formatAmount } from '../utils';
 import { Icon } from './ui/Icon';
 
 const ROTATION = [
@@ -70,8 +70,7 @@ export default function AuthMarketCard() {
   const value = rate ? arsValue(rate, rates) : null;
   const decimals = value >= 100000 ? 0 : 2;
   const up = change >= 0;
-  const fmt = (v, d) =>
-    Number(v).toLocaleString('es-AR', { minimumFractionDigits: d, maximumFractionDigits: d });
+  const fmt = (v, d) => formatAmount(v, { decimals: d, minDecimals: d });
 
   return (
     <div className="auth-market-card">

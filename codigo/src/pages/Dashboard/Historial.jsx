@@ -4,6 +4,7 @@ import { Icon } from '../../components/ui/Icon';
 import CurrencyBadge from '../../components/ui/CurrencyBadge';
 import { useAuth } from '../../context/AuthContext';
 import { getHistorial, recordHistorial } from '../../services/api';
+import { formatAmount } from '../../utils';
 import './Historial.css';
 
 const CRYPTO_CODES = new Set(['BTC', 'ETH', 'USDT', 'BNB', 'DOGE']);
@@ -440,7 +441,7 @@ export default function Historial() {
                     </td>
                     <td>
                       <span className="currency-price">
-                        ${item.precio.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                        ${formatAmount(item.precio, { decimals: 2, minDecimals: 2 })}
                       </span>
                     </td>
                     <td style={{ textAlign: 'right' }}>

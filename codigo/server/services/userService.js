@@ -19,7 +19,42 @@ async function getUserProfile(id_usuario) {
   return user;
 }
 
-async function updateProfile(id_usuario, { nombre, email, divisa_base_id }) {
+// Límite de seguridad para la foto (data URL en Base64). El frontend la
+// comprime a ~256px antes de enviarla, por lo que este margen es amplio.
+const MAX_FOTO_PERFIL_LENGTH = 1_000_000;
+
+function sanitizeFotoPerfil(foto) {
+  if (foto === undefined) return undefined;
+  if (foto === null) return null;
+
+  if (typeof foto !== 'string') {
+    throw Object.assign(new Error('El formato de la foto de perfil no es válido.'), { status: 400 });
+  }
+
+  const value = foto.trim();
+  if (!value) return null;
+
+  const isDataImage = /^data:image\/(?:png|jpe?g|webp|gif|svg\+xml)(?:;[^,]*)?,/i.test(value);
+  const isHttpUrl = /^https?:\/\/\S+$/i.test(value);
+
+  if (!isDataImage && !isHttpUrl) {
+    throw Object.assign(
+      new Error('La foto de perfil debe ser una imagen válida (JPG, PNG, WEBP, GIF o SVG).'),
+      { status: 400 }
+    );
+  }
+
+  if (value.length > MAX_FOTO_PERFIL_LENGTH) {
+    throw Object.assign(
+      new Error('La foto de perfil es demasiado grande. Probá con una imagen más liviana.'),
+      { status: 413 }
+    );
+  }
+
+  return value;
+}
+
+async function updateProfile(id_usuario, { nombre, email, divisa_base_id, foto_perfil }) {
   const existing = await userModel.getUserById(id_usuario);
   if (!existing) {
     throw Object.assign(new Error('Usuario no encontrado'), { status: 404 });
@@ -32,7 +67,12 @@ async function updateProfile(id_usuario, { nombre, email, divisa_base_id }) {
     }
   }
 
-  const updated = await userModel.updateUserProfile(id_usuario, { nombre, email, divisa_base_id });
+  const updated = await userModel.updateUserProfile(id_usuario, {
+    nombre,
+    email,
+    divisa_base_id,
+    foto_perfil: sanitizeFotoPerfil(foto_perfil),
+  });
   return updated;
 }
 

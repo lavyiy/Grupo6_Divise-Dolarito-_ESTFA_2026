@@ -6,13 +6,13 @@ import './CurrencyBadge.css';
 
 const GLYPHS = {
   USD: '$', ARS: '$', CLP: '$', UYU: '$U', CAD: 'C$', AUD: 'A$', MXN: '$',
-  EUR: '€', GBP: '£', JPY: '¥', CHF: 'Fr',
+  EUR: '€', GBP: '£', JPY: '¥', CNY: '¥', CHF: 'Fr',
   BRL: 'R$',
   BTC: '₿', ETH: 'Ξ', USDT: '₮', BNB: '◆', DOGE: 'Ð',
 };
 
 const COLORS = {
-  USD: '#F0B90B', ARS: '#F0B90B', CLP: '#F0B90B', UYU: '#F0B90B', CAD: '#F0B90B', AUD: '#F0B90B', MXN: '#F0B90B',
+  USD: '#F0B90B', ARS: '#F0B90B', CLP: '#F0B90B', UYU: '#F0B90B', CAD: '#F0B90B', AUD: '#F0B90B', MXN: '#F0B90B', CNY: '#F0B90B',
   EUR: '#8EA6FF', CHF: '#8EA6FF',
   GBP: '#C7A2FF',
   JPY: '#FF7A90',

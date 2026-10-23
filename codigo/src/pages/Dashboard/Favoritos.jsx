@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Icon } from '../../components/ui/Icon';
 import CurrencyBadge from '../../components/ui/CurrencyBadge';
 import Sparkline from '../../components/ui/Sparkline';
-import { stableVariation, hashSeed, precioEnARS } from '../../utils';
+import { stableVariation, hashSeed, precioEnARS, formatAmount } from '../../utils';
 import { useAuth } from '../../context/AuthContext';
 import { getFavorites, toggleFavorite, fetchRates, recordHistorial } from '../../services/api';
 import './Favoritos.css';
@@ -313,7 +313,7 @@ export default function Favoritos() {
                       <td>
                         <span className="currency-price">
                           {item.precio > 0
-                            ? `$${item.precio.toLocaleString('es-AR', { minimumFractionDigits: 2 })}`
+                            ? `$${formatAmount(item.precio, { decimals: 2, minDecimals: 2 })}`
                             : '—'}
                         </span>
                       </td>
@@ -321,7 +321,7 @@ export default function Favoritos() {
                         <div className="fav-variation">
                           <span className={`fav-var-badge ${isUp ? 'up' : 'down'}`}>
                             <Icon name={isUp ? 'trendUp' : 'trendDown'} size={12} />
-                            {isUp ? '+' : ''}{varValue.toFixed(2)}%
+                            {isUp ? '+' : ''}{formatAmount(varValue, { decimals: 2, minDecimals: 2 })}%
                           </span>
                           <Sparkline seed={hashSeed(item.codigo)} width={72} height={26} stroke={isUp ? 'var(--success)' : 'var(--danger)'} />
                         </div>

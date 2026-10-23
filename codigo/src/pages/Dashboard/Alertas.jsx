@@ -3,6 +3,7 @@ import AlertModal from '../../components/Alerts/AlertModal';
 import { Icon } from '../../components/ui/Icon';
 import { useAuth } from '../../context/AuthContext';
 import { getAlerts, createAlert, deleteAlert } from '../../services/api';
+import { formatAmount } from '../../utils';
 import './Alertas.css';
 
 export default function Alertas() {
@@ -155,7 +156,7 @@ export default function Alertas() {
                 <div className="ac-body">
                   <div className="ac-condition">
                     <span className="ac-label">{condicion}</span>
-                    <span className="ac-val"><span>$</span> {Number(valor || 0).toLocaleString('es-AR')}</span>
+                    <span className="ac-val"><span>$</span> {formatAmount(valor || 0, { decimals: 2, minDecimals: 0 })}</span>
                   </div>
                 </div>
 

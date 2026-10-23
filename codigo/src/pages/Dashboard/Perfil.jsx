@@ -68,12 +68,14 @@ export default function Perfil() {
   // ── Guardar Foto de Perfil ───────────────────────────────────────────────
   const handleSaveAvatar = async (photoUrl) => {
     try {
-      await updateProfile({ foto_perfil: photoUrl }, token);
-      updateUser({ foto_perfil: photoUrl });
+      const updated = await updateProfile({ foto_perfil: photoUrl }, token);
+      updateUser({ foto_perfil: updated?.foto_perfil ?? photoUrl });
       setIsAvatarModalOpen(false);
       showToast(photoUrl ? '¡Foto de perfil actualizada con éxito!' : 'Foto de perfil restablecida a la inicial.');
     } catch (err) {
+      // Se relanza el error para que el modal lo muestre y no se cierre.
       showToast(err.message || 'Error al actualizar la foto de perfil.', 'error');
+      throw err;
     }
   };
 

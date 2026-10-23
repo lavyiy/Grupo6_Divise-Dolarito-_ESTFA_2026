@@ -6,7 +6,7 @@ import { Icon } from '../../components/ui/Icon';
 import CurrencyBadge from '../../components/ui/CurrencyBadge';
 import Sparkline from '../../components/ui/Sparkline';
 import { useAuth } from '../../context/AuthContext';
-import { stableVariation, formatARS, hashSeed, precioEnARS } from '../../utils';
+import { stableVariation, formatARS, formatAmount, hashSeed, precioEnARS } from '../../utils';
 import './Inicio.css';
 
 const KPI_CARDS = [
@@ -131,15 +131,14 @@ export default function Inicio() {
                   end={price}
                   decimals={2}
                   duration={1.5}
-                  separator="."
-                  decimal=","
+                  formattingFn={(value) => formatAmount(value, { decimals: 2, minDecimals: 2 })}
                 />
               </div>
               <div className="sc-bottom">
                 <span className={`sc-change ${isUp ? 'up' : 'down'}`}>
                   <Icon name={isUp ? 'trendUp' : 'trendDown'} size={14} />
                   {isUp ? '+' : ''}
-                  {variation.toFixed(2)}% hoy
+                  {formatAmount(variation, { decimals: 2, minDecimals: 2 })}% hoy
                 </span>
                 <Sparkline
                   seed={hashSeed(kpi.seed)}
@@ -189,7 +188,7 @@ export default function Inicio() {
                       <span className="fr-price">$ {formatARS(precioArs)}</span>
                       <span className={`fr-change ${isUp ? 'up' : 'down'}`}>
                         {isUp ? '+' : ''}
-                        {variation.toFixed(2)}%
+                        {formatAmount(variation, { decimals: 2, minDecimals: 2 })}%
                       </span>
                     </div>
                     <Sparkline

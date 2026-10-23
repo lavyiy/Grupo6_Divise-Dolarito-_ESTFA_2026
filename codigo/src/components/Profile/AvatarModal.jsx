@@ -26,9 +26,35 @@ function createPresetSvgUri(preset) {
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }
 
+// Debe coincidir con el límite del backend (1.000.000 caracteres).
+const MAX_DATA_URL_LENGTH = 900_000;
+
+function renderCompressedImage(img, maxSize, quality) {
+  let width = img.width;
+  let height = img.height;
+
+  if (width > height) {
+    if (width > maxSize) {
+      height = Math.round((height * maxSize) / width);
+      width = maxSize;
+    }
+  } else if (height > maxSize) {
+    width = Math.round((width * maxSize) / height);
+    height = maxSize;
+  }
+
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, width);
+  canvas.height = Math.max(1, height);
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  return canvas.toDataURL('image/jpeg', quality);
+}
+
 export default function AvatarModal({ currentPhoto, userName, onClose, onSave }) {
   const [selectedPhoto, setSelectedPhoto] = useState(currentPhoto || '');
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const fileInputRef = useRef(null);
 
@@ -54,33 +80,36 @@ export default function AvatarModal({ currentPhoto, userName, onClose, onSave })
     reader.onload = (event) => {
       const img = new Image();
       img.onload = () => {
-        // Redimensionar a max 256x256 para guardar ligero en Base64
-        const canvas = document.createElement('canvas');
-        const maxSize = 256;
-        let width = img.width;
-        let height = img.height;
+        try {
+          // Redimensionar y bajar la calidad hasta que la imagen entre en el
+          // límite del backend (siempre como JPEG para que pese poco).
+          let maxSize = 256;
+          let quality = 0.85;
+          let dataUrl = renderCompressedImage(img, maxSize, quality);
 
-        if (width > height) {
-          if (width > maxSize) {
-            height = Math.round((height * maxSize) / width);
-            width = maxSize;
+          while (dataUrl.length > MAX_DATA_URL_LENGTH && quality > 0.5) {
+            quality -= 0.1;
+            dataUrl = renderCompressedImage(img, maxSize, quality);
           }
-        } else {
-          if (height > maxSize) {
-            width = Math.round((width * maxSize) / height);
-            height = maxSize;
+
+          if (dataUrl.length > MAX_DATA_URL_LENGTH) {
+            maxSize = 160;
+            quality = 0.7;
+            dataUrl = renderCompressedImage(img, maxSize, quality);
           }
+
+          if (dataUrl.length > MAX_DATA_URL_LENGTH) {
+            setError('No pudimos comprimir la imagen lo suficiente. Probá con otra foto más liviana.');
+            setLoading(false);
+            return;
+          }
+
+          setSelectedPhoto(dataUrl);
+          setLoading(false);
+        } catch {
+          setError('Error al procesar la imagen seleccionada.');
+          setLoading(false);
         }
-
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
-
-        // Convertir a JPEG comprimido
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-        setSelectedPhoto(dataUrl);
-        setLoading(false);
       };
       img.onerror = () => {
         setError('Error al procesar la imagen seleccionada.');
@@ -105,8 +134,17 @@ export default function AvatarModal({ currentPhoto, userName, onClose, onSave })
     setSelectedPhoto('');
   };
 
-  const handleConfirm = () => {
-    onSave(selectedPhoto);
+  const handleConfirm = async () => {
+    if (loading || saving) return;
+    setError('');
+    setSaving(true);
+    try {
+      await onSave(selectedPhoto);
+    } catch (err) {
+      setError(err?.message || 'No se pudo guardar la foto de perfil. Intentá nuevamente.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -158,7 +196,7 @@ export default function AvatarModal({ currentPhoto, userName, onClose, onSave })
             type="button"
             className="btn btn-primary btn-block"
             onClick={() => fileInputRef.current?.click()}
-            disabled={loading}
+            disabled={loading || saving}
           >
             <Icon name="upload" size={16} />
             {loading ? 'Procesando imagen...' : 'Subir foto desde tu dispositivo'}
@@ -190,11 +228,11 @@ export default function AvatarModal({ currentPhoto, userName, onClose, onSave })
 
         {/* Botones de acción */}
         <div className="avatar-modal-actions">
-          <button type="button" className="btn btn-secondary" onClick={onClose}>
+          <button type="button" className="btn btn-secondary" onClick={onClose} disabled={saving}>
             Cancelar
           </button>
-          <button type="button" className="btn btn-primary" onClick={handleConfirm} disabled={loading}>
-            Guardar Foto
+          <button type="button" className="btn btn-primary" onClick={handleConfirm} disabled={loading || saving}>
+            {saving ? 'Guardando...' : 'Guardar Foto'}
           </button>
         </div>
       </div>

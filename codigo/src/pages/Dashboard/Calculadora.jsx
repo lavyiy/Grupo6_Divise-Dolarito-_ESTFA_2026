@@ -1,12 +1,26 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { fetchRates, getFavorites, toggleFavorite, recordHistorial } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import CountUp from 'react-countup';
 import { Icon } from '../../components/ui/Icon';
 import CurrencyBadge from '../../components/ui/CurrencyBadge';
-import { currencyName, parseArgentineNumber, formatARS } from '../../utils';
+import { currencyName, parseArgentineNumber, formatAmount, formatAmountInput } from '../../utils';
 import './Calculadora.css';
+
+const CRYPTO_CODES = new Set(['BTC', 'ETH', 'USDT', 'BNB', 'DOGE']);
+
+const FALLBACK_CURRENCIES = [
+  'ARS', 'USD', 'EUR', 'BRL', 'UYU', 'CLP', 'MXN', 'GBP', 'JPY',
+  'CAD', 'CHF', 'AUD', 'CNY', 'BTC', 'ETH', 'USDT', 'BNB', 'DOGE',
+];
+
+const CURRENCY_ORDER = [
+  'ARS', 'USD', 'EUR', 'BRL', 'UYU', 'CLP', 'MXN', 'GBP', 'JPY',
+  'CAD', 'CHF', 'AUD', 'CNY', 'BTC', 'ETH', 'USDT', 'BNB', 'DOGE',
+];
+
+const isCryptoCode = (code) => CRYPTO_CODES.has(String(code || '').toUpperCase());
 
 export default function Calculadora() {
   const location = useLocation();
@@ -16,16 +30,45 @@ export default function Calculadora() {
   const [toast, setToast] = useState('');
   const [favBusy, setFavBusy] = useState(false);
   const [showResult, setShowResult] = useState(false);
-  const [amount, setAmount] = useState('1000');
+  const [amount, setAmount] = useState('1.000');
   const [fromCurrency, setFromCurrency] = useState(location.state?.currency || 'USD');
   const [toCurrency, setToCurrency] = useState('ARS');
 
   // Historial visual de conversiones de la sesión (sin datos mock).
   const [history, setHistory] = useState([]);
 
+  // Opciones de moneda: combina la lista base con las cotizaciones disponibles.
+  // Así aparecen UYU, CLP, MXN, CNY y cualquier otra divisa que devuelva el backend.
+  const currencyOptions = useMemo(() => {
+    const codes = new Set([...FALLBACK_CURRENCIES, fromCurrency, toCurrency]);
+    (Array.isArray(rates) ? rates : []).forEach((rate) => {
+      const code = String(rate?.codigo || '').trim().toUpperCase();
+      if (code) codes.add(code);
+    });
+
+    const orderIndex = (code) => {
+      const index = CURRENCY_ORDER.indexOf(code);
+      return index === -1 ? CURRENCY_ORDER.length : index;
+    };
+
+    return [...codes].sort(
+      (a, b) => orderIndex(a) - orderIndex(b) || a.localeCompare(b)
+    );
+  }, [rates, fromCurrency, toCurrency]);
+
   // ── Validación del monto ingresado con soporte de formato argentino y grandes números ──
   const amountParse = parseArgentineNumber(amount);
   const montoError = amountParse.ok ? '' : amountParse.error;
+
+  const handleAmountChange = (e) => {
+    // Solo números, puntos y comas. La validación estricta la hace el parser.
+    setAmount(String(e.target.value || '').replace(/[^\d.,]/g, ''));
+  };
+
+  const handleAmountBlur = () => {
+    const formatted = formatAmountInput(amount);
+    if (formatted !== amount) setAmount(formatted);
+  };
 
   useEffect(() => {
     if (location.state?.currency) {
@@ -93,6 +136,10 @@ export default function Calculadora() {
       return;
     }
 
+    // Normaliza el input con puntos de miles y coma decimal.
+    const formattedAmount = formatAmountInput(amount);
+    if (formattedAmount !== amount) setAmount(formattedAmount);
+
     setShowResult(true);
 
     // Registra la conversión en el historial real (solo con sesión activa).
@@ -108,8 +155,11 @@ export default function Calculadora() {
       {
         from: fromCurrency,
         to: toCurrency,
-        in: (amountParse.value || 0).toLocaleString('es-AR'),
-        out: (result || 0).toLocaleString('es-AR', { maximumFractionDigits: ['BTC', 'ETH', 'USDT', 'BNB', 'DOGE'].includes(toCurrency) ? 6 : 4 }),
+        in: formatAmount(amountParse.value || 0, { decimals: 6, minDecimals: 0 }),
+        out: formatAmount(result || 0, {
+          decimals: isCryptoCode(toCurrency) ? 6 : 2,
+          minDecimals: 0,
+        }),
         time: 'Ahora',
       },
       ...prev,
@@ -129,7 +179,7 @@ export default function Calculadora() {
     if (!rate) return 0;
 
     // Si la divisa cotiza en USD (como BTC, ETH, USDT, BNB, DOGE), convertimos su valor base a ARS mediante Dólar Blue
-    if (['BTC', 'ETH', 'USDT', 'BNB', 'DOGE'].includes(currencyCode)) {
+    if (isCryptoCode(currencyCode)) {
       const usdRate = rates.find(r => r.codigo === 'USD' && r.tipo_mercado === 'Informal')?.venta
         || rates.find(r => r.codigo === 'USD')?.venta
         || 1545;
@@ -155,6 +205,7 @@ export default function Calculadora() {
 
   const result = calculateResult();
   const conversionRate = fromRate > 0 && toRate > 0 ? fromRate / toRate : 0;
+  const resultDecimals = isCryptoCode(toCurrency) ? 6 : 2;
 
   return (
     <div className="calc-container page-enter">
@@ -186,20 +237,9 @@ export default function Calculadora() {
                   onChange={e => setFromCurrency(e.target.value)}
                   style={{position: 'absolute', opacity: 0, width: '100%', height: '100%', cursor: 'pointer'}}
                 >
-                  <option value="USD">USD</option>
-                  <option value="ARS">ARS</option>
-                  <option value="EUR">EUR</option>
-                  <option value="BRL">BRL</option>
-                  <option value="GBP">GBP</option>
-                  <option value="JPY">JPY</option>
-                  <option value="CAD">CAD</option>
-                  <option value="CHF">CHF</option>
-                  <option value="AUD">AUD</option>
-                  <option value="BTC">BTC</option>
-                  <option value="ETH">ETH</option>
-                  <option value="USDT">USDT</option>
-                  <option value="BNB">BNB</option>
-                  <option value="DOGE">DOGE</option>
+                  {currencyOptions.map(code => (
+                    <option key={code} value={code}>{code}</option>
+                  ))}
                 </select>
                 <span>⌄</span>
               </div>
@@ -208,10 +248,18 @@ export default function Calculadora() {
                 type="text" 
                 className={`calc-amount ${montoError ? 'calc-amount-error' : ''}`} 
                 value={amount} 
-                onChange={(e) => setAmount(e.target.value)} 
+                onChange={handleAmountChange}
+                onBlur={handleAmountBlur}
+                inputMode="decimal"
+                placeholder="Ej: 1.000.000,50"
                 aria-invalid={Boolean(montoError)}
               />
               {montoError && <span className="calc-error" role="alert">{montoError}</span>}
+              {!montoError && (
+                <span className="calc-input-hint">
+                  Miles con punto y decimales con coma. Ej: 12.980,50
+                </span>
+              )}
             </div>
 
             <button className="calc-swap-btn" onClick={handleSwap} title="Invertir monedas">⇄</button>
@@ -229,20 +277,9 @@ export default function Calculadora() {
                   onChange={e => setToCurrency(e.target.value)}
                   style={{position: 'absolute', opacity: 0, width: '100%', height: '100%', cursor: 'pointer'}}
                 >
-                  <option value="ARS">ARS</option>
-                  <option value="USD">USD</option>
-                  <option value="EUR">EUR</option>
-                  <option value="BRL">BRL</option>
-                  <option value="GBP">GBP</option>
-                  <option value="JPY">JPY</option>
-                  <option value="CAD">CAD</option>
-                  <option value="CHF">CHF</option>
-                  <option value="AUD">AUD</option>
-                  <option value="BTC">BTC</option>
-                  <option value="ETH">ETH</option>
-                  <option value="USDT">USDT</option>
-                  <option value="BNB">BNB</option>
-                  <option value="DOGE">DOGE</option>
+                  {currencyOptions.map(code => (
+                    <option key={code} value={code}>{code}</option>
+                  ))}
                 </select>
                 <span>⌄</span>
               </div>
@@ -250,8 +287,8 @@ export default function Calculadora() {
               <input 
                 type="text" 
                 className="calc-amount calc-result-display" 
-                value={hasError ? '' : (result || 0).toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: ['BTC', 'ETH', 'USDT', 'BNB', 'DOGE'].includes(toCurrency) ? 6 : 4})} 
-                disabled 
+                value={hasError ? '' : formatAmount(result || 0, { decimals: resultDecimals, minDecimals: 2 })}
+                disabled
               />
               {rateError && <span className="calc-error" role="alert">{rateError}</span>}
             </div>
@@ -265,7 +302,7 @@ export default function Calculadora() {
             </div>
           ) : conversionRate > 0 && (
             <div className="calc-rate-info">
-              <span>1 {fromCurrency} = {conversionRate.toLocaleString('es-AR', {maximumFractionDigits: ['BTC', 'ETH', 'USDT', 'BNB', 'DOGE'].includes(toCurrency) ? 8 : 4})} {toCurrency}</span>
+              <span>1 {fromCurrency} = {formatAmount(conversionRate, { decimals: isCryptoCode(toCurrency) ? 8 : 4, minDecimals: 0 })} {toCurrency}</span>
               <span className="calc-rate-live">Al día de hoy</span>
             </div>
           )}
@@ -308,7 +345,15 @@ export default function Calculadora() {
                 <span className="calc-error-big">{montoError || rateError}</span>
               ) : (
                 <>
-                  <CountUp end={result} decimals={['BTC', 'ETH', 'USDT', 'BNB', 'DOGE'].includes(toCurrency) ? 6 : 2} duration={1} separator="." decimal="," /> <span>{toCurrency}</span>
+                  <CountUp
+                    end={result}
+                    decimals={isCryptoCode(toCurrency) ? 6 : 2}
+                    duration={1}
+                    formattingFn={(value) => formatAmount(value, {
+                      decimals: isCryptoCode(toCurrency) ? 6 : 2,
+                      minDecimals: isCryptoCode(toCurrency) ? 6 : 2,
+                    })}
+                  /> <span>{toCurrency}</span>
                 </>
               )}
             </div>
@@ -316,7 +361,7 @@ export default function Calculadora() {
             <div className="calc-used-rate" style={{marginTop: '32px'}}>
               <div className="title">Cotización utilizada</div>
               <div className="row">
-                <span>1 {fromCurrency} = {conversionRate ? conversionRate.toLocaleString('es-AR', {maximumFractionDigits: 4}) : 0} {toCurrency}</span>
+                <span>1 {fromCurrency} = {formatAmount(conversionRate, { decimals: isCryptoCode(toCurrency) ? 8 : 4, minDecimals: 0 })} {toCurrency}</span>
               </div>
               <div className="time">Última actualización: En vivo desde el servidor</div>
             </div>
@@ -382,7 +427,7 @@ export default function Calculadora() {
               </div>
 
               <div className="calc-modal-amount">
-                {(amountParse.value || 0).toLocaleString('es-AR')} <span>{fromCurrency}</span>
+                {formatAmount(amountParse.value || 0, { decimals: 6, minDecimals: 0 })} <span>{fromCurrency}</span>
               </div>
 
               <div className="calc-modal-equals">=</div>
@@ -390,17 +435,19 @@ export default function Calculadora() {
               <div className="calc-modal-result">
                 <CountUp
                   end={result}
-                  decimals={['BTC', 'ETH', 'USDT', 'BNB', 'DOGE'].includes(toCurrency) ? 6 : 2}
+                  decimals={isCryptoCode(toCurrency) ? 6 : 2}
                   duration={0.9}
-                  separator="."
-                  decimal=","
+                  formattingFn={(value) => formatAmount(value, {
+                    decimals: isCryptoCode(toCurrency) ? 6 : 2,
+                    minDecimals: isCryptoCode(toCurrency) ? 6 : 2,
+                  })}
                 />
                 {' '}<span className="calc-modal-result-cur">{toCurrency}</span>
               </div>
 
               <div className="calc-modal-rate">
                 <Icon name="spark" size={14} style={{ color: 'var(--brand-gold)' }} />
-                1 {fromCurrency} = {conversionRate ? conversionRate.toLocaleString('es-AR', { maximumFractionDigits: 4 }) : 0} {toCurrency}
+                1 {fromCurrency} = {formatAmount(conversionRate, { decimals: isCryptoCode(toCurrency) ? 8 : 4, minDecimals: 0 })} {toCurrency}
               </div>
 
               <button type="button" className="btn btn-primary btn-block" onClick={() => setShowResult(false)}>

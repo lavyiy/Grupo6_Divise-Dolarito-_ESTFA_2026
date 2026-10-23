@@ -28,8 +28,13 @@ const getProfile = async (req, res) => {
 const updateProfile = async (req, res) => {
   try {
     const id_usuario = req.params.id || req.user.id_usuario;
-    const { nombre, email, divisa_base_id } = req.body;
-    const updated = await userService.updateProfile(id_usuario, { nombre, email, divisa_base_id });
+    const { nombre, email, divisa_base_id, foto_perfil } = req.body;
+    const updated = await userService.updateProfile(id_usuario, {
+      nombre,
+      email,
+      divisa_base_id,
+      foto_perfil,
+    });
     res.status(200).json(updated);
   } catch (error) {
     console.error('Error en updateProfile:', error);

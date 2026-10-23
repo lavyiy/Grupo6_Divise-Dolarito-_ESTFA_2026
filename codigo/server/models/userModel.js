@@ -344,28 +344,56 @@ const updateUserProfile = async (id_usuario, { nombre, email, divisa_base_id, fo
   }
   if (es_admin !== undefined) updateFields.es_admin = es_admin;
 
+  if (Object.keys(updateFields).length === 0) {
+    throw Object.assign(
+      new Error('No se enviaron cambios para actualizar el perfil.'),
+      { status: 400 }
+    );
+  }
+
   try {
     const { data, error } = await supabase().from('usuarios')
       .update(updateFields)
       .eq('id_usuario', id_usuario)
       .select('id_usuario, nombre, email, divisa_base_id, two_factor_enabled, rol, es_admin, foto_perfil')
-      .single();
+      .maybeSingle();
 
     if (error) throw error;
+    if (!data) {
+      throw Object.assign(new Error('Usuario no encontrado.'), { status: 404 });
+    }
     return data;
-  } catch {
+  } catch (error) {
+    // Solo se reintenta sin columnas opcionales cuando el error indica que el
+    // esquema todavía no las tiene (bases viejas). Cualquier otro error debe
+    // llegar al frontend en lugar de simular una actualización exitosa.
+    const message = String(error?.message || '');
+    const isMissingOptionalColumn =
+      error?.code === '42703' ||
+      error?.code === 'PGRST204' ||
+      /foto_perfil|\bes_admin\b|\brol\b|schema cache/i.test(message);
+
+    if (!isMissingOptionalColumn) throw error;
+
     const safeFields = { ...updateFields };
     delete safeFields.foto_perfil;
     delete safeFields.rol;
     delete safeFields.es_admin;
 
+    if (Object.keys(safeFields).length === 0) {
+      throw error;
+    }
+
     const { data: safeData, error: safeErr } = await supabase().from('usuarios')
       .update(safeFields)
       .eq('id_usuario', id_usuario)
       .select('id_usuario, nombre, email, divisa_base_id, two_factor_enabled')
-      .single();
+      .maybeSingle();
 
     if (safeErr) throw safeErr;
+    if (!safeData) {
+      throw Object.assign(new Error('Usuario no encontrado.'), { status: 404 });
+    }
     return {
       ...safeData,
       foto_perfil: foto_perfil ?? null,
