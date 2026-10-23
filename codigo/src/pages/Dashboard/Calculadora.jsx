@@ -238,7 +238,7 @@ export default function Calculadora() {
                   style={{position: 'absolute', inset: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer'}}
                 >
                   {currencyOptions.map(code => (
-                    <option key={code} value={code}>{code}</option>
+                    <option key={code} value={code}>{code} — {currencyName(code)}</option>
                   ))}
                 </select>
                 <span>⌄</span>
@@ -273,7 +273,7 @@ export default function Calculadora() {
                   style={{position: 'absolute', inset: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer'}}
                 >
                   {currencyOptions.map(code => (
-                    <option key={code} value={code}>{code}</option>
+                    <option key={code} value={code}>{code} — {currencyName(code)}</option>
                   ))}
                 </select>
                 <span>⌄</span>
