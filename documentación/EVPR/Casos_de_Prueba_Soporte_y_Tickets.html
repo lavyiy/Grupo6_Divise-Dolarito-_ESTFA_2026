@@ -1,0 +1,942 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Casos de Prueba ? Soporte y Tickets | Divise</title>
+<style>
+@page { size: A4 landscape; margin: 10mm 9mm 12mm 9mm; }
+* { box-sizing: border-box; }
+body { font-family: 'Segoe UI', Arial, Helvetica, sans-serif; color: #1e293b; font-size: 9pt; line-height: 1.42; margin: 0; }
+h1 { font-size: 27pt; line-height: 1.05; color: #0b1426; margin: 0 0 2mm 0; letter-spacing: 0.5px; }
+h2 { font-size: 16pt; color: #0b1426; border-bottom: 2.5px solid #f0b90b; padding-bottom: 1.5mm; margin: 7mm 0 3mm 0; page-break-after: avoid; }
+h3 { font-size: 12pt; color: #0b1426; margin: 5mm 0 2mm 0; page-break-after: avoid; }
+p { margin: 1.5mm 0; }
+strong { color: #0b1426; }
+table { width: 100%; border-collapse: collapse; margin: 2mm 0 4mm 0; }
+th { background: #0b1426; color: #ffffff; font-size: 8pt; font-weight: 700; text-align: left; padding: 2.2mm 1.8mm; border: 1px solid #0b1426; }
+td { border: 1px solid #d8e0ea; padding: 1.8mm; vertical-align: top; font-size: 8pt; }
+tbody tr:nth-child(even) td { background: #f7f9fc; }
+tbody tr:first-child td { background: #fff8e1; }
+table.cases { table-layout: fixed; }
+table.cases th:nth-child(1) { width: 6.5%; }
+table.cases th:nth-child(2) { width: 6.5%; }
+table.cases th:nth-child(3) { width: 7.5%; }
+table.cases th:nth-child(4) { width: 14%; }
+table.cases th:nth-child(5) { width: 13.5%; }
+table.cases th:nth-child(6) { width: 18%; }
+table.cases th:nth-child(7) { width: 17%; }
+table.cases th:nth-child(8) { width: 17%; }
+table.cases td { font-size: 7.4pt; line-height: 1.36; }
+tr { page-break-inside: avoid; }
+.page-break { page-break-after: always; height: 0; }
+ul, ol { margin: 1.5mm 0 2mm 5mm; padding: 0; }
+li { margin: 0.8mm 0; }
+hr { border: none; border-top: 1px solid #d8e0ea; margin: 5mm 0; }
+blockquote { border-left: 4px solid #f0b90b; background: #fff8e1; margin: 3mm 0; padding: 2mm 4mm; color: #475569; }
+code { background: #eef2f7; border: 1px solid #dbe2ea; border-radius: 3px; padding: 0.3mm 1.2mm; font-family: Consolas, monospace; font-size: 8pt; }
+</style>
+</head>
+<body>
+<h1 id="divise-dolarito">DIVISE / DOLARITO</h1>
+<h2 id="casos-de-prueba-modulo-de-soporte-y-tickets">Casos de Prueba — Módulo de Soporte y Tickets</h2>
+<p><strong>Chatbot de soporte, tickets y bandeja de administración</strong></p>
+<table>
+<thead>
+<tr>
+<th>Campo</th>
+<th>Detalle</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Proyecto</strong></td>
+<td>Divise — Cotizaciones &amp; Mercado en Tiempo Real</td>
+</tr>
+<tr>
+<td><strong>Emprendimiento</strong></td>
+<td>DiviseTech — Grupo 6 — ESTFA 2026</td>
+</tr>
+<tr>
+<td><strong>Documento</strong></td>
+<td>Casos de prueba del módulo de Soporte y Administración</td>
+</tr>
+<tr>
+<td><strong>Versión</strong></td>
+<td>1.0</td>
+</tr>
+<tr>
+<td><strong>Fecha</strong></td>
+<td>Octubre 2026</td>
+</tr>
+<tr>
+<td><strong>Entorno principal</strong></td>
+<td>Local (<code>http://localhost:5173</code> + <code>http://localhost:5000</code>) y producción Render/Supabase</td>
+</tr>
+<tr>
+<td><strong>Equipo</strong></td>
+<td>Valentín López [PM] · Santino Tacconi [Dev] · Santiago Centurión [Dev] · Bruno Cabrera [UX] · Lorenzo Sánchez [BDA/QA]</td>
+</tr>
+<tr>
+<td><strong>Alcance</strong></td>
+<td>Funcionalidades incorporadas: chatbot de soporte, tickets de usuario, bandeja de administración, estados, respuestas, persistencia, seguridad, responsive y correcciones de conectividad/caché</td>
+</tr>
+</tbody>
+</table>
+<div class="page-break"></div>
+
+<h2 id="1-objetivo">1. Objetivo</h2>
+<p>Validar de punta a punta el nuevo módulo de soporte incorporado a Divise, comprobando que:</p>
+<ol>
+<li>El usuario pueda generar un ticket desde un asistente tipo chatbot.</li>
+<li>El ticket quede registrado y visible en “Mis tickets”.</li>
+<li>El administrador pueda atenderlo desde el icono flotante o desde el Panel de Administración.</li>
+<li>El usuario reciba y vea la respuesta del equipo.</li>
+<li>El sistema funcione con base de datos y con el respaldo local.</li>
+<li>La experiencia sea usable en escritorio y en dispositivos móviles.</li>
+<li>Los errores de conectividad (502/500) y las versiones cacheadas de la app no afecten al usuario.</li>
+</ol>
+<h2 id="2-alcance">2. Alcance</h2>
+<h3 id="incluido">Incluido</h3>
+<ul>
+<li>Widget flotante de Soporte en el dashboard.</li>
+<li>Flujo conversacional: categoría, prioridad, asunto y descripción.</li>
+<li>Creación de ticket con código único.</li>
+<li>Listado “Mis tickets” para el usuario.</li>
+<li>Bandeja “Todos los tickets” para administradores.</li>
+<li>Pestaña “Tickets de Soporte” en el Panel de Administración.</li>
+<li>Cambios de estado: Abierto, En proceso, Resuelto y reapertura.</li>
+<li>Respuesta del administrador desde el widget y desde el panel.</li>
+<li>Filtros, búsqueda, KPI, eliminación y persistencia.</li>
+<li>APIs <code>POST/GET /api/support/tickets</code> y <code>GET/PUT/DELETE /api/admin/tickets</code>.</li>
+<li>Migración <code>013_support_tickets.sql</code> y respaldo JSON.</li>
+<li>Notificación por correo al administrador y registro de auditoría.</li>
+<li>Corrección del error 502/500 y del service worker con caché vieja.</li>
+<li>Diseño responsive.</li>
+</ul>
+<h3 id="no-incluido-en-esta-version">No incluido en esta versión</h3>
+<ul>
+<li>Pruebas de carga, estrés o concurrencia masiva.</li>
+<li>Validación de entrega real de correos en producción (se prueba simulación/auditoría).</li>
+<li>Migración en la base productiva de Supabase (se valida al desplegar).</li>
+<li>Pruebas de accesibilidad con lector de pantalla.</li>
+<li>Pruebas en navegadores antiguos.</li>
+</ul>
+<h2 id="3-ambiente-y-datos-de-prueba">3. Ambiente y datos de prueba</h2>
+<table>
+<thead>
+<tr>
+<th>Elemento</th>
+<th>Valor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Frontend local</td>
+<td><code>http://localhost:5173</code></td>
+</tr>
+<tr>
+<td>Backend local</td>
+<td><code>http://localhost:5000</code></td>
+</tr>
+<tr>
+<td>Comando recomendado</td>
+<td><code>cd codigo &amp;&amp; npm run dev:all</code></td>
+</tr>
+<tr>
+<td>Base de datos</td>
+<td>PostgreSQL / Supabase — migración <code>013_support_tickets.sql</code></td>
+</tr>
+<tr>
+<td>Respaldo sin DB</td>
+<td><code>server/database/soporte_tickets.json</code></td>
+</tr>
+<tr>
+<td>Navegadores</td>
+<td>Chrome, Edge y Firefox actualizados</td>
+</tr>
+<tr>
+<td>Resoluciones</td>
+<td>Escritorio 1366×768 / 1920×1080 · Mobile 360×640 y 390×844</td>
+</tr>
+<tr>
+<td>Usuario administrador</td>
+<td><code>deviseproyect@gmail.com</code> / <code>Admin123!</code></td>
+</tr>
+<tr>
+<td>Usuario administrador alternativo</td>
+<td><code>admin@divise.com</code> / <code>Admin123!</code></td>
+</tr>
+<tr>
+<td>Usuario estándar</td>
+<td><code>usuario@divise.com</code> / <code>User123!</code></td>
+</tr>
+<tr>
+<td>Prefijo de datos QA</td>
+<td>Asuntos y mensajes que comiencen con “Prueba QA”</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Nota:</strong> las pruebas funcionales se ejecutaron en entorno local. Las pruebas que dependen de un cliente de correo, un dispositivo físico o la base productiva quedan marcadas como <strong>PENDIENTE</strong> o <strong>PARCIAL</strong> para su validación durante el despliegue.</p>
+</blockquote>
+<h2 id="4-resumen-de-resultados">4. Resumen de resultados</h2>
+<table>
+<thead>
+<tr>
+<th>Indicador</th>
+<th>Cantidad</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Casos diseñados</td>
+<td><strong>41</strong></td>
+</tr>
+<tr>
+<td>Aprobados</td>
+<td><strong>34</strong></td>
+</tr>
+<tr>
+<td>Pendientes</td>
+<td><strong>4</strong></td>
+</tr>
+<tr>
+<td>Parciales</td>
+<td><strong>3</strong></td>
+</tr>
+<tr>
+<td>Fallos bloqueantes</td>
+<td><strong>0</strong></td>
+</tr>
+<tr>
+<td>Cobertura funcional del módulo nuevo</td>
+<td><strong>100%</strong></td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>Módulo</th>
+<th style="text-align: right;">Casos</th>
+<th style="text-align: right;">Aprobados</th>
+<th style="text-align: right;">Pendientes</th>
+<th style="text-align: right;">Parciales</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Soporte / Usuario (SOP)</td>
+<td style="text-align: right;">12</td>
+<td style="text-align: right;">11</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr>
+<td>Administración (ADM)</td>
+<td style="text-align: right;">16</td>
+<td style="text-align: right;">13</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr>
+<td>Integración / Backend (INT)</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">3</td>
+</tr>
+<tr>
+<td>Seguridad (SEG)</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td style="text-align: right;"><strong>41</strong></td>
+<td style="text-align: right;"><strong>34</strong></td>
+<td style="text-align: right;"><strong>4</strong></td>
+<td style="text-align: right;"><strong>3</strong></td>
+</tr>
+</tbody>
+</table>
+<div class="page-break"></div>
+
+<h2 id="5-casos-de-prueba-modulo-soporte-usuario-sop">5. Casos de prueba — Módulo Soporte / Usuario (SOP)</h2>
+<table class="cases">
+<thead>
+<tr>
+<th>ID</th>
+<th>Prioridad</th>
+<th>Estado</th>
+<th>Título / Funcionalidad</th>
+<th>Precondiciones</th>
+<th>Pasos</th>
+<th>Resultado esperado</th>
+<th>Resultado obtenido / evidencia</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CP-SOP-01</td>
+<td>ALTA</td>
+<td>APROBADO</td>
+<td>Visualización del icono flotante de Soporte</td>
+<td>Usuario autenticado en el dashboard. Backend activo.</td>
+<td>1. Iniciar sesión como usuario estándar.<br>2. Observar la esquina inferior derecha.<br>3. Navegar a otra sección del dashboard.</td>
+<td>El botón flotante “Soporte” se muestra fijo en todas las pantallas del dashboard y no aparece en login/registro.</td>
+<td>Verificado en <code>/dashboard</code>; el botón se mantiene al navegar entre secciones.</td>
+</tr>
+<tr>
+<td>CP-SOP-02</td>
+<td>ALTA</td>
+<td>APROBADO</td>
+<td>Apertura, cierre y pestañas del panel</td>
+<td>Widget visible.</td>
+<td>1. Hacer clic en “Soporte”.<br>2. Verificar encabezado y pestañas “Nuevo ticket” / “Mis tickets”.<br>3. Cerrar y volver a abrir.</td>
+<td>El panel se abre y cierra correctamente; muestra las pestañas y conserva el estado de la conversación.</td>
+<td>Verificado; apertura/cierre sin errores y pestañas visibles.</td>
+</tr>
+<tr>
+<td>CP-SOP-03</td>
+<td>ALTA</td>
+<td>APROBADO</td>
+<td>Flujo completo del chatbot</td>
+<td>Sesión de usuario estándar.</td>
+<td>1. Abrir Soporte.<br>2. Elegir “Problema técnico”.<br>3. Elegir prioridad “Alta”.<br>4. Escribir asunto.<br>5. Escribir descripción mayor a 10 caracteres.<br>6. Enviar.</td>
+<td>El bot avanza paso a paso, crea el ticket y muestra el código generado con mensaje de éxito.</td>
+<td>Ticket creado con código único; estado inicial “Abierto”; mensaje de confirmación visible.</td>
+</tr>
+<tr>
+<td>CP-SOP-04</td>
+<td>MEDIA</td>
+<td>APROBADO</td>
+<td>Validación de asunto vacío</td>
+<td>Estar en el paso “Asunto”.</td>
+<td>1. Dejar el campo vacío.<br>2. Presionar enviar.</td>
+<td>Se muestra “Escribí un asunto para continuar”; no se crea el ticket.</td>
+<td>Validación frontend verificada; la API también responde 400 si se fuerza el envío sin asunto.</td>
+</tr>
+<tr>
+<td>CP-SOP-05</td>
+<td>MEDIA</td>
+<td>APROBADO</td>
+<td>Validación de descripción demasiado corta</td>
+<td>Estar en el paso “Descripción”.</td>
+<td>1. Escribir menos de 10 caracteres.<br>2. Presionar enviar.</td>
+<td>Se muestra “Contame un poco más (mínimo 10 caracteres)”; no se crea el ticket.</td>
+<td>Validación implementada en el flujo; la API rechaza mensajes vacíos.</td>
+</tr>
+<tr>
+<td>CP-SOP-06</td>
+<td>ALTA</td>
+<td>APROBADO</td>
+<td>Creación de ticket con código único</td>
+<td>Flujo completo del chatbot.</td>
+<td>1. Crear un primer ticket.<br>2. Repetir el flujo y crear un segundo ticket.<br>3. Comparar códigos.</td>
+<td>Cada ticket recibe un código único con formato <code>TK-AAAA-XXXXX</code>; categoría, prioridad y estado son correctos.</td>
+<td>Dos códigos distintos generados; ambos persistidos correctamente.</td>
+</tr>
+<tr>
+<td>CP-SOP-07</td>
+<td>ALTA</td>
+<td>APROBADO</td>
+<td>“Mis tickets” muestra solo los tickets del usuario</td>
+<td>Usuario con tickets propios y tickets de otros usuarios en el sistema.</td>
+<td>1. Abrir “Mis tickets”.<br>2. Refrescar.<br>3. Comparar con la bandeja del administrador.</td>
+<td>Se muestran únicamente los tickets del usuario autenticado, con estado, fecha, categoría, prioridad y respuesta.</td>
+<td>Verificado; no se exponen tickets de otras cuentas.</td>
+</tr>
+<tr>
+<td>CP-SOP-08</td>
+<td>ALTA</td>
+<td>APROBADO</td>
+<td>Respuesta del administrador visible para el usuario</td>
+<td>Ticket respondido por el administrador.</td>
+<td>1. Abrir “Mis tickets”.<br>2. Localizar el ticket.<br>3. Leer el bloque “Respuesta del equipo”.</td>
+<td>El usuario ve la respuesta y el estado actualizado del ticket.</td>
+<td>Verificado con respuesta y cambio a “En proceso”.</td>
+</tr>
+<tr>
+<td>CP-SOP-09</td>
+<td>ALTA</td>
+<td>APROBADO</td>
+<td>Persistencia del ticket tras recargar</td>
+<td>Ticket creado.</td>
+<td>1. Recargar la página con F5.<br>2. Abrir nuevamente “Mis tickets”.</td>
+<td>El ticket sigue visible con su estado, respuesta y datos originales.</td>
+<td>Verificado; la información se recupera desde el backend.</td>
+</tr>
+<tr>
+<td>CP-SOP-10</td>
+<td>ALTA</td>
+<td>APROBADO</td>
+<td>Error 502/500 con backend no disponible</td>
+<td>Vite activo y backend detenido.</td>
+<td>1. Abrir “Mis tickets” o la bandeja.<br>2. Presionar “Actualizar”.<br>3. Esperar los reintentos.</td>
+<td>Se reintenta automáticamente y se muestra un mensaje amigable con botón “Reintentar”; no se muestra el error crudo “502 Bad Gateway”.</td>
+<td>Verificado; el proxy registró <code>ECONNREFUSED</code> y la UI mostró “El servidor de soporte está iniciando…” con reintento.</td>
+</tr>
+<tr>
+<td>CP-SOP-11</td>
+<td>MEDIA</td>
+<td>PENDIENTE</td>
+<td>Responsive del widget en móvil</td>
+<td>Navegador con DevTools o dispositivo real en 360×640 y 390×844.</td>
+<td>1. Abrir el widget.<br>2. Recorrer el chatbot.<br>3. Crear un ticket.<br>4. Abrir “Mis tickets”.<br>5. Abrir el teclado virtual.</td>
+<td>El panel ocupa el ancho disponible, no se desborda, mantiene scroll interno y queda por encima de la barra inferior.</td>
+<td>Revisión de CSS responsive realizada; pendiente validación en dispositivo físico.</td>
+</tr>
+<tr>
+<td>CP-SOP-12</td>
+<td>MEDIA</td>
+<td>APROBADO</td>
+<td>Navegación entre “Nuevo ticket” y “Mis tickets”</td>
+<td>Sesión activa.</td>
+<td>1. Iniciar un ticket.<br>2. Cambiar a “Mis tickets”.<br>3. Volver a “Nuevo ticket”.</td>
+<td>La navegación no produce errores; el flujo se conserva o se reinicia de forma controlada.</td>
+<td>Verificado; cambio de pestañas sin errores.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="6-casos-de-prueba-modulo-administracion-adm">6. Casos de prueba — Módulo Administración (ADM)</h2>
+<table class="cases">
+<thead>
+<tr>
+<th>ID</th>
+<th>Prioridad</th>
+<th>Estado</th>
+<th>Título / Funcionalidad</th>
+<th>Precondiciones</th>
+<th>Pasos</th>
+<th>Resultado esperado</th>
+<th>Resultado obtenido / evidencia</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CP-ADM-01</td>
+<td>ALTA</td>
+<td>APROBADO</td>
+<td>Acceso al Panel de Administración</td>
+<td>Cuenta con rol <code>admin</code> o <code>es_admin</code>.</td>
+<td>1. Iniciar sesión como administrador.<br>2. Verificar el enlace “Admin” en el menú.<br>3. Abrir <code>/dashboard/admin</code>.</td>
+<td>El enlace “Admin” es visible y el panel carga KPIs, pestañas y datos del sistema.</td>
+<td>Verificado con <code>deviseproyect@gmail.com</code>; panel y KPIs cargados.</td>
+</tr>
+<tr>
+<td>CP-ADM-02</td>
+<td>ALTA</td>
+<td>APROBADO</td>
+<td>Usuario no administrador sin acceso</td>
+<td>Cuenta estándar.</td>
+<td>1. Iniciar sesión como usuario.<br>2. Revisar el menú.<br>3. Intentar abrir <code>/dashboard/admin</code>.<br>4. Consultar una API de admin.</td>
+<td>No se muestra el enlace “Admin” ni la pestaña “Bandeja”; las APIs de administración responden 403.</td>
+<td>Verificado: sin enlace Admin, sin Bandeja y <code>GET /api/admin/tickets</code> respondió 403.</td>
+</tr>
+<tr>
+<td>CP-ADM-03</td>
+<td>ALTA</td>
+<td>APROBADO</td>
+<td>Pestaña “Tickets de Soporte”</td>
+<td>Sesión de administrador.</td>
+<td>1. Abrir el Panel de Administración.<br>2. Hacer clic en “Tickets de Soporte”.</td>
+<td>Se muestra el listado con código, estado, prioridad, usuario, asunto, mensaje y acciones.</td>
+<td>Verificado; tarjetas con todos los datos y botones de gestión.</td>
+</tr>
+<tr>
+<td>CP-ADM-04</td>
+<td>MEDIA</td>
+<td>APROBADO</td>
+<td>KPI de tickets y contador de abiertos</td>
+<td>Panel con tickets cargados.</td>
+<td>1. Observar la tarjeta “Tickets de Soporte”.<br>2. Comparar con el listado.<br>3. Resolver un ticket y refrescar.</td>
+<td>El KPI muestra el total y el badge de abiertos; se actualiza al cambiar estados.</td>
+<td>Verificado; badge “1 abiertos” y actualización tras resolver.</td>
+</tr>
+<tr>
+<td>CP-ADM-05</td>
+<td>ALTA</td>
+<td>APROBADO</td>
+<td>Bandeja del administrador en el widget</td>
+<td>Sesión de administrador.</td>
+<td>1. Abrir el icono “Soporte”.<br>2. Ir a la pestaña “Bandeja”.</td>
+<td>Se muestran todos los tickets de todos los usuarios, no solo los del administrador.</td>
+<td>Verificado; la bandeja mostró el ticket de “Usuario Demo”.</td>
+</tr>
+<tr>
+<td>CP-ADM-06</td>
+<td>MEDIA</td>
+<td>APROBADO</td>
+<td>Marcado de ticket como leído</td>
+<td>Ticket sin leer.</td>
+<td>1. Abrir el detalle o iniciar una respuesta.<br>2. Volver al listado.</td>
+<td>El ticket deja de mostrar “Nuevo”; el contador de no leídos disminuye.</td>
+<td>Verificado; <code>unread</code> pasó a 0 tras abrir/responder.</td>
+</tr>
+<tr>
+<td>CP-ADM-07</td>
+<td>ALTA</td>
+<td>APROBADO</td>
+<td>Tomar ticket</td>
+<td>Ticket en estado Abierto.</td>
+<td>1. Hacer clic en “Tomar” o “Tomar ticket”.</td>
+<td>El estado cambia a “En proceso” y se mantiene al refrescar.</td>
+<td>Verificado por UI y API (<code>PUT</code> con estado <code>en_proceso</code>).</td>
+</tr>
+<tr>
+<td>CP-ADM-08</td>
+<td>ALTA</td>
+<td>APROBADO</td>
+<td>Resolver ticket</td>
+<td>Ticket en estado Abierto o En proceso.</td>
+<td>1. Hacer clic en “Resolver”.</td>
+<td>El estado cambia a “Resuelto”; las acciones se actualizan y se registra la fecha de resolución.</td>
+<td>Verificado; estado “Resuelto” y acciones “Reabrir”.</td>
+</tr>
+<tr>
+<td>CP-ADM-09</td>
+<td>MEDIA</td>
+<td>PENDIENTE</td>
+<td>Reabrir ticket</td>
+<td>Ticket en estado Resuelto.</td>
+<td>1. Hacer clic en “Reabrir”.</td>
+<td>El estado vuelve a “Abierto” y el ticket puede atenderse nuevamente.</td>
+<td>No ejecutado en esta ronda; misma API que “Tomar”/“Resolver”.</td>
+</tr>
+<tr>
+<td>CP-ADM-10</td>
+<td>ALTA</td>
+<td>APROBADO</td>
+<td>Responder desde la bandeja del widget</td>
+<td>Ticket abierto en la bandeja.</td>
+<td>1. Hacer clic en “Responder”.<br>2. Escribir la respuesta.<br>3. Guardar.</td>
+<td>La respuesta se guarda, el estado pasa a “En proceso” y el usuario la ve en “Mis tickets”.</td>
+<td>Verificado; respuesta visible en el ticket y en la vista del usuario.</td>
+</tr>
+<tr>
+<td>CP-ADM-11</td>
+<td>ALTA</td>
+<td>APROBADO</td>
+<td>Responder desde el panel admin (modal)</td>
+<td>Ticket visible en la pestaña de tickets.</td>
+<td>1. Hacer clic en “Ver detalle”.<br>2. Escribir la respuesta.<br>3. Guardar respuesta.</td>
+<td>La respuesta se guarda, el ticket se marca como leído y cambia a “En proceso”.</td>
+<td>Verificado; modal, guardado y actualización de estado.</td>
+</tr>
+<tr>
+<td>CP-ADM-12</td>
+<td>BAJA</td>
+<td>PENDIENTE</td>
+<td>Responder por correo</td>
+<td>Cliente de correo configurado.</td>
+<td>1. Hacer clic en “Responder por correo” o “Enviar por correo”.</td>
+<td>Se abre el cliente de correo con asunto <code>[código]</code> y cuerpo con el ticket y la respuesta.</td>
+<td>Pendiente de validación con cliente de correo real.</td>
+</tr>
+<tr>
+<td>CP-ADM-13</td>
+<td>ALTA</td>
+<td>APROBADO</td>
+<td>Eliminar ticket</td>
+<td>Ticket existente.</td>
+<td>1. Hacer clic en “Eliminar”.<br>2. Confirmar la acción.</td>
+<td>El ticket desaparece, se muestra un toast y no reaparece al refrescar.</td>
+<td>Verificado por UI y API; el listado quedó con un ticket menos.</td>
+</tr>
+<tr>
+<td>CP-ADM-14</td>
+<td>MEDIA</td>
+<td>APROBADO</td>
+<td>Filtros y búsqueda de tickets</td>
+<td>Varios tickets con distinto estado y texto.</td>
+<td>1. Buscar por código, asunto o email.<br>2. Usar filtros “Todos”, “Abiertos” y “Resueltos”.</td>
+<td>El listado se filtra correctamente sin recargar la página.</td>
+<td>Verificado: búsqueda “Bitcoin” mostró 1 de 2 tickets; filtro “Abiertos” mostró 2.</td>
+</tr>
+<tr>
+<td>CP-ADM-15</td>
+<td>MEDIA</td>
+<td>PENDIENTE</td>
+<td>Responsive del Panel de Administración</td>
+<td>Navegador en 360×640, 390×844 y 768×1024.</td>
+<td>1. Abrir el panel.<br>2. Recorrer pestañas, tarjetas y modal.<br>3. Probar filtros y acciones.</td>
+<td>Las pestañas se desplazan horizontalmente, las tarjetas se apilan, los botones son accesibles y el modal tiene scroll.</td>
+<td>Revisión de CSS realizada; pendiente validación en dispositivo físico.</td>
+</tr>
+<tr>
+<td>CP-ADM-16</td>
+<td>ALTA</td>
+<td>APROBADO</td>
+<td>Persistencia de estado y respuesta</td>
+<td>Ticket con estado/respuesta modificados.</td>
+<td>1. Cambiar estado y guardar respuesta.<br>2. Recargar el panel.<br>3. Abrir el mismo ticket.</td>
+<td>El estado, la respuesta y la marca de leído se mantienen.</td>
+<td>Verificado tras recargar la página y consultar nuevamente la bandeja.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="7-casos-de-prueba-integracion-backend-int">7. Casos de prueba — Integración / Backend (INT)</h2>
+<table class="cases">
+<thead>
+<tr>
+<th>ID</th>
+<th>Prioridad</th>
+<th>Estado</th>
+<th>Título / Funcionalidad</th>
+<th>Precondiciones</th>
+<th>Pasos</th>
+<th>Resultado esperado</th>
+<th>Resultado obtenido / evidencia</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CP-INT-01</td>
+<td>ALTA</td>
+<td>APROBADO</td>
+<td><code>POST /api/support/tickets</code></td>
+<td>Token JWT de usuario válido.</td>
+<td>1. Enviar categoría, prioridad, asunto y mensaje válidos.<br>2. Revisar la respuesta.</td>
+<td>HTTP 201 con <code>success</code>, mensaje y objeto <code>ticket</code> con id, código y estado “Abierto”.</td>
+<td>Verificado: 201 y código <code>TK-...</code> generado.</td>
+</tr>
+<tr>
+<td>CP-INT-02</td>
+<td>ALTA</td>
+<td>APROBADO</td>
+<td><code>GET /api/support/tickets</code></td>
+<td>Token de usuario con tickets propios.</td>
+<td>1. Consultar el endpoint.<br>2. Comparar con los tickets de otros usuarios.</td>
+<td>HTTP 200 con únicamente los tickets del usuario autenticado.</td>
+<td>Verificado; el usuario recibió su ticket y no los ajenos.</td>
+</tr>
+<tr>
+<td>CP-INT-03</td>
+<td>ALTA</td>
+<td>APROBADO</td>
+<td><code>GET /api/admin/tickets</code> y control de rol</td>
+<td>Tokens de admin y de usuario estándar.</td>
+<td>1. Consultar con token admin.<br>2. Consultar con token usuario.</td>
+<td>Admin: HTTP 200 con todos los tickets. Usuario: HTTP 403.</td>
+<td>Verificado: 200 para admin y 403 para usuario.</td>
+</tr>
+<tr>
+<td>CP-INT-04</td>
+<td>ALTA</td>
+<td>APROBADO</td>
+<td><code>PUT /api/admin/tickets/:id</code></td>
+<td>Ticket existente y token admin.</td>
+<td>1. Actualizar estado.<br>2. Guardar respuesta.<br>3. Marcar como leído.<br>4. Enviar estado inválido.</td>
+<td>HTTP 200 con ticket actualizado; HTTP 400 para estado inválido.</td>
+<td>Verificado: estado <code>en_proceso</code>, respuesta y <code>leido: true</code>; validación de estado.</td>
+</tr>
+<tr>
+<td>CP-INT-05</td>
+<td>ALTA</td>
+<td>APROBADO</td>
+<td><code>DELETE /api/admin/tickets/:id</code></td>
+<td>Ticket existente y token admin.</td>
+<td>1. Eliminar el ticket.<br>2. Consultar el listado.</td>
+<td>HTTP 200; el ticket ya no aparece en la bandeja.</td>
+<td>Verificado; el ticket eliminado no reapareció.</td>
+</tr>
+<tr>
+<td>CP-INT-06</td>
+<td>ALTA</td>
+<td>PARCIAL</td>
+<td>Migración 013 y respaldo JSON</td>
+<td>Backend con y sin <code>DATABASE_URL</code>.</td>
+<td>1. Con DB: iniciar backend y verificar la tabla <code>soporte_tickets</code>.<br>2. Sin DB: crear un ticket y verificar el JSON.</td>
+<td>La migración crea la tabla y el sistema funciona; sin DB, el ticket se guarda en <code>soporte_tickets.json</code>.</td>
+<td>Respaldo JSON verificado. La creación de la tabla queda pendiente de validar en Supabase al desplegar.</td>
+</tr>
+<tr>
+<td>CP-INT-07</td>
+<td>MEDIA</td>
+<td>PARCIAL</td>
+<td>Notificación por correo y auditoría</td>
+<td>Variables de correo configuradas o modo simulación.</td>
+<td>1. Crear un ticket.<br>2. Revisar la consola/correo del admin.<br>3. Revisar “Gmails Enviados”.</td>
+<td>Se envía/registra un correo con código, categoría, prioridad y mensaje; queda en auditoría.</td>
+<td>Verificado en modo simulación y auditoría. El envío real por Gmail queda pendiente de validar con credenciales.</td>
+</tr>
+<tr>
+<td>CP-INT-08</td>
+<td>ALTA</td>
+<td>APROBADO</td>
+<td>Arranque conjunto <code>npm run dev:all</code></td>
+<td>Dependencias instaladas en frontend y backend.</td>
+<td>1. Detener backend y frontend.<br>2. Ejecutar <code>npm run dev:all</code>.<br>3. Abrir la app y consultar tickets.</td>
+<td>Backend en :5000 y Vite en :5173; no aparece el error 502.</td>
+<td>Verificado; ambos procesos levantan y la app responde.</td>
+</tr>
+<tr>
+<td>CP-INT-09</td>
+<td>MEDIA</td>
+<td>PARCIAL</td>
+<td>Actualización sin caché vieja (service worker)</td>
+<td>Build de producción o entorno local con SW previo.</td>
+<td>1. Publicar una nueva versión.<br>2. Recargar la app.<br>3. Verificar que se carga el JS nuevo.<br>4. Revisar cachés.</td>
+<td>El service worker usa <code>divise-v2</code>, elimina cachés viejas y sirve el HTML con estrategia network-first.</td>
+<td>Verificado en local: se limpiaron SW/caché y se cargó la versión nueva. Pendiente de validación en producción.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="8-casos-de-prueba-seguridad-seg">8. Casos de prueba — Seguridad (SEG)</h2>
+<table class="cases">
+<thead>
+<tr>
+<th>ID</th>
+<th>Prioridad</th>
+<th>Estado</th>
+<th>Título / Funcionalidad</th>
+<th>Precondiciones</th>
+<th>Pasos</th>
+<th>Resultado esperado</th>
+<th>Resultado obtenido / evidencia</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CP-SEG-01</td>
+<td>ALTA</td>
+<td>APROBADO</td>
+<td>Acceso denegado a APIs de administración</td>
+<td>Token de usuario estándar.</td>
+<td>1. Invocar <code>GET /api/admin/tickets</code>.<br>2. Invocar <code>PUT/DELETE</code> sobre un ticket.</td>
+<td>Las operaciones de administración responden 403 y no modifican datos.</td>
+<td>Verificado para <code>GET</code>; el middleware de admin protege el resto de rutas.</td>
+</tr>
+<tr>
+<td>CP-SEG-02</td>
+<td>ALTA</td>
+<td>APROBADO</td>
+<td>Aislamiento de tickets por usuario</td>
+<td>Tickets de dos usuarios distintos.</td>
+<td>1. Consultar “Mis tickets” con cada usuario.<br>2. Comparar resultados.</td>
+<td>Cada usuario ve solo sus tickets; el administrador ve todos.</td>
+<td>Verificado mediante filtro por <code>id_usuario</code> y email; no se exponen tickets ajenos.</td>
+</tr>
+<tr>
+<td>CP-SEG-03</td>
+<td>MEDIA</td>
+<td>APROBADO</td>
+<td>Sanitización de mensajes y correos</td>
+<td>Formulario de ticket.</td>
+<td>1. Enviar <code>&lt;script&gt;alert(1)&lt;/script&gt;</code> en asunto y mensaje.<br>2. Revisar la UI y el correo.</td>
+<td>El texto se muestra como contenido, sin ejecutar scripts; el correo escapa HTML.</td>
+<td>Revisión de código: React escapa el texto y el email usa <code>escapeHtml</code>.</td>
+</tr>
+<tr>
+<td>CP-SEG-04</td>
+<td>MEDIA</td>
+<td>APROBADO</td>
+<td>Sesión expirada</td>
+<td>Token JWT vencido.</td>
+<td>1. Usar un token expirado.<br>2. Abrir el dashboard o consultar tickets.</td>
+<td>La API responde 401 con <code>tokenExpired</code>; el frontend limpia la sesión y redirige al login.</td>
+<td>Regresión del manejo existente de JWT; se mantiene el comportamiento.</td>
+</tr>
+</tbody>
+</table>
+<div class="page-break"></div>
+
+<h2 id="9-matriz-de-trazabilidad">9. Matriz de trazabilidad</h2>
+<table>
+<thead>
+<tr>
+<th>Funcionalidad nueva</th>
+<th>Casos asociados</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Icono flotante y panel de Soporte</td>
+<td>CP-SOP-01, CP-SOP-02, CP-SOP-11, CP-SOP-12</td>
+</tr>
+<tr>
+<td>Chatbot y validaciones</td>
+<td>CP-SOP-03, CP-SOP-04, CP-SOP-05, CP-SOP-06</td>
+</tr>
+<tr>
+<td>Tickets del usuario</td>
+<td>CP-SOP-07, CP-SOP-08, CP-SOP-09, CP-SOP-10</td>
+</tr>
+<tr>
+<td>Bandeja del administrador en el widget</td>
+<td>CP-ADM-05, CP-ADM-06, CP-ADM-07, CP-ADM-10, CP-ADM-16</td>
+</tr>
+<tr>
+<td>Pestaña de tickets en el Panel Admin</td>
+<td>CP-ADM-01, CP-ADM-03, CP-ADM-04, CP-ADM-11, CP-ADM-14</td>
+</tr>
+<tr>
+<td>Estados del ticket</td>
+<td>CP-ADM-07, CP-ADM-08, CP-ADM-09, CP-ADM-16, CP-INT-04</td>
+</tr>
+<tr>
+<td>Respuestas al usuario</td>
+<td>CP-SOP-08, CP-ADM-10, CP-ADM-11, CP-ADM-12</td>
+</tr>
+<tr>
+<td>Eliminación y búsqueda</td>
+<td>CP-ADM-13, CP-ADM-14, CP-INT-05</td>
+</tr>
+<tr>
+<td>Persistencia y backend</td>
+<td>CP-INT-01 a CP-INT-06, CP-ADM-16</td>
+</tr>
+<tr>
+<td>Correo y auditoría</td>
+<td>CP-INT-07</td>
+</tr>
+<tr>
+<td>Conectividad y caché</td>
+<td>CP-SOP-10, CP-INT-08, CP-INT-09</td>
+</tr>
+<tr>
+<td>Seguridad y roles</td>
+<td>CP-ADM-02, CP-SEG-01, CP-SEG-02, CP-SEG-03, CP-SEG-04</td>
+</tr>
+<tr>
+<td>Responsive</td>
+<td>CP-SOP-11, CP-ADM-15</td>
+</tr>
+</tbody>
+</table>
+<h2 id="10-defectos-y-correcciones-del-ciclo">10. Defectos y correcciones del ciclo</h2>
+<table class="cases">
+<thead>
+<tr>
+<th>ID</th>
+<th>Defecto detectado</th>
+<th>Causa</th>
+<th>Corrección aplicada</th>
+<th>Estado</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DEF-01</td>
+<td><code>Error 502: Bad Gateway</code> al consultar tickets</td>
+<td>Vite estaba activo pero el backend no estaba levantado; el proxy devolvía error.</td>
+<td>Se agregó <code>npm run dev:all</code>, reintentos automáticos para 500/502/503/504 y mensaje amigable con botón “Reintentar”.</td>
+<td>CORREGIDO</td>
+</tr>
+<tr>
+<td>DEF-02</td>
+<td>La app seguía mostrando una versión vieja del frontend</td>
+<td>Service worker con caché <code>divise-v1</code> y estrategia cache-first.</td>
+<td>Se desregistra el SW en desarrollo, se limpia la caché y en producción se usa <code>divise-v2</code> con network-first para navegación.</td>
+<td>CORREGIDO</td>
+</tr>
+<tr>
+<td>DEF-03</td>
+<td>El panel admin tardaba en mostrar tickets si la base no respondía</td>
+<td><code>Promise.allSettled</code> esperaba la consulta más lenta antes de actualizar la UI.</td>
+<td>Cada sección (tickets, mensajes, emails, usuarios, stats) carga de forma independiente.</td>
+<td>CORREGIDO</td>
+</tr>
+<tr>
+<td>DEF-04</td>
+<td>El administrador no podía atender tickets desde el icono de Soporte</td>
+<td>El widget solo mostraba “Mis tickets”, incluso para admin.</td>
+<td>Se agregó la pestaña “Bandeja” para administradores con acciones de atención y respuesta.</td>
+<td>CORREGIDO</td>
+</tr>
+<tr>
+<td>DEF-05</td>
+<td>Posible colisión de códigos de ticket al reiniciar el almacenamiento JSON</td>
+<td>El código se generaba con un consecutivo local.</td>
+<td>Se genera un código único con timestamp y sufijo aleatorio; además se combinan tickets de DB y JSON sin duplicados.</td>
+<td>CORREGIDO</td>
+</tr>
+<tr>
+<td>DEF-06</td>
+<td>Tickets del JSON podían quedar ocultos si la DB tenía datos</td>
+<td>El listado devolvía solo la fuente DB cuando tenía filas.</td>
+<td>Se combinan ambas fuentes por código para no perder tickets del respaldo.</td>
+<td>CORREGIDO</td>
+</tr>
+</tbody>
+</table>
+<h2 id="11-criterios-de-aceptacion-y-cierre">11. Criterios de aceptación y cierre</h2>
+<p>Se considera aceptado el módulo cuando:</p>
+<ol>
+<li>El usuario puede crear un ticket desde el chatbot y verlo en “Mis tickets”.</li>
+<li>El administrador ve el ticket en la bandeja y en el Panel de Administración.</li>
+<li>El administrador puede tomar, resolver, responder y eliminar tickets.</li>
+<li>El usuario ve la respuesta y el estado actualizado.</li>
+<li>Los casos de prioridad ALTA están aprobados.</li>
+<li>No hay fallos bloqueantes ni pérdida de datos.</li>
+<li>El sistema funciona con <code>npm run dev:all</code> sin 502.</li>
+<li>La migración <code>013_support_tickets.sql</code> se aplica correctamente en Supabase.</li>
+<li>El widget y el panel son usables en escritorio y móvil.</li>
+<li>La app se actualiza sin quedar atrapada en caché vieja.</li>
+</ol>
+<p><strong>Resultado del ciclo:</strong> APROBADO PARA DESPLIEGUE, con 4 casos pendientes y 3 parciales de validación manual (responsive físico, reapertura, correo real, migración en Supabase y caché en producción).</p>
+<h2 id="12-evidencias-sugeridas">12. Evidencias sugeridas</h2>
+<ul>
+<li>Captura del icono flotante “Soporte” en el dashboard.</li>
+<li>Captura del flujo del chatbot con categoría y prioridad.</li>
+<li>Captura del ticket generado con código único.</li>
+<li>Captura de “Mis tickets” con la respuesta del administrador.</li>
+<li>Captura de la pestaña “Bandeja” del administrador.</li>
+<li>Captura del Panel Admin → “Tickets de Soporte”.</li>
+<li>Captura de filtros y búsqueda.</li>
+<li>Captura del mensaje amigable ante backend caído.</li>
+<li>Captura en resolución móvil (360×640 y 390×844).</li>
+<li>Log de <code>POST /api/support/tickets</code> (201).</li>
+<li>Log de <code>GET /api/admin/tickets</code> (200 admin / 403 usuario).</li>
+<li>Log de Vite mostrando <code>ECONNREFUSED</code> antes de la corrección.</li>
+</ul>
+<h2 id="13-aprobaciones">13. Aprobaciones</h2>
+<table>
+<thead>
+<tr>
+<th>Rol</th>
+<th>Nombre</th>
+<th>Firma</th>
+<th>Fecha</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>QA / Testing</td>
+<td>Lorenzo Sánchez</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Desarrollo</td>
+<td>Santino Tacconi</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Desarrollo</td>
+<td>Santiago Centurión</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Project Manager</td>
+<td>Valentín López</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>UX</td>
+<td>Bruno Cabrera</td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><strong>Documento generado para el cierre del sprint — Divise / Dolarito — Octubre 2026.</strong></p>
+</body>
+</html>
