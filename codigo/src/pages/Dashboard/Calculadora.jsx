@@ -235,7 +235,7 @@ export default function Calculadora() {
                 <select 
                   value={fromCurrency} 
                   onChange={e => setFromCurrency(e.target.value)}
-                  style={{position: 'absolute', opacity: 0, width: '100%', height: '100%', cursor: 'pointer'}}
+                  style={{position: 'absolute', inset: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer'}}
                 >
                   {currencyOptions.map(code => (
                     <option key={code} value={code}>{code}</option>
@@ -255,11 +255,6 @@ export default function Calculadora() {
                 aria-invalid={Boolean(montoError)}
               />
               {montoError && <span className="calc-error" role="alert">{montoError}</span>}
-              {!montoError && (
-                <span className="calc-input-hint">
-                  Miles con punto y decimales con coma. Ej: 12.980,50
-                </span>
-              )}
             </div>
 
             <button className="calc-swap-btn" onClick={handleSwap} title="Invertir monedas">⇄</button>
@@ -275,7 +270,7 @@ export default function Calculadora() {
                 <select 
                   value={toCurrency} 
                   onChange={e => setToCurrency(e.target.value)}
-                  style={{position: 'absolute', opacity: 0, width: '100%', height: '100%', cursor: 'pointer'}}
+                  style={{position: 'absolute', inset: 0, opacity: 0, width: '100%', height: '100%', cursor: 'pointer'}}
                 >
                   {currencyOptions.map(code => (
                     <option key={code} value={code}>{code}</option>
