@@ -38,6 +38,10 @@ async function request(path, options = {}) {
       const err = new Error(message);
       Object.assign(err, data || {});
       err.data = data;
+      err.status = res.status;
+      err.isGatewayError =
+        [502, 503, 504].includes(res.status) ||
+        (res.status === 500 && !data?.error);
       throw err;
     }
 
@@ -506,6 +510,43 @@ export function markAdminMessageRead(messageId, leido, token) {
 
 export function deleteAdminMessage(messageId, token) {
   return request(`/api/admin/messages/${messageId}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+// ── Tickets de Soporte (chatbot + panel admin) ───────────────────────────────
+
+export function createSupportTicket({ categoria, prioridad, asunto, mensaje }, token) {
+  return request('/api/support/tickets', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ categoria, prioridad, asunto, mensaje }),
+  });
+}
+
+export function getMySupportTickets(token) {
+  return request('/api/support/tickets', {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export function getAdminTickets(token) {
+  return request('/api/admin/tickets', {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export function updateAdminTicket(ticketId, changes, token) {
+  return request(`/api/admin/tickets/${ticketId}`, {
+    method: 'PUT',
+    headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify(changes),
+  });
+}
+
+export function deleteAdminTicket(ticketId, token) {
+  return request(`/api/admin/tickets/${ticketId}`, {
     method: 'DELETE',
     headers: { Authorization: `Bearer ${token}` },
   });

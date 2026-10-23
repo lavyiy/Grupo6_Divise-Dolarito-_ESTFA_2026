@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { verifyToken } = require('../middlewares/authMiddleware');
 const emailService = require('../services/emailService');
+const supportService = require('../services/supportService');
 const userModel = require('../models/userModel');
 const pool = require('../config/db');
 
@@ -100,12 +101,66 @@ router.delete('/messages/:id', async (req, res) => {
   }
 });
 
-// 7. Métricas rápidas del sistema
+// 7. Listado de tickets de soporte generados desde el chatbot
+router.get('/tickets', async (req, res) => {
+  try {
+    const tickets = await supportService.getTickets();
+    res.json(tickets);
+  } catch (err) {
+    console.error('Error al obtener tickets de soporte:', err.message);
+    res.status(500).json({ error: 'Error al obtener los tickets de soporte.' });
+  }
+});
+
+// 8. Actualizar estado / respuesta / prioridad de un ticket
+router.put('/tickets/:id', async (req, res) => {
+  try {
+    const ticketId = Number(req.params.id);
+    const { estado, respuesta_admin, prioridad, leido } = req.body || {};
+
+    if (estado !== undefined && !supportService.ESTADOS.includes(estado)) {
+      return res.status(400).json({ error: 'Estado de ticket inválido.' });
+    }
+    if (prioridad !== undefined && !supportService.PRIORIDADES.includes(prioridad)) {
+      return res.status(400).json({ error: 'Prioridad de ticket inválida.' });
+    }
+
+    const updated = await supportService.updateTicket(ticketId, {
+      estado,
+      respuesta_admin,
+      prioridad,
+      leido,
+    });
+
+    if (!updated) {
+      return res.status(404).json({ error: 'Ticket no encontrado.' });
+    }
+
+    res.json({ success: true, ticket: updated });
+  } catch (err) {
+    console.error('Error al actualizar ticket de soporte:', err.message);
+    res.status(500).json({ error: err.message || 'Error al actualizar el ticket.' });
+  }
+});
+
+// 9. Eliminar un ticket de soporte
+router.delete('/tickets/:id', async (req, res) => {
+  try {
+    await supportService.deleteTicket(req.params.id);
+    res.json({ success: true, message: 'Ticket eliminado con éxito.' });
+  } catch (err) {
+    console.error('Error al eliminar ticket de soporte:', err.message);
+    res.status(500).json({ error: 'Error al eliminar el ticket.' });
+  }
+});
+
+// 10. Métricas rápidas del sistema
 router.get('/stats', async (req, res) => {
   try {
     const users = await userModel.getAllUsers();
     const emails = await emailService.getEmailLogs();
     const messages = await emailService.getContactMessages();
+    const ticketStats = await supportService.getTicketStats();
 
     let totalCotizaciones = 0;
     try {
@@ -124,6 +179,7 @@ router.get('/stats', async (req, res) => {
       totalEmailsSent: emails.length,
       totalMessages: messages.length,
       unreadMessages,
+      ...ticketStats,
       totalCotizaciones,
       serverTime: new Date().toISOString(),
     });

@@ -28,6 +28,7 @@ const newsRoutes = require('./routes/newsRoutes');
 const fxHistoryRoutes = require('./routes/fxHistoryRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const contactRoutes = require('./routes/contactRoutes');
+const supportRoutes = require('./routes/supportRoutes');
 app.use('/api/auth', authRoutes);
 app.use('/api/rates', ratesRoutes);
 app.use('/api/cotizaciones', ratesRoutes);
@@ -39,12 +40,13 @@ app.use('/api/news', newsRoutes);
 app.use('/api/fx-history', fxHistoryRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/contact', contactRoutes);
+app.use('/api/support', supportRoutes);
 
 // Ruta raíz de la API para evitar "Cannot GET /api"
 app.get('/api', (req, res) => {
   res.json({
     message: 'Divise API',
-    endpoints: ['/api/auth', '/api/rates', '/api/cotizaciones', '/api/alerts', '/api/favorites', '/api/users', '/api/historial', '/api/news', '/api/admin', '/api/contact']
+    endpoints: ['/api/auth', '/api/rates', '/api/cotizaciones', '/api/alerts', '/api/favorites', '/api/users', '/api/historial', '/api/news', '/api/admin', '/api/contact', '/api/support']
   });
 });
 

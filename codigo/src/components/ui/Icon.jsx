@@ -150,6 +150,24 @@ const ICON_PATHS = {
     <line x1="12" y1="9" x2="12" y2="13" />
     <line x1="12" y1="17" x2="12.01" y2="17" />
   </>,
+  chat: <>
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10Z" />
+    <path d="M8 9h8" />
+    <path d="M8 13h5" />
+  </>,
+  ticket: <>
+    <path d="M3 9a2 2 0 0 0 0 6v3a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3a2 2 0 0 1 0-6V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v3Z" />
+    <path d="M13 5v2M13 11v2M13 17v2" />
+  </>,
+  send: <>
+    <path d="m22 2-7 20-4-9-9-4 20-7Z" />
+    <path d="M22 2 11 13" />
+  </>,
+  lifebuoy: <>
+    <circle cx="12" cy="12" r="9" />
+    <circle cx="12" cy="12" r="4" />
+    <path d="m4.93 4.93 4.24 4.24M14.83 14.83l4.24 4.24M14.83 9.17l4.24-4.24M9.17 14.83l-4.24 4.24" />
+  </>,
 };
 
 export function Icon({ name, size = 18, className = '', style }) {

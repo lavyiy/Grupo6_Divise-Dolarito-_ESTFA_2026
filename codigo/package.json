@@ -4,6 +4,7 @@
   "description": "Plataforma de cotizaciones multidivisa - FAM Fameghino",
   "scripts": {
     "dev": "vite",
+    "dev:all": "node scripts/dev-all.js",
     "build": "vite build",
     "preview": "vite preview"
   },

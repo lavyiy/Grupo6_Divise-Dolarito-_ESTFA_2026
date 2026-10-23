@@ -21,5 +21,46 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    <script>
+      // Limpieza única de service workers/cachés antiguos en desarrollo.
+      // En producción este bloque no hace nada (Vite no inyecta /@vite/client).
+      (function () {
+        try {
+          var isDev =
+            !!document.querySelector('script[src="/@vite/client"]') ||
+            /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+          if (!isDev) return;
+
+          var KEY = 'divise_sw_cleaned_v2';
+          if (sessionStorage.getItem(KEY) === '1') return;
+
+          var jobs = [];
+          if ('serviceWorker' in navigator) {
+            jobs.push(
+              navigator.serviceWorker.getRegistrations().then(function (regs) {
+                return Promise.all(regs.map(function (reg) { return reg.unregister(); }));
+              })
+            );
+          }
+          if ('caches' in window) {
+            jobs.push(
+              caches.keys().then(function (keys) {
+                return Promise.all(keys.map(function (key) { return caches.delete(key); }));
+              })
+            );
+          }
+          if (!jobs.length) return;
+
+          Promise.all(jobs)
+            .catch(function () {})
+            .then(function () {
+              sessionStorage.setItem(KEY, '1');
+              location.reload();
+            });
+        } catch (err) {
+          // Nunca bloqueamos la carga de la app por una limpieza de caché.
+        }
+      })();
+    </script>
   </body>
 </html>

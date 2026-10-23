@@ -1,4 +1,4 @@
-const CACHE = 'divise-v1';
+const CACHE = 'divise-v2';
 const ASSETS = ['/', '/index.html', '/manifest.webmanifest', '/icons/app-icon.svg'];
 
 self.addEventListener('install', (event) => {
@@ -22,10 +22,14 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET') return;
+
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
   if (url.pathname.startsWith('/api/')) return;
 
+  // Navegación: network-first. Así los usuarios reciben siempre el index.html
+  // más reciente (con los assets hasheados nuevos) y el modo offline queda
+  // como respaldo.
   if (req.mode === 'navigate') {
     event.respondWith(
       fetch(req)
@@ -39,10 +43,11 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Assets: stale-while-revalidate. Se sirve rápido desde caché y se
+  // actualiza en segundo plano para no quedar atrapados en versiones viejas.
   event.respondWith(
     caches.match(req).then((cached) => {
-      if (cached) return cached;
-      return fetch(req)
+      const network = fetch(req)
         .then((res) => {
           if (res && res.ok && res.type === 'basic') {
             const copy = res.clone();
@@ -51,6 +56,8 @@ self.addEventListener('fetch', (event) => {
           return res;
         })
         .catch(() => cached);
+
+      return cached || network;
     })
   );
 });

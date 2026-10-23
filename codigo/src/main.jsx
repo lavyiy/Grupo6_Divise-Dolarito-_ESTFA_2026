@@ -20,8 +20,23 @@ createRoot(document.getElementById('root')).render(
 );
 
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => {});
-  });
+  if (import.meta.env.PROD) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    });
+  } else {
+    // En desarrollo no registramos service worker: evita que el navegador
+    // sirva versiones cacheadas de los módulos y que los cambios no se vean.
+    navigator.serviceWorker
+      .getRegistrations()
+      .then((regs) => Promise.all(regs.map((reg) => reg.unregister())))
+      .catch(() => {});
+    if ('caches' in window) {
+      caches
+        .keys()
+        .then((keys) => Promise.all(keys.map((key) => caches.delete(key))))
+        .catch(() => {});
+    }
+  }
 }
 

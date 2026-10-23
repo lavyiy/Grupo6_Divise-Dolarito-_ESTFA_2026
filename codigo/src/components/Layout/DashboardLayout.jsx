@@ -3,6 +3,7 @@ import { Outlet, NavLink, useNavigate, Link, useLocation } from 'react-router-do
 import { useAuth } from '../../context/AuthContext';
 import { Icon } from '../ui/Icon';
 import ContactModal from '../Contact/ContactModal';
+import SupportWidget from '../Support/SupportWidget';
 import './DashboardLayout.css';
 
 const BASE_NAV_ITEMS = [
@@ -129,6 +130,9 @@ export default function DashboardLayout() {
 
       {/* Modal de Contactar Administradores */}
       {contactOpen && <ContactModal onClose={() => setContactOpen(false)} />}
+
+      {/* Asistente flotante de soporte (tickets para usuarios y bandeja para admin) */}
+      <SupportWidget />
 
       {/* Navegación inferior móvil (app-like) */}
       <nav className="bottom-nav" aria-label="Menú principal">

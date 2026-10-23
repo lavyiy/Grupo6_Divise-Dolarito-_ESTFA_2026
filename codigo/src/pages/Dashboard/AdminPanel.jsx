@@ -8,15 +8,40 @@ import {
   getAdminMessages,
   markAdminMessageRead,
   deleteAdminMessage,
+  getAdminTickets,
+  updateAdminTicket,
+  deleteAdminTicket,
 } from '../../services/api';
 import { Icon } from '../../components/ui/Icon';
 import './AdminPanel.css';
 
+const TICKET_STATUS_META = {
+  abierto: { label: 'Abierto', className: 'open' },
+  en_proceso: { label: 'En proceso', className: 'process' },
+  resuelto: { label: 'Resuelto', className: 'resolved' },
+  cerrado: { label: 'Cerrado', className: 'closed' },
+};
+
+const TICKET_PRIORITY_META = {
+  baja: { label: 'Baja', className: 'low' },
+  media: { label: 'Media', className: 'medium' },
+  alta: { label: 'Alta', className: 'high' },
+};
+
+const TICKET_CATEGORY_LABELS = {
+  tecnico: 'Problema técnico',
+  cuenta: 'Cuenta y acceso',
+  cotizaciones: 'Cotizaciones',
+  sugerencia: 'Sugerencia',
+  otro: 'Otro tema',
+};
+
 export default function AdminPanel() {
   const { token, user } = useAuth();
-  const [activeTab, setActiveTab] = useState('messages'); // 'messages' | 'emails' | 'users'
+  const [activeTab, setActiveTab] = useState('messages'); // 'messages' | 'tickets' | 'emails' | 'users'
   
   const [messages, setMessages] = useState([]);
+  const [tickets, setTickets] = useState([]);
   const [emails, setEmails] = useState([]);
   const [users, setUsers] = useState([]);
   const [stats, setStats] = useState(null);
@@ -27,9 +52,13 @@ export default function AdminPanel() {
   const [toast, setToast] = useState('');
   const [busyUser, setBusyUser] = useState(null);
   const [busyMessageId, setBusyMessageId] = useState(null);
+  const [busyTicketId, setBusyTicketId] = useState(null);
   const [filterOnlyUnread, setFilterOnlyUnread] = useState(false);
+  const [ticketFilter, setTicketFilter] = useState('todos');
   const [copiedId, setCopiedId] = useState(null);
   const [selectedModalMessage, setSelectedModalMessage] = useState(null);
+  const [selectedTicket, setSelectedTicket] = useState(null);
+  const [ticketReplyDraft, setTicketReplyDraft] = useState('');
 
   const showToast = (msg) => {
     setToast(msg);
@@ -40,31 +69,39 @@ export default function AdminPanel() {
     if (!token) return;
     setLoading(true);
     setError('');
-    try {
-      const [messagesRes, emailsRes, usersRes, statsRes] = await Promise.allSettled([
-        getAdminMessages(token),
-        getAdminEmails(token),
-        getAdminUsers(token),
-        getAdminStats(token),
-      ]);
 
-      if (messagesRes.status === 'fulfilled' && Array.isArray(messagesRes.value)) {
-        setMessages(messagesRes.value);
-      }
-      if (emailsRes.status === 'fulfilled' && Array.isArray(emailsRes.value)) {
-        setEmails(emailsRes.value);
-      }
-      if (usersRes.status === 'fulfilled' && Array.isArray(usersRes.value)) {
-        setUsers(usersRes.value);
-      }
-      if (statsRes.status === 'fulfilled') {
-        setStats(statsRes.value);
-      }
-    } catch (err) {
-      setError(err.message || 'Error al cargar los datos del panel de administración.');
-    } finally {
-      setLoading(false);
-    }
+    // Cada sección se resuelve de forma independiente para que el panel no
+    // quede bloqueado esperando la consulta más lenta (por ejemplo la DB).
+    const tasks = [
+      getAdminMessages(token)
+        .then((data) => {
+          if (Array.isArray(data)) setMessages(data);
+        })
+        .catch(() => {}),
+      getAdminEmails(token)
+        .then((data) => {
+          if (Array.isArray(data)) setEmails(data);
+        })
+        .catch(() => {}),
+      getAdminUsers(token)
+        .then((data) => {
+          if (Array.isArray(data)) setUsers(data);
+        })
+        .catch(() => {}),
+      getAdminStats(token)
+        .then((data) => {
+          if (data) setStats(data);
+        })
+        .catch(() => {}),
+      getAdminTickets(token)
+        .then((data) => {
+          if (Array.isArray(data)) setTickets(data);
+        })
+        .catch(() => {}),
+    ];
+
+    await Promise.allSettled(tasks);
+    setLoading(false);
   }, [token]);
 
   useEffect(() => {
@@ -129,6 +166,114 @@ export default function AdminPanel() {
     window.location.href = `mailto:${msg.email}?subject=${cleanSubject}&body=${cleanBody}`;
   };
 
+  // ── Gestión de Tickets de Soporte (chatbot) ────────────────────────────────
+
+  const applyTicketUpdate = (updated) => {
+    if (!updated) return;
+    setTickets((prev) =>
+      prev.map((t) => (Number(t.id) === Number(updated.id) ? { ...t, ...updated } : t))
+    );
+    setSelectedTicket((prev) =>
+      prev && Number(prev.id) === Number(updated.id) ? { ...prev, ...updated } : prev
+    );
+  };
+
+  const handleOpenTicket = async (ticket) => {
+    setSelectedTicket(ticket);
+    setTicketReplyDraft(ticket.respuesta_admin || '');
+    if (ticket.leido) return;
+    try {
+      const res = await updateAdminTicket(ticket.id, { leido: true }, token);
+      if (res?.ticket) applyTicketUpdate(res.ticket);
+      else setTickets((prev) => prev.map((t) => (t.id === ticket.id ? { ...t, leido: true } : t)));
+    } catch {
+      // Marcar como leído no debe bloquear la visualización del ticket
+    }
+  };
+
+  const handleTicketStatus = async (ticket, estado) => {
+    setBusyTicketId(ticket.id);
+    try {
+      const res = await updateAdminTicket(ticket.id, { estado }, token);
+      if (res?.ticket) {
+        applyTicketUpdate(res.ticket);
+      } else {
+        setTickets((prev) => prev.map((t) => (t.id === ticket.id ? { ...t, estado } : t)));
+        setSelectedTicket((prev) => (prev && prev.id === ticket.id ? { ...prev, estado } : prev));
+      }
+      showToast(`Ticket ${ticket.codigo} actualizado a "${TICKET_STATUS_META[estado]?.label || estado}".`);
+    } catch (err) {
+      showToast(err.message || 'Error al actualizar el estado del ticket.');
+    } finally {
+      setBusyTicketId(null);
+    }
+  };
+
+  const handleSaveTicketReply = async () => {
+    if (!selectedTicket) return;
+    const draft = ticketReplyDraft.trim();
+    if (!draft) {
+      showToast('Escribí una respuesta antes de guardarla.');
+      return;
+    }
+
+    setBusyTicketId(selectedTicket.id);
+    try {
+      const res = await updateAdminTicket(
+        selectedTicket.id,
+        { respuesta_admin: draft, estado: 'en_proceso', leido: true },
+        token
+      );
+      if (res?.ticket) applyTicketUpdate(res.ticket);
+      else {
+        setTickets((prev) =>
+          prev.map((t) =>
+            t.id === selectedTicket.id
+              ? { ...t, respuesta_admin: draft, estado: 'en_proceso', leido: true }
+              : t
+          )
+        );
+        setSelectedTicket((prev) =>
+          prev ? { ...prev, respuesta_admin: draft, estado: 'en_proceso', leido: true } : prev
+        );
+      }
+      showToast('Respuesta guardada. Ya es visible para el usuario en "Mis tickets".');
+    } catch (err) {
+      showToast(err.message || 'Error al guardar la respuesta del ticket.');
+    } finally {
+      setBusyTicketId(null);
+    }
+  };
+
+  const handleDeleteTicket = async (ticket) => {
+    const confirmDelete = window.confirm(
+      `¿Estás seguro de eliminar el ticket ${ticket.codigo || `#${ticket.id}`} de ${ticket.nombre || ticket.email}?`
+    );
+    if (!confirmDelete) return;
+
+    setBusyTicketId(ticket.id);
+    try {
+      await deleteAdminTicket(ticket.id, token);
+      setTickets((prev) => prev.filter((t) => t.id !== ticket.id));
+      if (selectedTicket && Number(selectedTicket.id) === Number(ticket.id)) {
+        setSelectedTicket(null);
+      }
+      showToast('Ticket eliminado con éxito.');
+    } catch (err) {
+      showToast(err.message || 'Error al eliminar el ticket.');
+    } finally {
+      setBusyTicketId(null);
+    }
+  };
+
+  const handleReplyTicket = (ticket) => {
+    const cleanSubject = encodeURIComponent(`Re: [${ticket.codigo || 'Ticket'}] ${ticket.asunto || 'Soporte Divise'}`);
+    const cleanBody = encodeURIComponent(
+      `Hola ${ticket.nombre || 'Usuario'},\n\nEstamos trabajando en tu ticket ${ticket.codigo || ''}.\n\n${ticket.respuesta_admin ? `Respuesta del equipo:\n${ticket.respuesta_admin}\n\n` : ''}────────────────────────────────────────\nTicket original (${formatDate(ticket.fecha)}):\n"${ticket.mensaje}"\n────────────────────────────────────────\n\nSaludos cordiales,\nEquipo de Administración de Divise`
+    );
+    window.location.href = `mailto:${ticket.email}?subject=${cleanSubject}&body=${cleanBody}`;
+  };
+
   // ── Gestión de Roles de Usuarios ──────────────────────────────────────────
 
   const handleToggleRole = async (targetUser) => {
@@ -175,6 +320,27 @@ export default function AdminPanel() {
   // ── Filtros ────────────────────────────────────────────────────────────────
 
   const unreadMessagesCount = messages.filter((m) => !m.leido).length;
+  const unreadTicketsCount = tickets.filter((t) => !t.leido).length;
+  const openTicketsCount = tickets.filter(
+    (t) => t.estado === 'abierto' || t.estado === 'en_proceso'
+  ).length;
+  const resolvedTicketsCount = tickets.filter(
+    (t) => t.estado === 'resuelto' || t.estado === 'cerrado'
+  ).length;
+
+  const filteredTickets = tickets.filter((t) => {
+    if (ticketFilter === 'abiertos' && !(t.estado === 'abierto' || t.estado === 'en_proceso')) {
+      return false;
+    }
+    if (ticketFilter === 'resueltos' && !(t.estado === 'resuelto' || t.estado === 'cerrado')) {
+      return false;
+    }
+    if (!searchTerm) return true;
+    const term = searchTerm.toLowerCase();
+    return [t.codigo, t.nombre, t.email, t.asunto, t.mensaje, t.categoria, t.respuesta_admin]
+      .filter(Boolean)
+      .some((value) => String(value).toLowerCase().includes(term));
+  });
 
   const filteredMessages = messages.filter((m) => {
     if (filterOnlyUnread && m.leido) return false;
@@ -231,7 +397,7 @@ export default function AdminPanel() {
           </div>
           <h1 className="page-title">Gestión y Mensajes del Sistema</h1>
           <p className="page-sub">
-            Recepción de mensajes de soporte de usuarios, auditoría de correos (Gmail/SMTP) y gestión de roles.
+            Recepción de tickets de soporte y mensajes de usuarios, auditoría de correos (Gmail/SMTP) y gestión de roles.
           </p>
         </div>
         <div className="admin-header-actions">
@@ -252,6 +418,21 @@ export default function AdminPanel() {
               {unreadMessagesCount > 0 && (
                 <span className="ak-sub-badge" title="Mensajes sin leer">
                   {unreadMessagesCount} nuevos
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className={`admin-kpi-card ${activeTab === 'tickets' ? 'highlighted' : ''}`} onClick={() => setActiveTab('tickets')}>
+          <div className="ak-icon tickets"><Icon name="ticket" size={22} /></div>
+          <div className="ak-info">
+            <span className="ak-label">Tickets de Soporte</span>
+            <div className="ak-value-row">
+              <span className="ak-value">{tickets.length}</span>
+              {openTicketsCount > 0 && (
+                <span className="ak-sub-badge" title="Tickets abiertos o en proceso">
+                  {openTicketsCount} abiertos
                 </span>
               )}
             </div>
@@ -312,6 +493,18 @@ export default function AdminPanel() {
 
           <button
             type="button"
+            className={`admin-tab ${activeTab === 'tickets' ? 'active' : ''}`}
+            onClick={() => setActiveTab('tickets')}
+          >
+            <Icon name="ticket" size={16} />
+            <span>Tickets de Soporte ({tickets.length})</span>
+            {unreadTicketsCount > 0 && (
+              <span className="tab-unread-pill">{unreadTicketsCount}</span>
+            )}
+          </button>
+
+          <button
+            type="button"
             className={`admin-tab ${activeTab === 'emails' ? 'active' : ''}`}
             onClick={() => setActiveTab('emails')}
           >
@@ -337,6 +530,8 @@ export default function AdminPanel() {
             placeholder={
               activeTab === 'messages'
                 ? 'Buscar por remitente, asunto o texto...'
+                : activeTab === 'tickets'
+                ? 'Buscar por código, usuario o asunto...'
                 : activeTab === 'emails'
                 ? 'Buscar por correo, asunto o código...'
                 : 'Buscar por nombre o email...'
@@ -479,7 +674,175 @@ export default function AdminPanel() {
         </div>
       )}
 
-      {/* ── TAB 2: AUDITORÍA DE GMAILS ENVIADOS ───────────────────────────── */}
+      {/* ── TAB 2: TICKETS DE SOPORTE (CHATBOT) ───────────────────────────── */}
+      {activeTab === 'tickets' && (
+        <div className="admin-panel-card">
+          <div className="apc-header apc-header-split">
+            <div>
+              <h3>Bandeja de Tickets de Soporte</h3>
+              <span className="apc-sub">
+                Tickets generados por los usuarios desde el asistente flotante de soporte del dashboard.
+              </span>
+            </div>
+            <div className="apc-filters">
+              <button
+                type="button"
+                className={`btn btn-xs ${ticketFilter === 'todos' ? 'btn-primary' : 'btn-outline'}`}
+                onClick={() => setTicketFilter('todos')}
+              >
+                Todos ({tickets.length})
+              </button>
+              <button
+                type="button"
+                className={`btn btn-xs ${ticketFilter === 'abiertos' ? 'btn-primary' : 'btn-outline'}`}
+                onClick={() => setTicketFilter('abiertos')}
+              >
+                Abiertos ({openTicketsCount})
+              </button>
+              <button
+                type="button"
+                className={`btn btn-xs ${ticketFilter === 'resueltos' ? 'btn-primary' : 'btn-outline'}`}
+                onClick={() => setTicketFilter('resueltos')}
+              >
+                Resueltos ({resolvedTicketsCount})
+              </button>
+            </div>
+          </div>
+
+          {filteredTickets.length === 0 ? (
+            <div className="admin-empty-state">
+              <div className="aes-icon"><Icon name="ticket" size={40} /></div>
+              <h4>No hay tickets que mostrar</h4>
+              <p>
+                {searchTerm
+                  ? `No se encontraron tickets que coincidan con "${searchTerm}".`
+                  : ticketFilter === 'abiertos'
+                  ? '¡Excelente! No tenés tickets pendientes en este momento.'
+                  : 'Aún no se recibieron tickets desde el asistente de soporte.'}
+              </p>
+            </div>
+          ) : (
+            <div className="tickets-list">
+              {filteredTickets.map((ticket) => {
+                const status = TICKET_STATUS_META[ticket.estado] || TICKET_STATUS_META.abierto;
+                const priority = TICKET_PRIORITY_META[ticket.prioridad] || TICKET_PRIORITY_META.media;
+                const isBusy = busyTicketId === ticket.id;
+
+                return (
+                  <div
+                    key={ticket.id}
+                    className={`ticket-card ${status.className} ${!ticket.leido ? 'unread' : ''}`}
+                  >
+                    <div className="tc-top">
+                      <div className="tc-badges">
+                        <span className="tc-code">
+                          <Icon name="ticket" size={13} /> {ticket.codigo || `#${ticket.id}`}
+                        </span>
+                        <span className={`tc-status ${status.className}`}>{status.label}</span>
+                        <span className={`tc-priority ${priority.className}`}>
+                          Prioridad {priority.label}
+                        </span>
+                        {!ticket.leido && <span className="tc-new">Nuevo</span>}
+                      </div>
+                      <span className="tc-date">{formatDate(ticket.fecha)}</span>
+                    </div>
+
+                    <div className="tc-main">
+                      <div className="tc-avatar">{getInitials(ticket.nombre, ticket.email)}</div>
+                      <div className="tc-info">
+                        <div className="tc-name-row">
+                          <strong>{ticket.nombre || 'Usuario Divise'}</strong>
+                          <span className="tc-category">
+                            {TICKET_CATEGORY_LABELS[ticket.categoria] || 'Otro tema'}
+                          </span>
+                        </div>
+                        <a href={`mailto:${ticket.email}`} className="tc-email">{ticket.email}</a>
+                      </div>
+                    </div>
+
+                    <div className="tc-subject">
+                      <span>Asunto:</span> {ticket.asunto}
+                    </div>
+
+                    <div className="tc-body">
+                      <p>{ticket.mensaje}</p>
+                    </div>
+
+                    {ticket.respuesta_admin && (
+                      <div className="tc-response">
+                        <span>Respuesta guardada</span>
+                        <p>{ticket.respuesta_admin}</p>
+                      </div>
+                    )}
+
+                    <div className="tc-actions">
+                      <button
+                        type="button"
+                        className="btn btn-outline btn-xs"
+                        onClick={() => handleOpenTicket(ticket)}
+                      >
+                        Ver detalle
+                      </button>
+
+                      {ticket.estado !== 'en_proceso' && ticket.estado !== 'resuelto' && (
+                        <button
+                          type="button"
+                          className="btn btn-outline btn-xs"
+                          disabled={isBusy}
+                          onClick={() => handleTicketStatus(ticket, 'en_proceso')}
+                        >
+                          Tomar ticket
+                        </button>
+                      )}
+
+                      {ticket.estado !== 'resuelto' && ticket.estado !== 'cerrado' && (
+                        <button
+                          type="button"
+                          className="btn btn-primary btn-xs"
+                          disabled={isBusy}
+                          onClick={() => handleTicketStatus(ticket, 'resuelto')}
+                        >
+                          <Icon name="check" size={13} /> Resolver
+                        </button>
+                      )}
+
+                      {ticket.estado === 'resuelto' && (
+                        <button
+                          type="button"
+                          className="btn btn-outline btn-xs"
+                          disabled={isBusy}
+                          onClick={() => handleTicketStatus(ticket, 'abierto')}
+                        >
+                          Reabrir
+                        </button>
+                      )}
+
+                      <button
+                        type="button"
+                        className="btn btn-outline btn-xs"
+                        onClick={() => handleReplyTicket(ticket)}
+                      >
+                        <Icon name="mail" size={13} /> Responder
+                      </button>
+
+                      <button
+                        type="button"
+                        className="btn btn-outline btn-xs btn-delete"
+                        disabled={isBusy}
+                        onClick={() => handleDeleteTicket(ticket)}
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── TAB 3: AUDITORÍA DE GMAILS ENVIADOS ───────────────────────────── */}
       {activeTab === 'emails' && (
         <div className="admin-panel-card">
           <div className="apc-header">
@@ -574,7 +937,7 @@ export default function AdminPanel() {
         </div>
       )}
 
-      {/* ── TAB 3: GESTIÓN DE USUARIOS Y ROLES ────────────────────────────── */}
+      {/* ── TAB 4: GESTIÓN DE USUARIOS Y ROLES ────────────────────────────── */}
       {activeTab === 'users' && (
         <div className="admin-panel-card">
           <div className="apc-header">
@@ -695,6 +1058,91 @@ export default function AdminPanel() {
           </div>
         </div>
       )}
+      {/* Modal de Detalle de Ticket de Soporte */}
+      {selectedTicket && (
+        <div className="admin-modal-overlay" onClick={() => setSelectedTicket(null)}>
+          <div
+            className="admin-modal-content admin-ticket-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="admin-modal-header">
+              <h3>
+                {selectedTicket.codigo || `Ticket #${selectedTicket.id}`} — {selectedTicket.asunto}
+              </h3>
+              <button
+                type="button"
+                className="admin-modal-close"
+                onClick={() => setSelectedTicket(null)}
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="admin-modal-meta">
+              <div className="ticket-modal-badges">
+                <span className={`tc-status ${(TICKET_STATUS_META[selectedTicket.estado] || TICKET_STATUS_META.abierto).className}`}>
+                  {(TICKET_STATUS_META[selectedTicket.estado] || TICKET_STATUS_META.abierto).label}
+                </span>
+                <span className={`tc-priority ${(TICKET_PRIORITY_META[selectedTicket.prioridad] || TICKET_PRIORITY_META.media).className}`}>
+                  Prioridad {(TICKET_PRIORITY_META[selectedTicket.prioridad] || TICKET_PRIORITY_META.media).label}
+                </span>
+                <span className="tc-category">
+                  {TICKET_CATEGORY_LABELS[selectedTicket.categoria] || 'Otro tema'}
+                </span>
+              </div>
+              <strong>De:</strong> {selectedTicket.nombre || 'Usuario Divise'} &lt;{selectedTicket.email}&gt;
+              <br />
+              <span className="at-date">{formatDate(selectedTicket.fecha)}</span>
+            </div>
+
+            <div className="admin-modal-body admin-ticket-body">
+              <p className="ticket-modal-message">{selectedTicket.mensaje}</p>
+
+              <label className="ticket-reply-label" htmlFor="admin-ticket-reply">
+                Respuesta para el usuario
+              </label>
+              <textarea
+                id="admin-ticket-reply"
+                className="ticket-reply-input"
+                rows={4}
+                placeholder="Escribí la respuesta que verá el usuario en 'Mis tickets'..."
+                value={ticketReplyDraft}
+                onChange={(e) => setTicketReplyDraft(e.target.value)}
+                disabled={busyTicketId === selectedTicket.id}
+              />
+              <span className="ticket-reply-hint">
+                La respuesta queda guardada en el ticket y también podés enviarla por correo.
+              </span>
+            </div>
+
+            <div className="admin-modal-actions">
+              <button
+                type="button"
+                className="btn btn-outline"
+                onClick={() => setSelectedTicket(null)}
+              >
+                Cerrar
+              </button>
+              <button
+                type="button"
+                className="btn btn-outline"
+                onClick={() => handleReplyTicket(selectedTicket)}
+              >
+                <Icon name="mail" size={14} /> Enviar por correo
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={handleSaveTicketReply}
+                disabled={busyTicketId === selectedTicket.id}
+              >
+                <Icon name="check" size={14} /> Guardar respuesta
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

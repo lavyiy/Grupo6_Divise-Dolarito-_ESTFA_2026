@@ -131,6 +131,28 @@ cd codigo
 npm install && npm run dev
 ```
 
+También podés levantar ambos procesos con un solo comando (desde `codigo/`):
+
+```bash
+npm run dev:all
+```
+
+> **Error 502: Bad Gateway** — aparece cuando Vite está corriendo pero el backend
+> no está disponible en el puerto 5000. Usá `npm run dev:all` o verificá que el
+> backend esté iniciado antes de abrir el dashboard.
+
+## Soporte y tickets
+
+- El dashboard tiene un **icono flotante de Soporte** con un asistente que guía
+  al usuario para crear un ticket (tema, prioridad, asunto y descripción).
+- El usuario puede seguir sus tickets desde **“Mis tickets”**.
+- Los administradores ven la **“Bandeja”** en el mismo asistente y la pestaña
+  **“Tickets de Soporte”** dentro del Panel de Administración, donde pueden
+  tomar, resolver, reabrir, responder y eliminar tickets.
+- La tabla se crea con la migración `server/migrations/013_support_tickets.sql`.
+  Si la base no está disponible, se usa `server/database/soporte_tickets.json`
+  como respaldo.
+
 ## Build de producción
 
 ```bash
